@@ -1,2 +1,17 @@
 @import "tailwindcss";
 
+main{
+    background-color: #0a0a0a;
+}
+
+header{
+    background-color: #0A0A0A;
+}
+
+nav{
+    background-color: #0A0A0A;
+}
+
+body{
+    color: #fff;
+}
