@@ -1,22 +1,18 @@
 "use client";
 import {
   Calendar,
-  CheckSquare,
-  FileText,
   Home,
-  User,
   Clock,
-  BookOpen,
   ChevronRight,
   Plus,
-  Search,
   Filter,
   MoreVertical,
-  BellRing,
 } from "lucide-react";
 import { useState } from "react";
 import ScheduleTaskInfo from "../components/SchedulePage/ScheduleTaskInfo";
 import TaskInfoCard from "../components/TaskPage/TaskInfoCard";
+import Header from "../components/Layout/Header";
+import Sidebar from "../components/Layout/Sidebar";
 type Subject = {
   id: number;
   name: string;
@@ -168,120 +164,8 @@ export default function HomePage() {
 
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col">
-      <header className="bg-white shadow-sm border-b px-6 py-4">
-        <div className="flex justify-between items-center">
-          <div className="flex items-center space-x-3">
-            <BookOpen className="h-8 w-8 text-indigo-600" />
-            <div>
-              <h1 className="text-2xl font-bold text-gray-800">МойБонч</h1>
-              <p className="text-sm text-gray-500">
-                Ваш персональный помощник в учебе
-              </p>
-            </div>
-          </div>
-          <div className="flex items-center space-x-4">
-            <Search className="h-5 w-5 text-gray-500 cursor-pointer" />
-            <BellRing className="h-5 w-5 text-gray-500 cursor-pointer" />
-            <div className="flex items-center space-x-3 cursor-pointer">
-              <div className="w-10 h-10 bg-indigo-100 rounded-full flex items-center justify-center">
-                <User className="h-6 w-6 text-indigo-600" />
-              </div>
-              <div>
-                <p className="font-medium">Гоглев Слава</p>
-                <p className="text-sm text-gray-500">4 курс, ИТПИ</p>
-              </div>
-            </div>
-          </div>
-        </div>
-      </header>
 
       <div className="flex flex-1 overflow-hidden">
-        <nav className="w-64 bg-white border-r flex flex-col p-6 space-y-8">
-          <div className="space-y-2">
-            <h2 className="text-xs uppercase text-gray-500 font-semibold tracking-wider">
-              Навигация
-            </h2>
-            <button
-              onClick={() => setActiveTab("schedule")}
-              className={`flex items-center space-x-3 w-full p-3 rounded-lg transition-all ${
-                activeTab === "schedule"
-                  ? "bg-indigo-50 text-indigo-700"
-                  : "hover:bg-gray-100"
-              }`}
-            >
-              <Calendar className="h-5 w-5" />
-              <span className="font-medium">Расписание</span>
-            </button>
-            <button
-              onClick={() => setActiveTab("assignments")}
-              className={`flex items-center space-x-3 w-full p-3 rounded-lg transition-all ${
-                activeTab === "assignments"
-                  ? "bg-indigo-50 text-indigo-700"
-                  : "hover:bg-gray-100"
-              }`}
-            >
-              <CheckSquare className="h-5 w-5" />
-              <span className="font-medium">Задания</span>
-              <span className="ml-auto bg-red-500 text-white text-xs rounded-full px-2 py-1">
-                {assignments.filter((a) => !a.completed).length}
-              </span>
-            </button>
-            <button
-              onClick={() => setActiveTab("notes")}
-              className={`flex items-center space-x-3 w-full p-3 rounded-lg transition-all ${
-                activeTab === "notes"
-                  ? "bg-indigo-50 text-indigo-700"
-                  : "hover:bg-gray-100"
-              }`}
-            >
-              <FileText className="h-5 w-5" />
-              <span className="font-medium">Конспекты</span>
-            </button>
-            <button
-              onClick={() => setActiveTab("notes")}
-              className={`flex items-center space-x-3 w-full p-3 rounded-lg transition-all ${
-                activeTab === "notes"
-                  ? "bg-indigo-50 text-indigo-700"
-                  : "hover:bg-gray-100"
-              }`}
-            >
-              <FileText className="h-5 w-5" />
-              <span className="font-medium">Дисциплины</span>
-            </button>
-          </div>
-
-          <div className="space-y-2">
-            <h2 className="text-xs uppercase text-gray-500 font-semibold tracking-wider">
-              Быстрый доступ
-            </h2>
-            <button className="flex items-center space-x-3 w-full p-3 rounded-lg hover:bg-gray-100">
-              <Plus className="h-5 w-5 text-gray-500" />
-              <span>Добавить пары</span>
-            </button>
-            <button className="flex items-center space-x-3 w-full p-3 rounded-lg hover:bg-gray-100">
-              <Plus className="h-5 w-5 text-gray-500" />
-              <span>Добавить экзамены</span>
-            </button>
-            <button className="flex items-center space-x-3 w-full p-3 rounded-lg hover:bg-gray-100">
-              <Plus className="h-5 w-5 text-gray-500" />
-              <span>Добавить зачеты</span>
-            </button>
-            <button className="flex items-center space-x-3 w-full p-3 rounded-lg hover:bg-gray-100">
-              <Clock className="h-5 w-5 text-gray-500" />
-              <span>Ближайшие дедлайны</span>
-            </button>
-          </div>
-
-          <div className="mt-auto pt-6 border-t">
-            <div className="bg-linear-to-r from-indigo-50 to-purple-50 rounded-xl p-4">
-              <p className="text-sm font-medium text-gray-800">До экзаменов</p>
-              <p className="text-2xl font-bold text-indigo-700 mt-1">24 дня</p>
-              <p className="text-xs text-gray-500 mt-2">
-                У вас 3 незавершенных задания
-              </p>
-            </div>
-          </div>
-        </nav>
 
         <main className="flex-1 overflow-auto p-8">
           {activeTab === "schedule" && (
@@ -357,7 +241,7 @@ export default function HomePage() {
                             Задания <ChevronRight className="h-4 w-4 ml-1" />
                           </button>
                         </div>
-                        <ScheduleTaskInfo/>
+                        <ScheduleTaskInfo />
                       </div>
                     </div>
                   ))}
@@ -399,7 +283,7 @@ export default function HomePage() {
                 </div>
               </div>
 
-              <TaskInfoCard/>
+              <TaskInfoCard />
 
               <div className="bg-[#1c1c1c] rounded-xl border overflow-hidden">
                 <div className="p-6 border-b">
@@ -436,14 +320,14 @@ export default function HomePage() {
                       <div className="flex items-center space-x-4">
                         <span
                           className={`px-3 py-1 rounded-full text-xs font-medium ${getPriorityColor(
-                            assignment.priority
+                            assignment.priority,
                           )}`}
                         >
                           {assignment.priority === "high"
                             ? "Высокий"
                             : assignment.priority === "medium"
-                            ? "Средний"
-                            : "Низкий"}
+                              ? "Средний"
+                              : "Низкий"}
                         </span>
                         <button className="text-gray-500 hover:text-gray-700">
                           <MoreVertical className="h-5 w-5" />
