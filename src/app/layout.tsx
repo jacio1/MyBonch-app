@@ -5,6 +5,7 @@ import Header from "@/src/components/Layout/Header";
 import Sidebar from "@/src/components/Layout/Sidebar";
 import { AuthProvider } from "@/src/lib/AuthContext";
 import { initialAssignments } from "@/src/data/initalData";
+import { DataProvider } from "../lib/DataContext";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -31,7 +32,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   const assignmentsCount = initialAssignments.filter(
-    (a) => !a.completed
+    (a) => !a.completed,
   ).length;
 
   return (
@@ -41,12 +42,14 @@ export default function RootLayout({
       >
         <AuthProvider>
           <Header />
-          <div className="flex flex-1 overflow-hidden min-h-screen pb-16 sm:pb-0">
-            <Sidebar assignmentsCount={assignmentsCount} />
-            <main className="flex-1 overflow-auto bg-gray-50">
-              {children}
-            </main>
-          </div>
+          <DataProvider>
+            <div className="flex flex-1 overflow-hidden min-h-screen pb-16 sm:pb-0">
+              <Sidebar assignmentsCount={assignmentsCount} />
+              <main className="flex-1 overflow-auto bg-gray-50">
+                {children}
+              </main>
+            </div>
+          </DataProvider>
         </AuthProvider>
       </body>
     </html>

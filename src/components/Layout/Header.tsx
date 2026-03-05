@@ -28,8 +28,8 @@ export default function Header() {
         <div className="flex items-center space-x-2 sm:space-x-3">
           <BookOpen className="h-6 w-6 sm:h-8 sm:w-8 text-indigo-600" />
           <div className="hidden sm:block">
-            <h1 className="text-xl sm:text-2xl font-bold text-gray-800">МойБонч</h1>
-            <p className="text-xs sm:text-sm text-gray-500">Ваш помощник в учебе</p>
+            <h1 className="text-xl sm:text-2xl font-bold text-white">МойБонч</h1>
+            <p className="text-xs sm:text-sm text-gray-200">Ваш помощник в учебе</p>
           </div>
           <h1 className="text-lg font-bold text-gray-800 sm:hidden">МойБонч</h1>
         </div>
@@ -43,8 +43,8 @@ export default function Header() {
               <User className="h-6 w-6 text-indigo-600" />
             </div>
             <div className="text-sm">
-              <p className="font-medium text-gray-800">{userName}</p>
-              <p className="text-xs text-gray-500">4 курс, ИТПИ</p>
+              <p className="font-medium text-white">{userName}</p>
+              <p className="text-xs text-gray-200">4 курс, ИТПИ</p>
             </div>
           </div>
         </div>
