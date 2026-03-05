@@ -1,9 +1,10 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
-import Header from "../components/Layout/Header";
-import Sidebar from "../components/Layout/Sidebar";
-import { initialAssignments } from "../data/initalData";
+import Header from "@/src/components/Layout/Header";
+import Sidebar from "@/src/components/Layout/Sidebar";
+import { AuthProvider } from "@/src/lib/AuthContext";
+import { initialAssignments } from "@/src/data/initalData";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -21,27 +22,32 @@ export const metadata: Metadata = {
   icons: {
     icon: "/favicon.ico",
   },
+  viewport: "width=device-width, initial-scale=1, maximum-scale=5",
 };
 
 export default function RootLayout({
   children,
-}: Readonly<{
+}: {
   children: React.ReactNode;
-}>) {
-  const assignmentsCount = initialAssignments.filter((a) => !a.completed).length;
-  
+}) {
+  const assignmentsCount = initialAssignments.filter(
+    (a) => !a.completed
+  ).length;
+
   return (
-    <html lang="en">
+    <html lang="ru">
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        <Header />
-        <div className="flex flex-1 overflow-hidden min-h-screen">
-          <Sidebar assignmentsCount={assignmentsCount} />
-          <main className="flex-1 overflow-auto bg-gray-50">
-            {children}
-          </main>
-        </div>
+        <AuthProvider>
+          <Header />
+          <div className="flex flex-1 overflow-hidden min-h-screen pb-16 sm:pb-0">
+            <Sidebar assignmentsCount={assignmentsCount} />
+            <main className="flex-1 overflow-auto bg-gray-50">
+              {children}
+            </main>
+          </div>
+        </AuthProvider>
       </body>
     </html>
   );
