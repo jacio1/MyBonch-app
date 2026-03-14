@@ -64,8 +64,8 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
     if (cachedData.userId === user.id && cachedData.subjects !== null) {
       console.log('💾 Используем кешированные данные');
       setSubjects(cachedData.subjects);
-      setAssignments(cachedData.assignments);
-      setNotes(cachedData.notes);
+      setAssignments(cachedData.assignments ?? []);
+      setNotes(cachedData.notes ?? []);
       setLoading(false);
       return;
     }

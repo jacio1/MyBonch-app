@@ -24,3 +24,5 @@ export type Note = {
   content: string;
   date: string;
 };
+
+export type Priority = "high" | "medium" | "low";

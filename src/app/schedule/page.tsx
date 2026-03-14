@@ -1,5 +1,4 @@
 import SchedulePage from "@/src/components/SchedulePage";
-import { initialSubjects } from "@/src/data/initalData";
 
 export default function ScheduleRoute() {
   return (

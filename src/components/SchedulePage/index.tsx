@@ -1,7 +1,7 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { Calendar, Clock, Home, ChevronRight, MoreVertical, Plus, Loader, X, Save, Trash2 } from 'lucide-react';
+import { useState } from 'react';
+import { Calendar, Clock, Home, MoreVertical, Plus, Loader, X, Save, Trash2 } from 'lucide-react';
 import { useAuth } from '@/src/lib/AuthContext';
 import { Subject } from '@/src/types';
 import { useData } from '@/src/lib/DataContext';

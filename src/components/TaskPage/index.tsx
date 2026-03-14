@@ -1,9 +1,9 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Filter, Plus, Clock, MoreVertical, Loader, X, Save, Trash2, CheckCircle2, Circle } from 'lucide-react';
 import { useAuth } from '@/src/lib/AuthContext';
-import { Assignment } from '@/src/types';
+import { Assignment, Priority } from '@/src/types';
 import { useData } from '@/src/lib/DataContext';
 
 type FilterType = 'all' | 'active' | 'completed' | 'high' | 'medium' | 'low';
@@ -228,7 +228,7 @@ export default function TaskPage() {
               {/* Priority */}
               <select
                 value={formData.priority}
-                onChange={(e) => setFormData({ ...formData, priority: e.target.value as any })}
+                onChange={(e) => setFormData({ ...formData, priority: e.target.value as Priority })}
                 className="px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-600 sm:col-span-2"
               >
                 <option value="low">Низкий приоритет</option>
