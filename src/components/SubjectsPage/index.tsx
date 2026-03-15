@@ -1,14 +1,14 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import { Plus, Loader, BookOpen, Users, MapPin } from 'lucide-react';
-import { useAuth } from '@/src/lib/AuthContext';
-import { useData } from '@/src/lib/DataContext';
+import { useState } from "react";
+import { Plus, Loader, BookOpen, Users, MapPin } from "lucide-react";
+import { useAuth } from "@/src/lib/AuthContext";
+import { useData } from "@/src/lib/DataContext";
 
 export default function SubjectsPage() {
   const { user, loading: authLoading } = useAuth();
   const { subjects, loading, error } = useData();
-  const [searchQuery, setSearchQuery] = useState('');
+  const [searchQuery, setSearchQuery] = useState("");
 
   const filteredSubjects = subjects.filter((subject) => {
     const query = searchQuery.toLowerCase();
@@ -20,9 +20,7 @@ export default function SubjectsPage() {
   });
 
   const uniqueSubjects = Array.from(
-    new Map(
-      subjects.map((s) => [s.name.toLowerCase(), s])
-    ).values()
+    new Map(subjects.map((s) => [s.name.toLowerCase(), s])).values(),
   );
 
   if (authLoading || loading) {
@@ -49,8 +47,10 @@ export default function SubjectsPage() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
         <div>
-          <h2 className="text-2xl sm:text-3xl font-bold text-gray-800">Дисциплины</h2>
-          <p className="text-gray-500 text-sm sm:text-base">
+          <h2 className="text-2xl sm:text-3xl font-bold text-white">
+            Дисциплины
+          </h2>
+          <p className="text-gray-200 text-sm sm:text-base">
             {uniqueSubjects.length} дисциплин в расписании
           </p>
         </div>
@@ -84,7 +84,7 @@ export default function SubjectsPage() {
           })
           .map((subject) => {
             const subjectSchedules = subjects.filter(
-              (s) => s.name.toLowerCase() === subject.name.toLowerCase()
+              (s) => s.name.toLowerCase() === subject.name.toLowerCase(),
             );
 
             return (
@@ -100,22 +100,26 @@ export default function SubjectsPage() {
                 </div>
 
                 {/* Content */}
-                <h3 className="font-bold text-lg text-gray-800 mb-2">{subject.name}</h3>
+                <h3 className="font-bold text-lg text-gray-800 mb-2">
+                  {subject.name}
+                </h3>
 
                 <div className="space-y-2 text-sm text-gray-700">
                   <div className="flex items-start gap-2">
                     <Users className="h-4 w-4 mt-0.5 flex-shrink-0" />
-                    <span>{subject.teacher || 'Не указан'}</span>
+                    <span>{subject.teacher || "Не указан"}</span>
                   </div>
                   <div className="flex items-start gap-2">
                     <MapPin className="h-4 w-4 mt-0.5 flex-shrink-0" />
-                    <span>{subject.room || 'Не указана'}</span>
+                    <span>{subject.room || "Не указана"}</span>
                   </div>
                 </div>
 
                 {/* Schedule */}
                 <div className="mt-4 pt-4 border-t border-gray-300 border-opacity-50">
-                  <p className="text-xs font-semibold text-gray-700 mb-2">Расписание:</p>
+                  <p className="text-xs font-semibold text-gray-700 mb-2">
+                    Расписание:
+                  </p>
                   <div className="space-y-1">
                     {subjectSchedules.map((schedule, idx) => (
                       <div
@@ -147,12 +151,12 @@ export default function SubjectsPage() {
         <div className="bg-white rounded-xl border p-8 sm:p-12 text-center">
           <BookOpen className="h-12 w-12 text-gray-300 mx-auto mb-4" />
           <h3 className="text-lg sm:text-xl font-medium text-gray-700">
-            {searchQuery ? 'Дисциплины не найдены' : 'Нет дисциплин'}
+            {searchQuery ? "Дисциплины не найдены" : "Нет дисциплин"}
           </h3>
           <p className="text-gray-500 mt-2 text-sm sm:text-base">
             {searchQuery
-              ? 'Попробуйте изменить поисковый запрос'
-              : 'Добавьте дисциплины в расписание'}
+              ? "Попробуйте изменить поисковый запрос"
+              : "Добавьте дисциплины в расписание"}
           </p>
         </div>
       )}

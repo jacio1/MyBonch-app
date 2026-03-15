@@ -1,38 +1,56 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import { Calendar, Clock, Home, MoreVertical, Plus, Loader, X, Save, Trash2 } from 'lucide-react';
-import { useAuth } from '@/src/lib/AuthContext';
-import { Subject } from '@/src/types';
-import { useData } from '@/src/lib/DataContext';
+import { useState } from "react";
+import {
+  Calendar,
+  Clock,
+  Home,
+  MoreVertical,
+  Plus,
+  Loader,
+  X,
+  Save,
+  Trash2,
+} from "lucide-react";
+import { useAuth } from "@/src/lib/AuthContext";
+import { Subject } from "@/src/types";
+import { useData } from "@/src/lib/DataContext";
 
 export default function SchedulePage() {
   const { user, loading: authLoading } = useAuth();
-  const { subjects, loading, error, addSubject, updateSubject, deleteSubject } = useData();
-  const [selectedDay, setSelectedDay] = useState<string>('Пн');
+  const { subjects, loading, error, addSubject, updateSubject, deleteSubject } =
+    useData();
+  const [selectedDay, setSelectedDay] = useState<string>("Пн");
   const [showAddForm, setShowAddForm] = useState(false);
   const [editingId, setEditingId] = useState<number | null>(null);
-  const [formData, setFormData] = useState<Omit<Subject, 'id'>>({
-    name: '',
-    teacher: '',
-    room: '',
-    time: '',
-    day: 'Пн',
-    color: 'bg-blue-100',
+  const [formData, setFormData] = useState<Omit<Subject, "id">>({
+    name: "",
+    teacher: "",
+    room: "",
+    time: "",
+    day: "Пн",
+    color: "bg-blue-100",
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const days = ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб'];
-  const colors = ['bg-blue-100', 'bg-green-100', 'bg-purple-100', 'bg-yellow-100', 'bg-red-100', 'bg-pink-100'];
+  const days = ["Пн", "Вт", "Ср", "Чт", "Пт", "Сб"];
+const colors = [
+  { value: "bg-blue-100", label: "Голубой" },
+  { value: "bg-green-100", label: "Зеленый" },
+  { value: "bg-purple-100", label: "Фиолетовый" },
+  { value: "bg-yellow-100", label: "Желтый" },
+  { value: "bg-red-100", label: "Красный" },
+  { value: "bg-pink-100", label: "Розовый" },
+];
 
   const resetForm = () => {
     setFormData({
-      name: '',
-      teacher: '',
-      room: '',
-      time: '',
-      day: 'Пн',
-      color: 'bg-blue-100',
+      name: "",
+      teacher: "",
+      room: "",
+      time: "",
+      day: "Пн",
+      color: "bg-blue-100",
     });
     setEditingId(null);
     setShowAddForm(false);
@@ -50,8 +68,8 @@ export default function SchedulePage() {
       }
       resetForm();
     } catch (error) {
-      console.error('Error saving subject:', error);
-      alert('Ошибка сохранения. Попробуйте снова.');
+      console.error("Error saving subject:", error);
+      alert("Ошибка сохранения. Попробуйте снова.");
     } finally {
       setIsSubmitting(false);
     }
@@ -71,12 +89,12 @@ export default function SchedulePage() {
   };
 
   const handleDelete = async (id: number) => {
-    if (confirm('Вы уверены, что хотите удалить эту пару?')) {
+    if (confirm("Вы уверены, что хотите удалить эту пару?")) {
       try {
         await deleteSubject(id);
       } catch (error) {
-        console.error('Error deleting subject:', error);
-        alert('Ошибка удаления. Попробуйте снова.');
+        console.error("Error deleting subject:", error);
+        alert("Ошибка удаления. Попробуйте снова.");
       }
     }
   };
@@ -107,7 +125,9 @@ export default function SchedulePage() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
         <div>
-          <h2 className="text-2xl sm:text-3xl font-bold text-white">Расписание занятий</h2>
+          <h2 className="text-2xl sm:text-3xl font-bold text-white">
+            Расписание занятий
+          </h2>
           <p className="text-gray-200 text-sm sm:text-base">3 семестр</p>
         </div>
         <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto ">
@@ -130,7 +150,9 @@ export default function SchedulePage() {
             key={day}
             onClick={() => setSelectedDay(day)}
             className={`px-4 sm:px-6 py-2 sm:py-3 rounded-lg font-medium whitespace-nowrap transition text-sm sm:text-base ${
-              selectedDay === day ? 'bg-indigo-600 text-white' : 'bg-[#0A0A0A] border hover:bg-[#1c1c1c]'
+              selectedDay === day
+                ? "bg-indigo-600 text-white"
+                : "bg-[#0A0A0A] border hover:bg-[#1c1c1c]"
             }`}
           >
             {day}
@@ -140,10 +162,10 @@ export default function SchedulePage() {
 
       {/* Add Form */}
       {showAddForm && (
-        <div className="bg-white rounded-xl border p-4 sm:p-6 mb-6">
+        <div className="bg-[#131313] rounded-xl border p-4 sm:p-6 mb-6">
           <div className="flex justify-between items-center mb-4">
-            <h3 className="text-lg font-bold text-gray-800">
-              {editingId ? 'Редактировать пару' : 'Добавить новую пару'}
+            <h3 className="text-lg font-bold text-white">
+              {editingId ? "Редактировать пару" : "Добавить новую пару"}
             </h3>
             <button
               onClick={resetForm}
@@ -160,8 +182,10 @@ export default function SchedulePage() {
                 type="text"
                 placeholder="Название предмета"
                 value={formData.name}
-                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                className="px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-600"
+                onChange={(e) =>
+                  setFormData({ ...formData, name: e.target.value })
+                }
+                className="px-4 py-2 border rounded-lg focus:outline-none focus:ring-2"
                 required
               />
 
@@ -170,8 +194,10 @@ export default function SchedulePage() {
                 type="text"
                 placeholder="Преподаватель"
                 value={formData.teacher}
-                onChange={(e) => setFormData({ ...formData, teacher: e.target.value })}
-                className="px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-600"
+                onChange={(e) =>
+                  setFormData({ ...formData, teacher: e.target.value })
+                }
+                className="px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 "
               />
 
               {/* Room */}
@@ -179,8 +205,10 @@ export default function SchedulePage() {
                 type="text"
                 placeholder="Аудитория"
                 value={formData.room}
-                onChange={(e) => setFormData({ ...formData, room: e.target.value })}
-                className="px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-600"
+                onChange={(e) =>
+                  setFormData({ ...formData, room: e.target.value })
+                }
+                className="px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 "
               />
 
               {/* Time */}
@@ -188,15 +216,19 @@ export default function SchedulePage() {
                 type="text"
                 placeholder="Время (9:00-10:35)"
                 value={formData.time}
-                onChange={(e) => setFormData({ ...formData, time: e.target.value })}
-                className="px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-600"
+                onChange={(e) =>
+                  setFormData({ ...formData, time: e.target.value })
+                }
+                className="px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 "
               />
 
               {/* Day */}
               <select
                 value={formData.day}
-                onChange={(e) => setFormData({ ...formData, day: e.target.value })}
-                className="px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-600"
+                onChange={(e) =>
+                  setFormData({ ...formData, day: e.target.value })
+                }
+                className="px-4 bg-[#131313] py-2 border rounded-lg focus:outline-none focus:ring-2 "
               >
                 {days.map((day) => (
                   <option key={day} value={day}>
@@ -208,12 +240,14 @@ export default function SchedulePage() {
               {/* Color */}
               <select
                 value={formData.color}
-                onChange={(e) => setFormData({ ...formData, color: e.target.value })}
-                className="px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-600"
+                onChange={(e) =>
+                  setFormData({ ...formData, color: e.target.value })
+                }
+                className="px-4 bg-[#131313] py-2 border rounded-lg focus:outline-none focus:ring-2 "
               >
                 {colors.map((color) => (
-                  <option key={color} value={color}>
-                    {color}
+                  <option key={color.value} value={color.value}>
+                    {color.label}
                   </option>
                 ))}
               </select>
@@ -226,7 +260,11 @@ export default function SchedulePage() {
                 className="flex-1 bg-indigo-600 text-white font-semibold py-2 rounded-lg hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed transition flex items-center justify-center gap-2"
               >
                 <Save className="h-4 w-4" />
-                {isSubmitting ? 'Сохраняем...' : editingId ? 'Обновить' : 'Добавить'}
+                {isSubmitting
+                  ? "Сохраняем..."
+                  : editingId
+                    ? "Обновить"
+                    : "Добавить"}
               </button>
               <button
                 type="button"
@@ -243,11 +281,16 @@ export default function SchedulePage() {
       {/* Subjects Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
         {filteredSubjects.map((subject) => (
-          <div key={subject.id} className="bg-[#1c1c1c] rounded-xl border overflow-hidden hover:shadow-md transition-shadow">
+          <div
+            key={subject.id}
+            className="bg-[#1c1c1c] rounded-xl border overflow-hidden hover:shadow-md transition-shadow"
+          >
             <div className={`p-3 sm:p-4 ${subject.color}`}>
               <div className="flex justify-between items-start">
                 <div className="flex-1">
-                  <h3 className="font-bold text-base sm:text-lg text-gray-800">{subject.name}</h3>
+                  <h3 className="font-bold text-base sm:text-lg text-gray-800">
+                    {subject.name}
+                  </h3>
                   <p className="text-sm text-gray-700">{subject.teacher}</p>
                 </div>
                 <div className="flex gap-2">
@@ -277,7 +320,7 @@ export default function SchedulePage() {
               <div className="flex gap-2 pt-2 border-t">
                 <button
                   onClick={() => handleEdit(subject)}
-                  className="flex-1 text-sm text-indigo-600 hover:text-indigo-800 font-medium py-1 rounded hover:bg-indigo-50 transition"
+                  className="flex-1 text-sm text-indigo-600 hover:bg-gray-600 font-medium py-1 rounded transition"
                 >
                   Изменить
                 </button>
@@ -295,24 +338,28 @@ export default function SchedulePage() {
       </div>
 
       {/* Add Button */}
-      {!showAddForm && (
+      {/* {!showAddForm && (
         <div className="mt-6 flex justify-center">
           <button
             onClick={() => setShowAddForm(true)}
-            className="flex items-center gap-2 px-6 py-3 bg-indigo-600 text-white font-semibold rounded-lg hover:bg-indigo-700 transition"
+            className="flex items-center gap-2 px-6 mb-6 py-3 bg-indigo-600 text-white font-semibold rounded-lg hover:bg-indigo-700 transition"
           >
             <Plus className="h-5 w-5" />
             Добавить пару
           </button>
         </div>
-      )}
+      )} */}
 
       {/* Empty State */}
       {filteredSubjects.length === 0 && !showAddForm && (
-        <div className="bg-white rounded-xl border p-8 sm:p-12 text-center">
+        <div className="bg-[#131313] rounded-xl border p-8 sm:p-12 text-center">
           <Calendar className="h-12 w-12 text-gray-300 mx-auto mb-4" />
-          <h3 className="text-lg sm:text-xl font-medium text-gray-700">Пар нет</h3>
-          <p className="text-gray-500 mt-2 text-sm sm:text-base">В этот день у вас нет занятий</p>
+          <h3 className="text-lg sm:text-xl font-medium text-white">
+            Пар нет
+          </h3>
+          <p className="text-gray-200 mt-2 text-sm sm:text-base">
+            В этот день у вас нет занятий
+          </p>
           <button
             onClick={() => setShowAddForm(true)}
             className="mt-4 px-4 sm:px-6 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 text-sm sm:text-base transition"

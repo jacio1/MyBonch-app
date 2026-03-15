@@ -20,10 +20,20 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "Мой Бонч",
   description: "Лучшее приложение для учебы!",
+  manifest: "/manifest.json",
   icons: {
-    icon: "/favicon.ico",
+    icon: [
+      { url: "/favicon.ico" },
+      { url: "/icons/icon-192x192.png", sizes: "192x192", type: "image/png" },
+      { url: "/icons/icon-512x512.png", sizes: "512x512", type: "image/png" },
+    ],
+    apple: [{ url: "/icons/icon-192x192.png" }],
   },
-  viewport: "width=device-width, initial-scale=1, maximum-scale=5",
+};
+export const viewport = {
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 5,
 };
 
 export default function RootLayout({
@@ -37,15 +47,19 @@ export default function RootLayout({
 
   return (
     <html lang="ru">
+      <head>
+        <meta name="theme-color" content="#2563eb" />
+        <link rel="manifest" href="/manifest.json" />
+      </head>
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+        className={`${geistSans.variable} ${geistMono.variable} antialiased   h-screen flex flex-col`}
       >
         <AuthProvider>
           <Header />
           <DataProvider>
-            <div className="flex flex-1 overflow-hidden min-h-screen pb-16 sm:pb-0">
+            <div className="flex flex-1 sm:pb-0 ">
               <Sidebar assignmentsCount={assignmentsCount} />
-              <main className="flex-1 overflow-auto bg-gray-50">
+              <main className="flex-1 bg-gray-50 overflow-auto">
                 {children}
               </main>
             </div>

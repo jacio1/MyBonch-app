@@ -1,7 +1,7 @@
-'use client';
+"use client";
 
-import { Mail, ArrowRight } from 'lucide-react';
-import Link from 'next/link';
+import { Mail, ArrowRight } from "lucide-react";
+import Link from "next/link";
 
 export default function CheckEmailPage() {
   return (
@@ -20,14 +20,15 @@ export default function CheckEmailPage() {
             Проверьте почту
           </h1>
           <p className="text-gray-600 text-center mb-6 text-sm sm:text-base">
-            Мы отправили письмо на ваш адрес электронной почты. 
-            Пожалуйста, проверьте папку входящих и перейдите по ссылке 
-            для подтверждения регистрации.
+            Мы отправили письмо на ваш адрес электронной почты. Пожалуйста,
+            проверьте папку входящих и перейдите по ссылке для подтверждения
+            регистрации.
           </p>
 
           <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
             <p className="text-blue-800 text-sm font-medium">
-              💡 Не получили письмо? Проверьте папку спама или попробуйте зарегистрироваться снова.
+              💡 Не получили письмо? Проверьте папку спама или попробуйте
+              зарегистрироваться снова.
             </p>
           </div>
 

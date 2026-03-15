@@ -41,7 +41,7 @@ export default function Sidebar({ assignmentsCount }: SidebarProps) {
   return (
     <>
       {/* Desktop Sidebar */}
-      <nav className="hidden sm:flex w-64 bg-white border-r flex-col p-6 space-y-8">
+      <nav className=" hidden sm:flex w-64 bg-white border-r flex-col p-6 space-y-8">
         <div className="space-y-2">
           <h2 className="text-xs uppercase text-gray-500 font-semibold tracking-wider">
             Навигация
@@ -55,7 +55,7 @@ export default function Sidebar({ assignmentsCount }: SidebarProps) {
                 key={item.href}
                 href={item.href}
                 className={`flex items-center space-x-3 w-full p-3 rounded-lg transition-all ${
-                  isActive ? 'bg-indigo-50 text-indigo-700' : 'hover:bg-gray-100'
+                  isActive ? 'bg-indigo-50 text-indigo-700' : 'hover:bg-gray-600'
                 }`}
               >
                 <Icon className="h-5 w-5" />
@@ -70,29 +70,9 @@ export default function Sidebar({ assignmentsCount }: SidebarProps) {
           })}
         </div>
 
-        <div className="space-y-2">
-          <h2 className="text-xs uppercase text-gray-500 font-semibold tracking-wider">
-            Быстрый доступ
-          </h2>
-          <button className="flex items-center space-x-3 w-full p-3 rounded-lg hover:bg-gray-100 transition text-left">
-            <Plus className="h-5 w-5 text-gray-500" />
-            <span className="text-sm font-medium">Добавить пары</span>
-          </button>
-          <button className="flex items-center space-x-3 w-full p-3 rounded-lg hover:bg-gray-100 transition text-left">
-            <Plus className="h-5 w-5 text-gray-500" />
-            <span className="text-sm font-medium">Добавить экзамены</span>
-          </button>
-          <button className="flex items-center space-x-3 w-full p-3 rounded-lg hover:bg-gray-100 transition text-left">
-            <Plus className="h-5 w-5 text-gray-500" />
-            <span className="text-sm font-medium">Добавить зачеты</span>
-          </button>
-          <button className="flex items-center space-x-3 w-full p-3 rounded-lg hover:bg-gray-100 transition text-left">
-            <Clock className="h-5 w-5 text-gray-500" />
-            <span className="text-sm font-medium">Ближайшие дедлайны</span>
-          </button>
-        </div>
 
-        <div className="mt-auto pt-6 border-t">
+
+        <div className="m pt-6 border-t">
           <div className="bg-gradient-to-r from-indigo-50 to-purple-50 rounded-xl p-4 mb-4">
             <p className="text-sm font-medium text-gray-800">До экзаменов</p>
             <p className="text-2xl font-bold text-indigo-700 mt-1">24 дня</p>
