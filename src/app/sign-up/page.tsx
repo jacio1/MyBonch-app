@@ -102,7 +102,7 @@ export default function SignUpPage() {
                   value={fullName}
                   onChange={(e) => setFullName(e.target.value)}
                   placeholder="Username"
-                  className="h-12 border input-base w-full pl-10 pr-4"
+                  className="h-12 rounded-xl border input-base w-full pl-10 pr-4"
                   disabled={loading}
                 />
               </div>
@@ -124,7 +124,7 @@ export default function SignUpPage() {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="you@example.com"
-                  className="h-12 border input-base w-full pl-10 pr-4"
+                  className="h-12 rounded-xl border input-base w-full pl-10 pr-4"
                   disabled={loading}
                 />
               </div>
@@ -146,7 +146,7 @@ export default function SignUpPage() {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="••••••••"
-                  className="h-12 border input-base w-full pl-10 pr-10"
+                  className="h-12 rounded-xl border input-base w-full pl-10 pr-10"
                   disabled={loading}
                 />
                 <button
@@ -180,7 +180,7 @@ export default function SignUpPage() {
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
                   placeholder="••••••••"
-                  className="h-12 border input-base w-full pl-10 pr-10"
+                  className="h-12 rounded-xl border input-base w-full pl-10 pr-10"
                   disabled={loading}
                 />
                 <button
