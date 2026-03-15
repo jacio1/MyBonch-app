@@ -54,10 +54,10 @@ export default function SignUpPage() {
   const displayError = localError || error;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-indigo-600 to-purple-600 dark:from-indigo-950 dark:to-purple-950 flex items-center justify-center p-4 sm:p-8">
-      <div className="w-full max-w-md">
+    <div className="h-full bg-[#0a0a0a]  flex items-center justify-center p-4 sm:p-8">
+      <div className="w-full max-w-md bg-[#131313] rounded-2xl">
         {/* Header */}
-        <div className="text-center mb-8">
+        <div className="text-center mt-8">
           <div className="flex justify-center mb-4">
             <div className="bg-white dark:bg-indigo-900 rounded-full p-3 sm:p-4">
               <BookOpen className="h-8 w-8 sm:h-10 sm:w-10 text-indigo-600 dark:text-indigo-400" />
@@ -92,7 +92,7 @@ export default function SignUpPage() {
                 htmlFor="fullName"
                 className="block text-sm font-medium text-primary mb-2"
               >
-                ФИО
+                Имя пользователя
               </label>
               <div className="relative">
                 <User className="absolute left-3 top-3 h-5 w-5 text-secondary" />
@@ -101,8 +101,8 @@ export default function SignUpPage() {
                   type="text"
                   value={fullName}
                   onChange={(e) => setFullName(e.target.value)}
-                  placeholder="Иван Иванов"
-                  className="input-base w-full pl-10 pr-4"
+                  placeholder="Username"
+                  className="h-12 input-base w-full pl-10 pr-4"
                   disabled={loading}
                 />
               </div>
@@ -124,7 +124,7 @@ export default function SignUpPage() {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="you@example.com"
-                  className="input-base w-full pl-10 pr-4"
+                  className="h-12 input-base w-full pl-10 pr-4"
                   disabled={loading}
                 />
               </div>
@@ -146,7 +146,7 @@ export default function SignUpPage() {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="••••••••"
-                  className="input-base w-full pl-10 pr-10"
+                  className="h-12 input-base w-full pl-10 pr-10"
                   disabled={loading}
                 />
                 <button
@@ -180,7 +180,7 @@ export default function SignUpPage() {
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
                   placeholder="••••••••"
-                  className="input-base w-full pl-10 pr-10"
+                  className="h-12 input-base w-full pl-10 pr-10"
                   disabled={loading}
                 />
                 <button
@@ -201,7 +201,7 @@ export default function SignUpPage() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full btn-primary disabled:opacity-50 disabled:cursor-not-allowed text-sm sm:text-base"
+              className="bg-indigo-600 hover:bg-indigo-800 rounded-2xl h-12 w-full btn-primary disabled:opacity-50 disabled:cursor-not-allowed text-sm sm:text-base"
             >
               {loading ? "Регистрация..." : "Зарегистрироваться"}
             </button>
@@ -210,13 +210,9 @@ export default function SignUpPage() {
           {/* Divider */}
           <div className="my-6 relative">
             <div className="absolute inset-0 flex items-center">
-              <div className="w-full border-t border-[var(--color-border)]"></div>
+              <div className="w-full border-t"></div>
             </div>
-            <div className="relative flex justify-center text-sm">
-              <span className="px-2 bg-[var(--color-card)] text-secondary">
-                или
-              </span>
-            </div>
+            <div className="relative flex justify-center text-sm"></div>
           </div>
 
           {/* Sign In Link */}
