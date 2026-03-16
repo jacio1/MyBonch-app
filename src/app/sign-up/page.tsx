@@ -104,6 +104,7 @@ export default function SignUpPage() {
                   placeholder="Username"
                   className="h-12 rounded-xl border input-base w-full pl-10 pr-4"
                   disabled={loading}
+                  maxLength={15}
                 />
               </div>
             </div>
