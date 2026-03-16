@@ -5,9 +5,9 @@ import Link from "next/link";
 
 export default function CheckEmailPage() {
   return (
-    <div className="min-h-screen bg-gradient-to-br from-indigo-600 to-purple-600 flex items-center justify-center p-4">
+    <div className="min-h-screen  flex items-center justify-center p-4">
       <div className="w-full max-w-md">
-        <div className="bg-white rounded-2xl shadow-2xl p-6 sm:p-8">
+        <div className="bg-[#131313] rounded-2xl shadow-2xl p-6 sm:p-8">
           {/* Icon */}
           <div className="flex justify-center mb-6">
             <div className="bg-indigo-100 rounded-full p-4">
@@ -16,10 +16,10 @@ export default function CheckEmailPage() {
           </div>
 
           {/* Content */}
-          <h1 className="text-2xl sm:text-3xl font-bold text-gray-800 text-center mb-4">
+          <h1 className="text-2xl sm:text-3xl font-bold text-white text-center mb-4">
             Проверьте почту
           </h1>
-          <p className="text-gray-600 text-center mb-6 text-sm sm:text-base">
+          <p className="text-gray-200 text-center mb-6 text-sm sm:text-base">
             Мы отправили письмо на ваш адрес электронной почты. Пожалуйста,
             проверьте папку входящих и перейдите по ссылке для подтверждения
             регистрации.
