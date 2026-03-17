@@ -22,7 +22,7 @@ export default function Header() {
   const userName = user?.user_metadata?.full_name || user?.email || 'Пользователь';
 
   return (
-    <header className="bg-white shadow-sm border-b px-4 sm:px-6 py-4">
+    <header className="bg-white shadow-sm border-[#282829] border-b px-4 sm:px-6 py-4">
       <div className="flex justify-between items-center">
         {/* Logo */}
         <div className="flex items-center space-x-2 sm:space-x-3">

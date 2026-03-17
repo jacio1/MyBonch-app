@@ -256,7 +256,7 @@ export default function NotesPage() {
                     </span>
                   )}
                 </p>
-                <div className="text-white whitespace-pre-wrap">
+                <div className="text-white wrap-break-word">
                   {formData.content}
                 </div>
               </div>

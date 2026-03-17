@@ -41,7 +41,7 @@ export default function Sidebar({ assignmentsCount }: SidebarProps) {
   return (
     <>
       {/* Desktop Sidebar */}
-      <nav className=" hidden sm:flex w-64 bg-white border-r flex-col p-6 space-y-8">
+      <nav className=" hidden sm:flex w-64 bg-white border-[#282829] border-r flex-col p-6 space-y-8">
         <div className="space-y-2">
           <h2 className="text-xs uppercase text-gray-500 font-semibold tracking-wider">
             Навигация
