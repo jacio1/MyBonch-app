@@ -1,101 +1,201 @@
-"use client";
+'use client';
 
-import { useState } from "react";
+import { useState, useMemo } from 'react';
 import {
   Calendar,
   Clock,
-  Home,
-  MoreVertical,
+  MapPin,
+  ChevronLeft,
+  ChevronRight,
   Plus,
-  Loader,
   X,
   Save,
   Trash2,
-} from "lucide-react";
-import { useAuth } from "@/src/lib/AuthContext";
-import { Subject } from "@/src/types";
-import { useData } from "@/src/lib/DataContext";
+  Loader,
+  Copy,
+} from 'lucide-react';
+import { useData } from '@/src/lib/DataContext';
+import { useAuth } from '@/src/lib/AuthContext';
+
+const DAYS_RU = ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс'];
+const COLORS = [
+  'bg-blue-100',
+  'bg-green-100',
+  'bg-purple-100',
+  'bg-yellow-100',
+  'bg-red-100',
+  'bg-pink-100',
+  'bg-orange-100',
+];
 
 export default function SchedulePage() {
   const { user, loading: authLoading } = useAuth();
-  const { subjects, loading, error, addSubject, updateSubject, deleteSubject } =
-    useData();
-  const [selectedDay, setSelectedDay] = useState<string>("Пн");
-  const [showAddForm, setShowAddForm] = useState(false);
-  const [editingId, setEditingId] = useState<number | null>(null);
-  const [formData, setFormData] = useState<Omit<Subject, "id">>({
-    name: "",
-    teacher: "",
-    room: "",
-    time: "",
-    day: "Пн",
-    color: "bg-blue-100",
+  const {
+    schedules,
+    presets,
+    studyPeriods,
+    activeStudyPeriod,
+    loading,
+    error,
+    addSchedule,
+    deleteSchedule,
+    createStudyPeriod,
+    setActiveStudyPeriod,
+    applyPreset,
+  } = useData();
+
+  const [currentWeekStart, setCurrentWeekStart] = useState<Date>(() => {
+    const today = new Date();
+    const day = today.getDay();
+    const diff = today.getDate() - (day === 0 ? 6 : day - 1);
+    const date = new Date(today.setDate(diff));
+    return date;
   });
+
+  const [showAddPeriod, setShowAddPeriod] = useState(false);
+  const [showAddSchedule, setShowAddSchedule] = useState(false);
+  const [showApplyPreset, setShowApplyPreset] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const days = ["Пн", "Вт", "Ср", "Чт", "Пт", "Сб"];
-const colors = [
-  { value: "bg-blue-100", label: "Голубой" },
-  { value: "bg-green-100", label: "Зеленый" },
-  { value: "bg-purple-100", label: "Фиолетовый" },
-  { value: "bg-yellow-100", label: "Желтый" },
-  { value: "bg-red-100", label: "Красный" },
-  { value: "bg-pink-100", label: "Розовый" },
-];
+  const [periodForm, setPeriodForm] = useState({
+    name: '',
+    start_date: '',
+    end_date: '',
+  });
 
-  const resetForm = () => {
-    setFormData({
-      name: "",
-      teacher: "",
-      room: "",
-      time: "",
-      day: "Пн",
-      color: "bg-blue-100",
+  const [scheduleForm, setScheduleForm] = useState({
+    date: '',
+    subject_name: '',
+    start_time: '09:00',
+    end_time: '10:35',
+    room: '',
+    color: COLORS[0],
+  });
+
+  const [applyPresetForm, setApplyPresetForm] = useState({
+    preset_id: '',
+    start_date: '',
+  });
+
+  // Получаем дни текущей недели
+  const weekDays = useMemo(() => {
+    const days = [];
+    for (let i = 0; i < 7; i++) {
+      const date = new Date(currentWeekStart);
+      date.setDate(date.getDate() + i);
+      days.push(date);
+    }
+    return days;
+  }, [currentWeekStart]);
+
+  // Расписание на текущую неделю
+  const weekSchedules = useMemo(() => {
+    const start = weekDays[0].toISOString().split('T')[0];
+    const end = weekDays[6].toISOString().split('T')[0];
+    return schedules.filter((s) => s.date >= start && s.date <= end).sort((a, b) => {
+      const dateA = new Date(`2000-01-01 ${a.start_time}`);
+      const dateB = new Date(`2000-01-01 ${b.start_time}`);
+      return dateA.getTime() - dateB.getTime();
     });
-    setEditingId(null);
-    setShowAddForm(false);
+  }, [weekDays, schedules]);
+
+  const schedulesByDate = useMemo(() => {
+    const grouped: { [key: string]: typeof schedules } = {};
+    weekSchedules.forEach((schedule) => {
+      if (!grouped[schedule.date]) {
+        grouped[schedule.date] = [];
+      }
+      grouped[schedule.date].push(schedule);
+    });
+    return grouped;
+  }, [weekSchedules]);
+
+  const canGoNext = () => {
+    if (!activeStudyPeriod) return false;
+    const nextWeekEnd = new Date(currentWeekStart);
+    nextWeekEnd.setDate(nextWeekEnd.getDate() + 13);
+    return nextWeekEnd <= new Date(activeStudyPeriod.end_date);
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleCreatePeriod = async (e: React.FormEvent) => {
     e.preventDefault();
-    setIsSubmitting(true);
+    if (!periodForm.name || !periodForm.start_date || !periodForm.end_date) {
+      alert('Заполните все поля');
+      return;
+    }
 
     try {
-      if (editingId) {
-        await updateSubject(editingId, formData);
-      } else {
-        await addSubject(formData);
-      }
-      resetForm();
-    } catch (error) {
-      console.error("Error saving subject:", error);
-      alert("Ошибка сохранения. Попробуйте снова.");
+      setIsSubmitting(true);
+      await createStudyPeriod({
+        name: periodForm.name,
+        start_date: periodForm.start_date,
+        end_date: periodForm.end_date,
+        is_active: true,
+      });
+      setPeriodForm({ name: '', start_date: '', end_date: '' });
+      setShowAddPeriod(false);
+    } catch (err) {
+      console.error('Error:', err);
+      alert('Ошибка при создании периода');
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  const handleEdit = (subject: Subject) => {
-    setFormData({
-      name: subject.name,
-      teacher: subject.teacher,
-      room: subject.room,
-      time: subject.time,
-      day: subject.day,
-      color: subject.color,
-    });
-    setEditingId(subject.id);
-    setShowAddForm(true);
+  const handleAddSchedule = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!activeStudyPeriod) {
+      alert('Выберите период обучения');
+      return;
+    }
+
+    try {
+      setIsSubmitting(true);
+      await addSchedule({
+        user_id: user!.id,
+        subject_name: scheduleForm.subject_name,
+        date: scheduleForm.date,
+        start_time: scheduleForm.start_time,
+        end_time: scheduleForm.end_time,
+        room: scheduleForm.room,
+        color: scheduleForm.color,
+        study_period_id: activeStudyPeriod.id,
+      });
+      setScheduleForm({
+        date: '',
+        subject_name: '',
+        start_time: '09:00',
+        end_time: '10:35',
+        room: '',
+        color: COLORS[0],
+      });
+      setShowAddSchedule(false);
+    } catch (err) {
+      console.error('Error:', err);
+      alert('Ошибка при добавлении пары');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
-  const handleDelete = async (id: number) => {
-    if (confirm("Вы уверены, что хотите удалить эту пару?")) {
-      try {
-        await deleteSubject(id);
-      } catch (error) {
-        console.error("Error deleting subject:", error);
-        alert("Ошибка удаления. Попробуйте снова.");
-      }
+  const handleApplyPreset = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!applyPresetForm.preset_id || !applyPresetForm.start_date) {
+      alert('Выберите пресет и дату');
+      return;
+    }
+
+    try {
+      setIsSubmitting(true);
+      await applyPreset(Number(applyPresetForm.preset_id), applyPresetForm.start_date);
+      setApplyPresetForm({ preset_id: '', start_date: '' });
+      setShowApplyPreset(false);
+      alert('Пресет успешно применен!');
+    } catch (err) {
+      console.error('Error:', err);
+      alert('Ошибка при применении пресета');
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -118,159 +218,97 @@ const colors = [
     );
   }
 
-  const filteredSubjects = subjects.filter((s) => s.day === selectedDay);
-
   return (
     <div className="p-4 sm:p-8">
       {/* Header */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
         <div>
-          <h2 className="text-2xl sm:text-3xl font-bold text-white">
-            Расписание занятий
-          </h2>
-          <p className="text-gray-200 text-sm sm:text-base">3 семестр</p>
+          <h2 className="text-2xl sm:text-3xl font-bold text-gray-800">Расписание</h2>
+          {activeStudyPeriod ? (
+            <p className="text-gray-500 text-sm sm:text-base">
+              {activeStudyPeriod.name} ({new Date(activeStudyPeriod.start_date).toLocaleDateString('ru-RU')} - {new Date(activeStudyPeriod.end_date).toLocaleDateString('ru-RU')})
+            </p>
+          ) : (
+            <p className="text-amber-600 text-sm sm:text-base font-medium">Создайте период обучения</p>
+          )}
         </div>
-        <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto ">
-          <button className="px-3 sm:px-4 py-2 bg-indigo-600 rounded-lg hover:bg-indigo-800 text-sm sm:text-base transition ">
-            Неделя
-          </button>
-          <button className="px-3 sm:px-4 py-2 bg-indigo-600  rounded-lg hover:bg-indigo-800 text-sm sm:text-base transition">
-            Месяц
-          </button>
-          <button className="px-3 sm:px-4 py-2 bg-indigo-600 rounded-lg hover:bg-indigo-800 text-sm sm:text-base transition">
-            Семестр
-          </button>
-        </div>
-      </div>
-
-      {/* Day Selection */}
-      <div className="flex gap-2 mb-6 overflow-x-auto pb-2">
-        {days.map((day) => (
+        <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
           <button
-            key={day}
-            onClick={() => setSelectedDay(day)}
-            className={`px-4 sm:px-6 py-2 sm:py-3 rounded-lg font-medium whitespace-nowrap transition text-sm sm:text-base ${
-              selectedDay === day
-                ? "bg-indigo-600 text-white"
-                : "bg-[#0A0A0A] border hover:bg-[#1c1c1c]"
-            }`}
+            onClick={() => setShowAddPeriod(true)}
+            className="flex items-center justify-center gap-2 px-4 sm:px-6 py-2 sm:py-3 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 text-sm sm:text-base transition"
           >
-            {day}
+            <Plus className="h-4 w-4" />
+            Новый период
           </button>
-        ))}
+          {activeStudyPeriod && (
+            <>
+              <button
+                onClick={() => setShowAddSchedule(true)}
+                className="flex items-center justify-center gap-2 px-4 sm:px-6 py-2 sm:py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 text-sm sm:text-base transition"
+              >
+                <Plus className="h-4 w-4" />
+                Добавить пару
+              </button>
+              {presets.length > 0 && (
+                <button
+                  onClick={() => setShowApplyPreset(true)}
+                  className="flex items-center justify-center gap-2 px-4 sm:px-6 py-2 sm:py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm sm:text-base transition"
+                >
+                  <Copy className="h-4 w-4" />
+                  Пресет
+                </button>
+              )}
+            </>
+          )}
+        </div>
       </div>
 
-      {/* Add Form */}
-      {showAddForm && (
-        <div className="bg-[#131313] rounded-xl border p-4 sm:p-6 mb-6">
+      {/* Create Period Form */}
+      {showAddPeriod && (
+        <div className="bg-white rounded-xl border p-4 sm:p-6 mb-6">
           <div className="flex justify-between items-center mb-4">
-            <h3 className="text-lg font-bold text-white">
-              {editingId ? "Редактировать пару" : "Добавить новую пару"}
-            </h3>
-            <button
-              onClick={resetForm}
-              className="p-1 hover:bg-gray-100 rounded-lg transition"
-            >
+            <h3 className="text-lg font-bold text-gray-800">Новый период обучения</h3>
+            <button onClick={() => setShowAddPeriod(false)} className="p-1 hover:bg-gray-100 rounded">
               <X className="h-5 w-5" />
             </button>
           </div>
 
-          <form onSubmit={handleSubmit} className="space-y-4">
+          <form onSubmit={handleCreatePeriod} className="space-y-4">
+            <input
+              type="text"
+              placeholder="Название периода"
+              value={periodForm.name}
+              onChange={(e) => setPeriodForm({ ...periodForm, name: e.target.value })}
+              className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-600"
+              required
+            />
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              {/* Subject Name */}
-              <input
-                type="text"
-                placeholder="Название предмета"
-                value={formData.name}
-                onChange={(e) =>
-                  setFormData({ ...formData, name: e.target.value })
-                }
-                className="px-4 py-2 border rounded-lg focus:outline-none focus:ring-2"
-                required
-              />
-
-              {/* Teacher */}
-              <input
-                type="text"
-                placeholder="Преподаватель"
-                value={formData.teacher}
-                onChange={(e) =>
-                  setFormData({ ...formData, teacher: e.target.value })
-                }
-                className="px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 "
-              />
-
-              {/* Room */}
-              <input
-                type="text"
-                placeholder="Аудитория"
-                value={formData.room}
-                onChange={(e) =>
-                  setFormData({ ...formData, room: e.target.value })
-                }
-                className="px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 "
-              />
-
-              {/* Time */}
-              <input
-                type="text"
-                placeholder="Время (9:00-10:35)"
-                value={formData.time}
-                onChange={(e) =>
-                  setFormData({ ...formData, time: e.target.value })
-                }
-                className="px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 "
-              />
-
-              {/* Day */}
-              <select
-                value={formData.day}
-                onChange={(e) =>
-                  setFormData({ ...formData, day: e.target.value })
-                }
-                className="px-4 bg-[#131313] py-2 border rounded-lg focus:outline-none focus:ring-2 "
-              >
-                {days.map((day) => (
-                  <option key={day} value={day}>
-                    {day}
-                  </option>
-                ))}
-              </select>
-
-              {/* Color */}
-              <select
-                value={formData.color}
-                onChange={(e) =>
-                  setFormData({ ...formData, color: e.target.value })
-                }
-                className="px-4 bg-[#131313] py-2 border rounded-lg focus:outline-none focus:ring-2 "
-              >
-                {colors.map((color) => (
-                  <option key={color.value} value={color.value}>
-                    {color.label}
-                  </option>
-                ))}
-              </select>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Начало</label>
+                <input
+                  type="date"
+                  value={periodForm.start_date}
+                  onChange={(e) => setPeriodForm({ ...periodForm, start_date: e.target.value })}
+                  className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-600"
+                  required
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Конец</label>
+                <input
+                  type="date"
+                  value={periodForm.end_date}
+                  onChange={(e) => setPeriodForm({ ...periodForm, end_date: e.target.value })}
+                  className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-600"
+                  required
+                />
+              </div>
             </div>
-
-            <div className="flex gap-2 pt-4">
-              <button
-                type="submit"
-                disabled={isSubmitting}
-                className="flex-1 bg-indigo-600 text-white font-semibold py-2 rounded-lg hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed transition flex items-center justify-center gap-2"
-              >
-                <Save className="h-4 w-4" />
-                {isSubmitting
-                  ? "Сохраняем..."
-                  : editingId
-                    ? "Обновить"
-                    : "Добавить"}
+            <div className="flex gap-2">
+              <button type="submit" disabled={isSubmitting} className="flex-1 bg-indigo-600 text-white py-2 rounded-lg hover:bg-indigo-700 disabled:opacity-50">
+                Создать
               </button>
-              <button
-                type="button"
-                onClick={resetForm}
-                className="flex-1 bg-gray-200 text-gray-800 font-semibold py-2 rounded-lg hover:bg-gray-300 transition"
-              >
+              <button type="button" onClick={() => setShowAddPeriod(false)} className="flex-1 bg-gray-200 text-gray-800 py-2 rounded-lg">
                 Отмена
               </button>
             </div>
@@ -278,95 +316,250 @@ const colors = [
         </div>
       )}
 
-      {/* Subjects Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
-        {filteredSubjects.map((subject) => (
-          <div
-            key={subject.id}
-            className="bg-[#1c1c1c] rounded-xl border overflow-hidden hover:shadow-md transition-shadow"
-          >
-            <div className={`p-3 sm:p-4 ${subject.color}`}>
-              <div className="flex justify-between items-start">
-                <div className="flex-1">
-                  <h3 className="font-bold text-base sm:text-lg text-gray-800">
-                    {subject.name}
-                  </h3>
-                  <p className="text-sm text-gray-700">{subject.teacher}</p>
-                </div>
-                <div className="flex gap-2">
-                  <button
-                    onClick={() => handleEdit(subject)}
-                    className="p-1 hover:bg-white hover:bg-opacity-50 rounded transition"
-                    title="Редактировать"
-                  >
-                    <MoreVertical className="h-4 w-4 sm:h-5 sm:w-5 text-gray-600" />
-                  </button>
-                </div>
-              </div>
-            </div>
-            <div className="p-3 sm:p-4 space-y-4">
-              <div className="flex items-center justify-between text-xs sm:text-sm flex-wrap gap-2">
-                <div className="flex items-center gap-2 sm:gap-4">
-                  <span className="flex items-center whitespace-nowrap">
-                    <Clock className="h-3 w-3 sm:h-4 sm:w-4 mr-1" />
-                    {subject.time}
-                  </span>
-                  <span className="flex items-center whitespace-nowrap">
-                    <Home className="h-3 w-3 sm:h-4 sm:w-4 mr-1" />
-                    {subject.room}
-                  </span>
-                </div>
-              </div>
-              <div className="flex gap-2 pt-2 border-t">
-                <button
-                  onClick={() => handleEdit(subject)}
-                  className="flex-1 text-sm text-indigo-600 hover:bg-gray-600 font-medium py-1 rounded transition"
-                >
-                  Изменить
-                </button>
-                <button
-                  onClick={() => handleDelete(subject.id)}
-                  className="flex-1 text-sm text-red-600 hover:text-red-800 font-medium py-1 rounded hover:bg-red-50 transition"
-                >
-                  <Trash2 className="h-4 w-4 inline mr-1" />
-                  Удалить
-                </button>
-              </div>
-            </div>
+      {/* Add Schedule Form */}
+      {showAddSchedule && activeStudyPeriod && (
+        <div className="bg-white rounded-xl border p-4 sm:p-6 mb-6">
+          <div className="flex justify-between items-center mb-4">
+            <h3 className="text-lg font-bold text-gray-800">Добавить пару</h3>
+            <button onClick={() => setShowAddSchedule(false)} className="p-1 hover:bg-gray-100 rounded">
+              <X className="h-5 w-5" />
+            </button>
           </div>
-        ))}
-      </div>
 
-      {/* Add Button */}
-      {/* {!showAddForm && (
-        <div className="mt-6 flex justify-center">
-          <button
-            onClick={() => setShowAddForm(true)}
-            className="flex items-center gap-2 px-6 mb-6 py-3 bg-indigo-600 text-white font-semibold rounded-lg hover:bg-indigo-700 transition"
-          >
-            <Plus className="h-5 w-5" />
-            Добавить пару
-          </button>
+          <form onSubmit={handleAddSchedule} className="space-y-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Дата</label>
+                <input
+                  type="date"
+                  value={scheduleForm.date}
+                  onChange={(e) => setScheduleForm({ ...scheduleForm, date: e.target.value })}
+                  min={activeStudyPeriod.start_date}
+                  max={activeStudyPeriod.end_date}
+                  className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-600"
+                  required
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Предмет</label>
+                <input
+                  type="text"
+                  placeholder="Название"
+                  value={scheduleForm.subject_name}
+                  onChange={(e) => setScheduleForm({ ...scheduleForm, subject_name: e.target.value })}
+                  className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-600"
+                  required
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Начало</label>
+                <input
+                  type="time"
+                  value={scheduleForm.start_time}
+                  onChange={(e) => setScheduleForm({ ...scheduleForm, start_time: e.target.value })}
+                  className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-600"
+                  required
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Конец</label>
+                <input
+                  type="time"
+                  value={scheduleForm.end_time}
+                  onChange={(e) => setScheduleForm({ ...scheduleForm, end_time: e.target.value })}
+                  className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-600"
+                  required
+                />
+              </div>
+              <div className="sm:col-span-2">
+                <label className="block text-sm font-medium text-gray-700 mb-1">Аудитория</label>
+                <input
+                  type="text"
+                  placeholder="Например: 101"
+                  value={scheduleForm.room}
+                  onChange={(e) => setScheduleForm({ ...scheduleForm, room: e.target.value })}
+                  className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-600"
+                />
+              </div>
+              <div className="sm:col-span-2">
+                <label className="block text-sm font-medium text-gray-700 mb-1">Цвет</label>
+                <div className="flex gap-2 flex-wrap">
+                  {COLORS.map((color) => (
+                    <button
+                      key={color}
+                      type="button"
+                      onClick={() => setScheduleForm({ ...scheduleForm, color })}
+                      className={`w-8 h-8 rounded-lg border-2 ${color} ${
+                        scheduleForm.color === color ? 'border-gray-800' : 'border-transparent'
+                      }`}
+                    />
+                  ))}
+                </div>
+              </div>
+            </div>
+            <div className="flex gap-2">
+              <button type="submit" disabled={isSubmitting} className="flex-1 bg-green-600 text-white py-2 rounded-lg hover:bg-green-700 disabled:opacity-50">
+                Добавить пару
+              </button>
+              <button type="button" onClick={() => setShowAddSchedule(false)} className="flex-1 bg-gray-200 text-gray-800 py-2 rounded-lg">
+                Отмена
+              </button>
+            </div>
+          </form>
         </div>
-      )} */}
+      )}
 
-      {/* Empty State */}
-      {filteredSubjects.length === 0 && !showAddForm && (
-        <div className="bg-[#131313] rounded-xl border p-8 sm:p-12 text-center">
-          <Calendar className="h-12 w-12 text-gray-300 mx-auto mb-4" />
-          <h3 className="text-lg sm:text-xl font-medium text-white">
-            Пар нет
-          </h3>
-          <p className="text-gray-200 mt-2 text-sm sm:text-base">
-            В этот день у вас нет занятий
-          </p>
-          <button
-            onClick={() => setShowAddForm(true)}
-            className="mt-4 px-4 sm:px-6 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 text-sm sm:text-base transition"
-          >
-            Добавить пару
-          </button>
+      {/* Apply Preset Form */}
+      {showApplyPreset && (
+        <div className="bg-white rounded-xl border p-4 sm:p-6 mb-6">
+          <div className="flex justify-between items-center mb-4">
+            <h3 className="text-lg font-bold text-gray-800">Применить пресет</h3>
+            <button onClick={() => setShowApplyPreset(false)} className="p-1 hover:bg-gray-100 rounded">
+              <X className="h-5 w-5" />
+            </button>
+          </div>
+
+          <form onSubmit={handleApplyPreset} className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Пресет</label>
+              <select
+                value={applyPresetForm.preset_id}
+                onChange={(e) => setApplyPresetForm({ ...applyPresetForm, preset_id: e.target.value })}
+                className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-600"
+                required
+              >
+                <option value="">Выберите пресет</option>
+                {presets.map((preset) => (
+                  <option key={preset.id} value={preset.id}>
+                    {preset.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Начиная с</label>
+              <input
+                type="date"
+                value={applyPresetForm.start_date}
+                onChange={(e) => setApplyPresetForm({ ...applyPresetForm, start_date: e.target.value })}
+                min={activeStudyPeriod?.start_date}
+                max={activeStudyPeriod?.end_date}
+                className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-600"
+                required
+              />
+            </div>
+            <div className="flex gap-2">
+              <button type="submit" disabled={isSubmitting} className="flex-1 bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 disabled:opacity-50">
+                Применить пресет
+              </button>
+              <button type="button" onClick={() => setShowApplyPreset(false)} className="flex-1 bg-gray-200 text-gray-800 py-2 rounded-lg">
+                Отмена
+              </button>
+            </div>
+          </form>
         </div>
+      )}
+
+      {/* No Period Warning */}
+      {!activeStudyPeriod && (
+        <div className="bg-amber-50 border border-amber-200 rounded-lg p-4 mb-6 text-center">
+          <p className="text-amber-800 font-medium">Создайте период обучения для начала работы с расписанием</p>
+        </div>
+      )}
+
+      {/* Week Navigation */}
+      {activeStudyPeriod && (
+        <>
+          <div className="flex flex-col sm:flex-row justify-between items-center gap-4 mb-6">
+            <button
+              onClick={() => {
+                const newDate = new Date(currentWeekStart);
+                newDate.setDate(newDate.getDate() - 7);
+                setCurrentWeekStart(newDate);
+              }}
+              className="flex items-center gap-2 px-4 py-2 bg-white border rounded-lg hover:bg-gray-50 transition"
+            >
+              <ChevronLeft className="h-4 w-4" />
+              Пред. неделя
+            </button>
+
+            <h3 className="font-semibold text-gray-800 text-center">
+              {weekDays[0].toLocaleDateString('ru-RU', { day: 'numeric', month: 'short' })} -{' '}
+              {weekDays[6].toLocaleDateString('ru-RU', { day: 'numeric', month: 'short', year: 'numeric' })}
+            </h3>
+
+            <button
+              onClick={() => {
+                const newDate = new Date(currentWeekStart);
+                newDate.setDate(newDate.getDate() + 7);
+                setCurrentWeekStart(newDate);
+              }}
+              disabled={!canGoNext()}
+              className="flex items-center gap-2 px-4 py-2 bg-white border rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition"
+            >
+              След. неделя
+              <ChevronRight className="h-4 w-4" />
+            </button>
+          </div>
+
+          {/* Week Schedule */}
+          <div className="space-y-6">
+            {weekDays.map((day) => {
+              const dateStr = day.toISOString().split('T')[0];
+              const daySchedules = schedulesByDate[dateStr] || [];
+              const dayName = DAYS_RU[day.getDay() === 0 ? 6 : day.getDay() - 1];
+
+              return (
+                <div key={dateStr}>
+                  <h3 className="font-bold text-lg text-gray-800 mb-3">
+                    {dayName}, {day.toLocaleDateString('ru-RU')}
+                  </h3>
+
+                  {daySchedules.length > 0 ? (
+                    <div className="space-y-3">
+                      {daySchedules.map((schedule) => (
+                        <div
+                          key={schedule.id}
+                          className={`${schedule.color} rounded-lg border p-4 hover:shadow-md transition`}
+                        >
+                          <div className="flex justify-between items-start">
+                            <div className="flex-1">
+                              <h4 className="font-bold text-gray-800 text-lg">
+                                {schedule.subject_name}
+                              </h4>
+                              <div className="flex flex-col sm:flex-row gap-2 sm:gap-4 mt-2 text-sm text-gray-700">
+                                <span className="flex items-center gap-1">
+                                  <Clock className="h-4 w-4" />
+                                  {schedule.start_time} - {schedule.end_time}
+                                </span>
+                                {schedule.room && (
+                                  <span className="flex items-center gap-1">
+                                    <MapPin className="h-4 w-4" />
+                                    {schedule.room}
+                                  </span>
+                                )}
+                              </div>
+                            </div>
+                            <button
+                              onClick={() => deleteSchedule(schedule.id)}
+                              className="p-2 text-gray-600 hover:text-red-600 hover:bg-red-50 rounded transition ml-2 flex-shrink-0"
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="bg-gray-100 rounded-lg p-4 text-center text-gray-500 text-sm">
+                      Нет пар
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        </>
       )}
 
       {error && (

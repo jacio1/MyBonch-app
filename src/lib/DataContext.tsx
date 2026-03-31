@@ -3,31 +3,57 @@
 import React, { createContext, useContext, useEffect, useState, useCallback } from 'react';
 import { supabase } from './supabase';
 import { useAuth } from './AuthContext';
-import { Assignment, Note, Subject } from '@/src/types';
+import { Assignment, Note, Schedule, Preset, StudyPeriod, PresetSchedule } from '@/src/types';
 
 interface DataContextType {
-  subjects: Subject[];
+  // Study Periods
+  studyPeriods: StudyPeriod[];
+  activeStudyPeriod: StudyPeriod | null;
+  createStudyPeriod: (period: Omit<StudyPeriod, 'id'>) => Promise<StudyPeriod>;
+  updateStudyPeriod: (id: number, period: Partial<StudyPeriod>) => Promise<StudyPeriod>;
+  deleteStudyPeriod: (id: number) => Promise<void>;
+  setActiveStudyPeriod: (id: number) => Promise<void>;
+
+  // Schedules
+  schedules: Schedule[];
+  addSchedule: (schedule: Omit<Schedule, 'id'>) => Promise<Schedule>;
+  updateSchedule: (id: number, schedule: Partial<Schedule>) => Promise<Schedule>;
+  deleteSchedule: (id: number) => Promise<void>;
+  getSchedulesByDateRange: (startDate: string, endDate: string) => Schedule[];
+
+  // Presets
+  presets: Preset[];
+  addPreset: (preset: Omit<Preset, 'id'>) => Promise<Preset>;
+  updatePreset: (id: number, preset: Partial<Preset>) => Promise<Preset>;
+  deletePreset: (id: number) => Promise<void>;
+  addPresetSchedule: (presetId: number, schedule: Omit<PresetSchedule, 'id'>) => Promise<PresetSchedule>;
+  deletePresetSchedule: (scheduleId: number) => Promise<void>;
+  applyPreset: (presetId: number, startDate: string) => Promise<void>;
+
+  // Assignments
   assignments: Assignment[];
-  notes: Note[];
-  loading: boolean;
-  error: string | null;
-  addSubject: (subject: Omit<Subject, 'id'>) => Promise<Subject>;
-  updateSubject: (id: number, subject: Partial<Subject>) => Promise<Subject>;
-  deleteSubject: (id: number) => Promise<void>;
   addAssignment: (assignment: Omit<Assignment, 'id'>) => Promise<Assignment>;
   updateAssignment: (id: number, assignment: Partial<Assignment>) => Promise<Assignment>;
   deleteAssignment: (id: number) => Promise<void>;
+
+  // Notes
+  notes: Note[];
   addNote: (note: Omit<Note, 'id'>) => Promise<Note>;
   updateNote: (id: number, note: Partial<Note>) => Promise<Note>;
   deleteNote: (id: number) => Promise<void>;
+
+  // Loading
+  loading: boolean;
+  error: string | null;
 }
 
 const DataContext = createContext<DataContextType | undefined>(undefined);
 
-// Глобальный кеш данных
 let cachedData = {
   userId: null as string | null,
-  subjects: null as Subject[] | null,
+  studyPeriods: null as StudyPeriod[] | null,
+  schedules: null as Schedule[] | null,
+  presets: null as Preset[] | null,
   assignments: null as Assignment[] | null,
   notes: null as Note[] | null,
   loading: false,
@@ -36,53 +62,66 @@ let cachedData = {
 
 export function DataProvider({ children }: { children: React.ReactNode }) {
   const { user } = useAuth();
-  const [subjects, setSubjects] = useState<Subject[]>([]);
+  const [studyPeriods, setStudyPeriods] = useState<StudyPeriod[]>([]);
+  const [activeStudyPeriod, setActiveStudyPeriod] = useState<StudyPeriod | null>(null);
+  const [schedules, setSchedules] = useState<Schedule[]>([]);
+  const [presets, setPresets] = useState<Preset[]>([]);
   const [assignments, setAssignments] = useState<Assignment[]>([]);
   const [notes, setNotes] = useState<Note[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // ГЛАВНОЕ: загружаем данные ТОЛЬКО при изменении user, и ОДИН РАЗ
+  // Загрузка данных
   useEffect(() => {
     if (!user) {
       cachedData = {
         userId: null,
-        subjects: null,
+        studyPeriods: null,
+        schedules: null,
+        presets: null,
         assignments: null,
         notes: null,
         loading: false,
         loadPromise: null,
       };
-      setSubjects([]);
+      setStudyPeriods([]);
+      setActiveStudyPeriod(null);
+      setSchedules([]);
+      setPresets([]);
       setAssignments([]);
       setNotes([]);
       setLoading(false);
       return;
     }
 
-    // Если уже загружали для этого пользователя - используем кеш
-    if (cachedData.userId === user.id && cachedData.subjects !== null) {
+    if (cachedData.userId === user.id && cachedData.studyPeriods !== null) {
       console.log('💾 Используем кешированные данные');
-      setSubjects(cachedData.subjects);
-      setAssignments(cachedData.assignments ?? []);
-      setNotes(cachedData.notes ?? []);
+      setStudyPeriods(cachedData.studyPeriods);
+      setSchedules(cachedData.schedules || []);
+      setPresets(cachedData.presets || []);
+      setAssignments(cachedData.assignments || []);
+      setNotes(cachedData.notes || []);
+      const active = cachedData.studyPeriods.find((p) => p.is_active) || null;
+      setActiveStudyPeriod(active);
       setLoading(false);
       return;
     }
 
-    // Если уже идет загрузка - ждем
     if (cachedData.loading && cachedData.loadPromise) {
-      console.log('⏳ Загрузка уже в процессе, ждем...');
+      console.log('⏳ Загрузка уже в процессе');
       cachedData.loadPromise.then(() => {
-        setSubjects(cachedData.subjects!);
-        setAssignments(cachedData.assignments!);
-        setNotes(cachedData.notes!);
+        setStudyPeriods(cachedData.studyPeriods || []);
+        setSchedules(cachedData.schedules || []);
+        setPresets(cachedData.presets || []);
+        setAssignments(cachedData.assignments || []);
+        setNotes(cachedData.notes || []);
+        const active = cachedData.studyPeriods?.find((p) => p.is_active) || null;
+        setActiveStudyPeriod(active);
         setLoading(false);
       });
       return;
     }
 
-    // Загружаем данные
     cachedData.userId = user.id;
     cachedData.loading = true;
 
@@ -93,25 +132,56 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
 
         console.log('🔄 Загружаем данные для user:', user.id);
 
-        const [subjectsRes, assignmentsRes, notesRes] = await Promise.all([
-          supabase.from('subjects').select('*').eq('user_id', user.id),
+        const [
+          studyPeriodsRes,
+          schedulesRes,
+          presetsRes,
+          assignmentsRes,
+          notesRes,
+        ] = await Promise.all([
+          supabase.from('study_periods').select('*').eq('user_id', user.id),
+          supabase.from('schedules').select('*').eq('user_id', user.id),
+          supabase.from('presets').select('*').eq('user_id', user.id),
           supabase.from('assignments').select('*').eq('user_id', user.id),
           supabase.from('notes').select('*').eq('user_id', user.id),
         ]);
 
-        const subjectsData = subjectsRes.data || [];
+        const studyPeriodsData = studyPeriodsRes.data || [];
+        const schedulesData = schedulesRes.data || [];
+        const presetsData = presetsRes.data || [];
         const assignmentsData = assignmentsRes.data || [];
         const notesData = notesRes.data || [];
 
-        // Сохраняем в кеш
-        cachedData.subjects = subjectsData;
+        // Загружаем расписание пресетов
+        if (presetsData.length > 0) {
+          const { data: presetSchedulesData } = await supabase
+            .from('preset_schedules')
+            .select('*')
+            .in(
+              'preset_id',
+              presetsData.map((p) => p.id)
+            );
+
+          presetsData.forEach((preset) => {
+            preset.schedules = presetSchedulesData?.filter((ps) => ps.preset_id === preset.id) || [];
+          });
+        }
+
+        cachedData.studyPeriods = studyPeriodsData;
+        cachedData.schedules = schedulesData;
+        cachedData.presets = presetsData;
         cachedData.assignments = assignmentsData;
         cachedData.notes = notesData;
         cachedData.loading = false;
 
-        setSubjects(subjectsData);
+        setStudyPeriods(studyPeriodsData);
+        setSchedules(schedulesData);
+        setPresets(presetsData);
         setAssignments(assignmentsData);
         setNotes(notesData);
+
+        const active = studyPeriodsData.find((p) => p.is_active) || null;
+        setActiveStudyPeriod(active);
 
         console.log('✅ Данные загружены успешно');
       } catch (err) {
@@ -125,41 +195,42 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
     };
 
     cachedData.loadPromise = loadData();
-  }, [user]); // ОЧЕНЬ ВАЖНО: зависит ТОЛЬКО от user!
+  }, [user]);
 
-  // Функции для работы с данными
-  const addSubject = useCallback(
-    async (subject: Omit<Subject, 'id'>) => {
+  // Study Periods Functions
+  const createStudyPeriod = useCallback(
+    async (period: Omit<StudyPeriod, 'id'>) => {
       if (!user) throw new Error('User not authenticated');
 
       const { data, error: err } = await supabase
-        .from('subjects')
-        .insert([{ ...subject, user_id: user.id }])
+        .from('study_periods')
+        .insert([{ ...period, user_id: user.id }])
         .select();
 
       if (err) throw err;
 
-      const newSubject = data?.[0];
-      if (newSubject) {
-        // Обновляем локальное состояние
-        setSubjects((prev) => [...prev, newSubject]);
-        // Обновляем кеш
-        if (cachedData.subjects) {
-          cachedData.subjects = [...cachedData.subjects, newSubject];
+      const newPeriod = data?.[0];
+      if (newPeriod) {
+        setStudyPeriods((prev) => [...prev, newPeriod]);
+        if (cachedData.studyPeriods) {
+          cachedData.studyPeriods = [...cachedData.studyPeriods, newPeriod];
+        }
+        if (period.is_active) {
+          setActiveStudyPeriod(newPeriod);
         }
       }
-      return newSubject;
+      return newPeriod;
     },
     [user]
   );
 
-  const updateSubject = useCallback(
-    async (id: number, subject: Partial<Subject>) => {
+  const updateStudyPeriod = useCallback(
+    async (id: number, period: Partial<StudyPeriod>) => {
       if (!user) throw new Error('User not authenticated');
 
       const { data, error: err } = await supabase
-        .from('subjects')
-        .update(subject)
+        .from('study_periods')
+        .update(period)
         .eq('id', id)
         .eq('user_id', user.id)
         .select();
@@ -168,9 +239,12 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
 
       const updated = data?.[0];
       if (updated) {
-        setSubjects((prev) => prev.map((s) => (s.id === id ? updated : s)));
-        if (cachedData.subjects) {
-          cachedData.subjects = cachedData.subjects.map((s) => (s.id === id ? updated : s));
+        setStudyPeriods((prev) => prev.map((p) => (p.id === id ? updated : p)));
+        if (cachedData.studyPeriods) {
+          cachedData.studyPeriods = cachedData.studyPeriods.map((p) => (p.id === id ? updated : p));
+        }
+        if (updated.is_active) {
+          setActiveStudyPeriod(updated);
         }
       }
       return updated;
@@ -178,22 +252,266 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
     [user]
   );
 
-  const deleteSubject = useCallback(
+  const deleteStudyPeriod = useCallback(
     async (id: number) => {
       if (!user) throw new Error('User not authenticated');
 
-      const { error: err } = await supabase.from('subjects').delete().eq('id', id).eq('user_id', user.id);
+      const { error: err } = await supabase
+        .from('study_periods')
+        .delete()
+        .eq('id', id)
+        .eq('user_id', user.id);
 
       if (err) throw err;
 
-      setSubjects((prev) => prev.filter((s) => s.id !== id));
-      if (cachedData.subjects) {
-        cachedData.subjects = cachedData.subjects.filter((s) => s.id !== id);
+      setStudyPeriods((prev) => prev.filter((p) => p.id !== id));
+      if (cachedData.studyPeriods) {
+        cachedData.studyPeriods = cachedData.studyPeriods.filter((p) => p.id !== id);
+      }
+      if (activeStudyPeriod?.id === id) {
+        setActiveStudyPeriod(null);
+      }
+    },
+    [user, activeStudyPeriod]
+  );
+
+  const setActiveStudyPeriodFn = useCallback(
+    async (id: number) => {
+      if (!user) throw new Error('User not authenticated');
+
+      // Отключаем все остальные периоды
+      for (const period of studyPeriods) {
+        await supabase
+          .from('study_periods')
+          .update({ is_active: period.id === id })
+          .eq('id', period.id)
+          .eq('user_id', user.id);
+      }
+
+      const active = studyPeriods.find((p) => p.id === id) || null;
+      setActiveStudyPeriod(active);
+
+      // Обновляем локальное состояние
+      setStudyPeriods((prev) =>
+        prev.map((p) => ({ ...p, is_active: p.id === id }))
+      );
+    },
+    [user, studyPeriods]
+  );
+
+  // Schedule Functions
+  const addSchedule = useCallback(
+    async (schedule: Omit<Schedule, 'id'>) => {
+      if (!user) throw new Error('User not authenticated');
+
+      const { data, error: err } = await supabase
+        .from('schedules')
+        .insert([{ ...schedule, user_id: user.id }])
+        .select();
+
+      if (err) throw err;
+
+      const newSchedule = data?.[0];
+      if (newSchedule) {
+        setSchedules((prev) => [...prev, newSchedule]);
+        if (cachedData.schedules) {
+          cachedData.schedules = [...cachedData.schedules, newSchedule];
+        }
+      }
+      return newSchedule;
+    },
+    [user]
+  );
+
+  const updateSchedule = useCallback(
+    async (id: number, schedule: Partial<Schedule>) => {
+      if (!user) throw new Error('User not authenticated');
+
+      const { data, error: err } = await supabase
+        .from('schedules')
+        .update(schedule)
+        .eq('id', id)
+        .eq('user_id', user.id)
+        .select();
+
+      if (err) throw err;
+
+      const updated = data?.[0];
+      if (updated) {
+        setSchedules((prev) => prev.map((s) => (s.id === id ? updated : s)));
+        if (cachedData.schedules) {
+          cachedData.schedules = cachedData.schedules.map((s) => (s.id === id ? updated : s));
+        }
+      }
+      return updated;
+    },
+    [user]
+  );
+
+  const deleteSchedule = useCallback(
+    async (id: number) => {
+      if (!user) throw new Error('User not authenticated');
+
+      const { error: err } = await supabase
+        .from('schedules')
+        .delete()
+        .eq('id', id)
+        .eq('user_id', user.id);
+
+      if (err) throw err;
+
+      setSchedules((prev) => prev.filter((s) => s.id !== id));
+      if (cachedData.schedules) {
+        cachedData.schedules = cachedData.schedules.filter((s) => s.id !== id);
       }
     },
     [user]
   );
 
+  const getSchedulesByDateRange = useCallback(
+    (startDate: string, endDate: string) => {
+      return schedules.filter((s) => s.date >= startDate && s.date <= endDate);
+    },
+    [schedules]
+  );
+
+  // Preset Functions
+  const addPreset = useCallback(
+    async (preset: Omit<Preset, 'id'>) => {
+      if (!user) throw new Error('User not authenticated');
+
+      const { data, error: err } = await supabase
+        .from('presets')
+        .insert([{ ...preset, user_id: user.id }])
+        .select();
+
+      if (err) throw err;
+
+      const newPreset = data?.[0];
+      if (newPreset) {
+        newPreset.schedules = [];
+        setPresets((prev) => [...prev, newPreset]);
+        if (cachedData.presets) {
+          cachedData.presets = [...cachedData.presets, newPreset];
+        }
+      }
+      return newPreset;
+    },
+    [user]
+  );
+
+  const updatePreset = useCallback(
+    async (id: number, preset: Partial<Preset>) => {
+      if (!user) throw new Error('User not authenticated');
+
+      const { data, error: err } = await supabase
+        .from('presets')
+        .update(preset)
+        .eq('id', id)
+        .eq('user_id', user.id)
+        .select();
+
+      if (err) throw err;
+
+      const updated = data?.[0];
+      if (updated) {
+        setPresets((prev) =>
+          prev.map((p) => (p.id === id ? { ...updated, schedules: p.schedules } : p))
+        );
+        if (cachedData.presets) {
+          cachedData.presets = cachedData.presets.map((p) =>
+            p.id === id ? { ...updated, schedules: p.schedules } : p
+          );
+        }
+      }
+      return updated;
+    },
+    [user]
+  );
+
+  const deletePreset = useCallback(
+    async (id: number) => {
+      if (!user) throw new Error('User not authenticated');
+
+      const { error: err } = await supabase.from('presets').delete().eq('id', id).eq('user_id', user.id);
+
+      if (err) throw err;
+
+      setPresets((prev) => prev.filter((p) => p.id !== id));
+      if (cachedData.presets) {
+        cachedData.presets = cachedData.presets.filter((p) => p.id !== id);
+      }
+    },
+    [user]
+  );
+
+  const addPresetSchedule = useCallback(
+    async (presetId: number, schedule: Omit<PresetSchedule, 'id'>) => {
+      const { data, error: err } = await supabase
+        .from('preset_schedules')
+        .insert([{ ...schedule, preset_id: presetId }])
+        .select();
+
+      if (err) throw err;
+
+      const newSchedule = data?.[0];
+      if (newSchedule) {
+        setPresets((prev) =>
+          prev.map((p) =>
+            p.id === presetId
+              ? { ...p, schedules: [...(p.schedules || []), newSchedule] }
+              : p
+          )
+        );
+      }
+      return newSchedule;
+    },
+    []
+  );
+
+  const deletePresetSchedule = useCallback(async (scheduleId: number) => {
+    const { error: err } = await supabase.from('preset_schedules').delete().eq('id', scheduleId);
+
+    if (err) throw err;
+
+    setPresets((prev) =>
+      prev.map((p) => ({
+        ...p,
+        schedules: (p.schedules || []).filter((s) => s.id !== scheduleId),
+      }))
+    );
+  }, []);
+
+  const applyPreset = useCallback(
+    async (presetId: number, startDate: string) => {
+      if (!user) throw new Error('User not authenticated');
+
+      const preset = presets.find((p) => p.id === presetId);
+      if (!preset || !preset.schedules) throw new Error('Preset not found');
+
+      const startDateObj = new Date(startDate);
+      const dayOfWeekStart = startDateObj.getDay() === 0 ? 6 : startDateObj.getDay() - 1; // Пн = 0
+
+      for (const presetSchedule of preset.schedules) {
+        const dayDiff = (presetSchedule.day_of_week - dayOfWeekStart + 7) % 7;
+        const scheduleDate = new Date(startDate);
+        scheduleDate.setDate(scheduleDate.getDate() + dayDiff);
+
+        await addSchedule({
+          user_id: user.id,
+          subject_name: presetSchedule.subject_name,
+          date: scheduleDate.toISOString().split('T')[0],
+          start_time: presetSchedule.start_time,
+          end_time: presetSchedule.end_time,
+          room: presetSchedule.room,
+          color: presetSchedule.color,
+        });
+      }
+    },
+    [user, presets, addSchedule]
+  );
+
+  // Assignment Functions
   const addAssignment = useCallback(
     async (assignment: Omit<Assignment, 'id'>) => {
       if (!user) throw new Error('User not authenticated');
@@ -246,7 +564,11 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
     async (id: number) => {
       if (!user) throw new Error('User not authenticated');
 
-      const { error: err } = await supabase.from('assignments').delete().eq('id', id).eq('user_id', user.id);
+      const { error: err } = await supabase
+        .from('assignments')
+        .delete()
+        .eq('id', id)
+        .eq('user_id', user.id);
 
       if (err) throw err;
 
@@ -258,6 +580,7 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
     [user]
   );
 
+  // Note Functions
   const addNote = useCallback(
     async (note: Omit<Note, 'id'>) => {
       if (!user) throw new Error('User not authenticated');
@@ -319,21 +642,35 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
     [user]
   );
 
-  const value = {
-    subjects,
+  const value: DataContextType = {
+    studyPeriods,
+    activeStudyPeriod,
+    createStudyPeriod,
+    updateStudyPeriod,
+    deleteStudyPeriod,
+    setActiveStudyPeriod: setActiveStudyPeriodFn,
+    schedules,
+    addSchedule,
+    updateSchedule,
+    deleteSchedule,
+    getSchedulesByDateRange,
+    presets,
+    addPreset,
+    updatePreset,
+    deletePreset,
+    addPresetSchedule,
+    deletePresetSchedule,
+    applyPreset,
     assignments,
-    notes,
-    loading,
-    error,
-    addSubject,
-    updateSubject,
-    deleteSubject,
     addAssignment,
     updateAssignment,
     deleteAssignment,
+    notes,
     addNote,
     updateNote,
     deleteNote,
+    loading,
+    error,
   };
 
   return <DataContext.Provider value={value}>{children}</DataContext.Provider>;
