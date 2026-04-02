@@ -27,7 +27,7 @@ export type Schedule = {
 
 export type PresetSchedule = {
   id: number;
-  preset_id: number;
+  preset_id?: number;
   subject_name: string;
   day_of_week: number; // 0-6, где 0=Пн, 1=Вт и т.д.
   start_time: string;
@@ -38,7 +38,7 @@ export type PresetSchedule = {
 
 export type Preset = {
   id: number;
-  user_id: string;
+  user_id?: string;
   name: string;
   description?: string;
   schedules?: PresetSchedule[];
