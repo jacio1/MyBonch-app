@@ -131,6 +131,8 @@ export default function SchedulePage() {
         start_date: periodForm.start_date,
         end_date: periodForm.end_date,
         is_active: true,
+        user_id: user!.id,
+      
       });
       setPeriodForm({ name: '', start_date: '', end_date: '' });
       setShowAddPeriod(false);
