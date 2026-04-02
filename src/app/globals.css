@@ -15,3 +15,7 @@ nav{
 body{
     color: #fff;
 }
+
+html.dark {
+  color-scheme: dark;
+}

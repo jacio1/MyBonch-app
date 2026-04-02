@@ -1,9 +1,19 @@
-'use client';
+"use client";
 
-import { BookOpen, Search, BellRing, User, Menu, X, LogOut } from 'lucide-react';
-import { useState } from 'react';
-import { useAuth } from '@/src/lib/AuthContext';
-import { useRouter } from 'next/navigation';
+import {
+  BookOpen,
+  Search,
+  BellRing,
+  User,
+  Menu,
+  X,
+  LogOut,
+  Settings,
+} from "lucide-react";
+import { useState } from "react";
+import { useAuth } from "@/src/lib/AuthContext";
+import { useRouter } from "next/navigation";
+import Link from "next/link";
 
 export default function Header() {
   const [menuOpen, setMenuOpen] = useState(false);
@@ -13,13 +23,14 @@ export default function Header() {
   const handleSignOut = async () => {
     try {
       await signOut();
-      router.push('/sign-in');
+      router.push("/sign-in");
     } catch (error) {
-      console.error('Sign out error:', error);
+      console.error("Sign out error:", error);
     }
   };
 
-  const userName = user?.user_metadata?.full_name || user?.email || 'Пользователь';
+  const userName =
+    user?.user_metadata?.full_name || user?.email || "Пользователь";
 
   return (
     <header className="bg-white shadow-sm border-[#282829] border-b px-4 sm:px-6 py-4">
@@ -28,8 +39,12 @@ export default function Header() {
         <div className="flex items-center space-x-2 sm:space-x-3">
           <BookOpen className="h-6 w-6 sm:h-8 sm:w-8 text-indigo-600" />
           <div className="hidden sm:block">
-            <h1 className="text-xl sm:text-2xl font-bold text-white">МойБонч</h1>
-            <p className="text-xs sm:text-sm text-gray-200">Ваш помощник в учебе</p>
+            <h1 className="text-xl sm:text-2xl font-bold text-white">
+              МойБонч
+            </h1>
+            <p className="text-xs sm:text-sm text-gray-200">
+              Ваш помощник в учебе
+            </p>
           </div>
           <h1 className="text-lg font-bold text-gray-800 sm:hidden">МойБонч</h1>
         </div>
@@ -47,6 +62,15 @@ export default function Header() {
               <p className="text-xs text-gray-200">4 курс, ИТПИ</p>
             </div>
           </div>
+          <Link
+            href="/profile"
+            className="flex items-center space-x-3 cursor-pointer hover:bg-gray-100 p-2 rounded"
+          >
+            <Settings className="h-5 w-5 text-gray-600" />
+            <div>
+              <p className="font-medium text-sm">Настройки</p>
+            </div>
+          </Link>
         </div>
 
         {/* Mobile Menu Button */}

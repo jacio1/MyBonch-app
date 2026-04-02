@@ -1,21 +1,96 @@
 {
-  "name": "Мой Бонч",
-  "short_name": "Бонч",
-  "description": "Лучшее приложение для учебы!",
+  "name": "МойБонч - Приложение для учебы",
+  "short_name": "МойБонч",
+  "description": "Приложение для управления расписанием, заданиями и заметками",
   "start_url": "/",
+  "scope": "/",
   "display": "standalone",
+  "orientation": "portrait-primary",
+  "theme_color": "#4f46e5",
   "background_color": "#ffffff",
-  "theme_color": "#2563eb",
-  "icons": [
+  "screenshots": [
     {
-      "src": "/icons/icon-192x192.png",
-      "sizes": "192x192",
-      "type": "image/png"
+      "src": "/screenshot-1.png",
+      "sizes": "540x720",
+      "type": "image/png",
+      "form_factor": "narrow"
     },
     {
-      "src": "/icons/icon-512x512.png",
+      "src": "/screenshot-2.png",
+      "sizes": "1280x720",
+      "type": "image/png",
+      "form_factor": "wide"
+    }
+  ],
+  "icons": [
+    {
+      "src": "/favicon.ico",
+      "sizes": "192x192",
+      "type": "image/x-icon",
+      "purpose": "any"
+    },
+    {
+      "src": "/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icon-192-maskable.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "/icon-512.png",
       "sizes": "512x512",
-      "type": "image/png"
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icon-512-maskable.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ],
+  "categories": ["education", "productivity"],
+  "shortcuts": [
+    {
+      "name": "Расписание",
+      "short_name": "Расписание",
+      "description": "Перейти к расписанию",
+      "url": "/schedule",
+      "icons": [
+        {
+          "src": "/icon-96.png",
+          "sizes": "96x96"
+        }
+      ]
+    },
+    {
+      "name": "Задания",
+      "short_name": "Задания",
+      "description": "Перейти к заданиям",
+      "url": "/task",
+      "icons": [
+        {
+          "src": "/icon-96.png",
+          "sizes": "96x96"
+        }
+      ]
+    },
+    {
+      "name": "Заметки",
+      "short_name": "Заметки",
+      "description": "Перейти к заметкам",
+      "url": "/notes",
+      "icons": [
+        {
+          "src": "/icon-96.png",
+          "sizes": "96x96"
+        }
+      ]
     }
   ]
 }

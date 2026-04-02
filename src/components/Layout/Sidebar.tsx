@@ -1,6 +1,6 @@
 'use client';
 
-import { Calendar, CheckSquare, FileText, Plus, Clock, X, LogOut } from 'lucide-react';
+import { Calendar, CheckSquare, FileText, Settings, Plus, X, LogOut } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useState } from 'react';
@@ -27,6 +27,7 @@ export default function Sidebar({ assignmentsCount }: SidebarProps) {
     },
     { href: '/notes', icon: FileText, label: 'Конспекты' },
     { href: '/subjects', icon: FileText, label: 'Дисциплины' },
+    { href: "/profile", icon: Settings, label: "Профиль" }
   ];
 
   const handleSignOut = async () => {

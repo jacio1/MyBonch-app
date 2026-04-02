@@ -4,8 +4,8 @@ import "./globals.css";
 import Header from "@/src/components/Layout/Header";
 import Sidebar from "@/src/components/Layout/Sidebar";
 import { AuthProvider } from "@/src/lib/AuthContext";
-import { initialAssignments } from "@/src/data/initalData";
-import { DataProvider } from "../lib/DataContext";
+import { DataProvider } from "@/src/lib/DataContext";
+import { ThemeProvider } from "@/src/lib/ThemeContext";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -18,53 +18,57 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Мой Бонч",
-  description: "Лучшее приложение для учебы!",
+  title: "МойБонч",
+  description: "Приложение для управления учебой",
   manifest: "/manifest.json",
   icons: {
-    icon: [
-      { url: "/favicon.ico" },
-      { url: "/icons/icon-192x192.png", sizes: "192x192", type: "image/png" },
-      { url: "/icons/icon-512x512.png", sizes: "512x512", type: "image/png" },
-    ],
-    apple: [{ url: "/icons/icon-192x192.png" }],
+    icon: "/favicon.ico",
+    apple: "/icon-192.png",
   },
-};
-export const viewport = {
-  width: "device-width",
-  initialScale: 1,
-  maximumScale: 5,
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "black-translucent",
+    title: "МойБонч",
+  },
+  formatDetection: {
+    telephone: false,
+  },
+  viewport: {
+    width: "device-width",
+    initialScale: 1,
+    maximumScale: 5,
+    userScalable: true,
+  },
 };
 
 export default function RootLayout({
   children,
-}: {
+}: Readonly<{
   children: React.ReactNode;
-}) {
-  const assignmentsCount = initialAssignments.filter(
-    (a) => !a.completed,
-  ).length;
-
+}>) {
   return (
-    <html lang="ru">
+    <html lang="ru" suppressHydrationWarning>
       <head>
-        <meta name="theme-color" content="#2563eb" />
-        <link rel="manifest" href="/manifest.json" />
+        <meta name="theme-color" content="#4f46e5" />
+        <meta name="mobile-web-app-capable" content="yes" />
+        <meta name="apple-mobile-web-app-capable" content="yes" />
+        <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+        <meta name="apple-mobile-web-app-title" content="МойБонч" />
       </head>
-      <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased   h-screen flex flex-col`}
-      >
-        <AuthProvider>
-          <Header />
-          <DataProvider>
-            <div className="flex flex-1 sm:pb-0 ">
-              <Sidebar assignmentsCount={assignmentsCount} />
-              <main className="flex-1 bg-gray-50 overflow-auto">
-                {children}
-              </main>
-            </div>
-          </DataProvider>
-        </AuthProvider>
+      <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
+        <ThemeProvider>
+          <AuthProvider>
+            <DataProvider>
+              <Header />
+              <div className="flex flex-1 overflow-hidden min-h-screen pb-16 sm:pb-0">
+                <Sidebar assignmentsCount={0} />
+                <main className="flex-1 overflow-auto bg-light dark:bg-dark transition-colors">
+                  {children}
+                </main>
+              </div>
+            </DataProvider>
+          </AuthProvider>
+        </ThemeProvider>
       </body>
     </html>
   );
