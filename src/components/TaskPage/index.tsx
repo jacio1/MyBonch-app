@@ -14,7 +14,7 @@ import {
   Circle,
 } from "lucide-react";
 import { useAuth } from "@/src/lib/AuthContext";
-import { Assignment, Priority } from "@/src/types";
+import { Assignment } from "@/src/types";
 import { useData } from "@/src/lib/DataContext";
 
 type FilterType = "all" | "active" | "completed" | "high" | "medium" | "low";
@@ -180,9 +180,7 @@ export default function TaskPage() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
         <div>
-          <h2 className="text-2xl sm:text-3xl font-bold text-white">
-            Задания
-          </h2>
+          <h2 className="text-2xl sm:text-3xl font-bold text-white">Задания</h2>
           <p className="text-gray-200 text-sm sm:text-base">
             {activeCount} активных, {completedCount} выполнено
           </p>
@@ -259,7 +257,6 @@ export default function TaskPage() {
                 onChange={(e) =>
                   setFormData({
                     ...formData,
-                    priority: e.target.value as Priority,
                   })
                 }
                 className="bg-[#131313] px-4 py-2 border rounded-lg focus:outline-none focus:ring-2  sm:col-span-2"
