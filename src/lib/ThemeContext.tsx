@@ -15,17 +15,16 @@ const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
   const [theme, setThemeState] = useState<Theme>('system');
   const [isDark, setIsDark] = useState(false);
-  const [mounted, setMounted] = useState(false);
+  // Убираем mounted, используем флаг клиента
+  const [isClient, setIsClient] = useState(false);
 
-  // Инициализация при загрузке
+  // Инициализация на клиенте
   useEffect(() => {
-    setMounted(true);
+    setIsClient(true);
     
-    // Получаем сохраненную тему из localStorage
     const savedTheme = localStorage.getItem('theme') as Theme || 'system';
     setThemeState(savedTheme);
 
-    // Определяем темноту
     const updateDarkMode = () => {
       if (savedTheme === 'dark') {
         setIsDark(true);
@@ -34,7 +33,6 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
         setIsDark(false);
         document.documentElement.classList.remove('dark');
       } else {
-        // system mode
         const isDarkMode = window.matchMedia('(prefers-color-scheme: dark)').matches;
         setIsDark(isDarkMode);
         if (isDarkMode) {
@@ -47,11 +45,16 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
 
     updateDarkMode();
 
-    // Следим за системными изменениями в system mode
     const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
     const handleChange = () => {
       if (savedTheme === 'system') {
-        updateDarkMode();
+        const isDarkMode = window.matchMedia('(prefers-color-scheme: dark)').matches;
+        setIsDark(isDarkMode);
+        if (isDarkMode) {
+          document.documentElement.classList.add('dark');
+        } else {
+          document.documentElement.classList.remove('dark');
+        }
       }
     };
 
@@ -70,7 +73,6 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
       setIsDark(false);
       document.documentElement.classList.remove('dark');
     } else {
-      // system mode
       const isDarkMode = window.matchMedia('(prefers-color-scheme: dark)').matches;
       setIsDark(isDarkMode);
       if (isDarkMode) {
@@ -81,10 +83,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  if (!mounted) {
-    return <>{children}</>;
-  }
-
+  // Всегда рендерим провайдер, но с дефолтными значениями на сервере
   return (
     <ThemeContext.Provider value={{ theme, isDark, setTheme }}>
       {children}

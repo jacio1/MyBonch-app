@@ -1,6 +1,6 @@
-'use client';
+"use client";
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect } from "react";
 import {
   User,
   Mail,
@@ -12,13 +12,14 @@ import {
   Monitor,
   Lock,
   Bell,
-} from 'lucide-react';
-import { useAuth } from '@/src/lib/AuthContext';
-import { useTheme } from '@/src/lib/ThemeContext';
-import { supabase } from '@/src/lib/supabase';
-import { useRouter } from 'next/navigation';
+} from "lucide-react";
+import { useAuth } from "@/src/lib/AuthContext";
+import { useTheme } from "@/src/lib/ThemeContext";
+import { supabase } from "@/src/lib/supabase";
+import { useRouter } from "next/navigation";
 
 export default function ProfilePage() {
+
   const { user, signOut, loading: authLoading } = useAuth();
   const { theme, isDark, setTheme } = useTheme();
   const router = useRouter();
@@ -26,8 +27,8 @@ export default function ProfilePage() {
   const [isEditing, setIsEditing] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [profileData, setProfileData] = useState({
-    full_name: '',
-    avatar_url: '',
+    full_name: "",
+    avatar_url: "",
   });
   const [notificationsEnabled, setNotificationsEnabled] = useState(false);
   const [isPushSupported, setIsPushSupported] = useState(false);
@@ -45,30 +46,30 @@ export default function ProfilePage() {
 
     try {
       const { data, error } = await supabase
-        .from('profiles')
-        .select('full_name, avatar_url')
-        .eq('id', user.id)
+        .from("profiles")
+        .select("full_name, avatar_url")
+        .eq("id", user.id)
         .single();
 
       if (data) {
         setProfileData({
-          full_name: data.full_name || '',
-          avatar_url: data.avatar_url || '',
+          full_name: data.full_name || "",
+          avatar_url: data.avatar_url || "",
         });
       }
     } catch (err) {
-      console.error('Error loading profile:', err);
+      console.error("Error loading profile:", err);
     }
   };
 
   const checkPushSupport = () => {
-    const isSupported = 'serviceWorker' in navigator && 'PushManager' in window;
+    const isSupported = "serviceWorker" in navigator && "PushManager" in window;
     setIsPushSupported(isSupported);
 
     if (isSupported) {
       // Проверяем если уведомления уже включены
-      if ('Notification' in window) {
-        setNotificationsEnabled(Notification.permission === 'granted');
+      if ("Notification" in window) {
+        setNotificationsEnabled(Notification.permission === "granted");
       }
     }
   };
@@ -80,22 +81,22 @@ export default function ProfilePage() {
       setIsSaving(true);
 
       const { error } = await supabase
-        .from('profiles')
+        .from("profiles")
         .upsert({
           id: user.id,
           full_name: profileData.full_name,
           avatar_url: profileData.avatar_url,
           updated_at: new Date().toISOString(),
         })
-        .eq('id', user.id);
+        .eq("id", user.id);
 
       if (error) throw error;
 
-      alert('Профиль успешно сохранен!');
+      alert("Профиль успешно сохранен!");
       setIsEditing(false);
     } catch (err) {
-      console.error('Error saving profile:', err);
-      alert('Ошибка при сохранении профиля');
+      console.error("Error saving profile:", err);
+      alert("Ошибка при сохранении профиля");
     } finally {
       setIsSaving(false);
     }
@@ -103,22 +104,25 @@ export default function ProfilePage() {
 
   const enableNotifications = async () => {
     if (!isPushSupported) {
-      alert('Ваш браузер не поддерживает уведомления');
+      alert("Ваш браузер не поддерживает уведомления");
       return;
     }
 
     try {
       const permission = await Notification.requestPermission();
-      
-      if (permission === 'granted') {
+
+      if (permission === "granted") {
         setNotificationsEnabled(true);
-        alert('Уведомления включены!');
+        alert("Уведомления включены!");
 
         // Регистрируем service worker для уведомлений
-        if ('serviceWorker' in navigator) {
-          const registration = await navigator.serviceWorker.register('/sw.js', {
-            scope: '/',
-          });
+        if ("serviceWorker" in navigator) {
+          const registration = await navigator.serviceWorker.register(
+            "/sw.js",
+            {
+              scope: "/",
+            },
+          );
 
           // Подписываем на push уведомления
           const subscription = await registration.pushManager.subscribe({
@@ -127,9 +131,9 @@ export default function ProfilePage() {
           });
 
           // Отправляем subscription на сервер
-          await fetch('/api/notifications/subscribe', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+          await fetch("/api/notifications/subscribe", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
               subscription: subscription.toJSON(),
               userId: user?.id,
@@ -137,28 +141,28 @@ export default function ProfilePage() {
           });
         }
       } else {
-        alert('Вы отклонили уведомления');
+        alert("Вы отклонили уведомления");
         setNotificationsEnabled(false);
       }
     } catch (err) {
-      console.error('Error enabling notifications:', err);
-      alert('Ошибка при включении уведомлений');
+      console.error("Error enabling notifications:", err);
+      alert("Ошибка при включении уведомлений");
     }
   };
 
   const disableNotifications = async () => {
     try {
-      if ('serviceWorker' in navigator) {
+      if ("serviceWorker" in navigator) {
         const registration = await navigator.serviceWorker.ready;
         const subscription = await registration.pushManager.getSubscription();
 
         if (subscription) {
           await subscription.unsubscribe();
-          
+
           // Отправляем запрос на удаление подписки с сервера
-          await fetch('/api/notifications/unsubscribe', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+          await fetch("/api/notifications/unsubscribe", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
               userId: user?.id,
             }),
@@ -167,20 +171,20 @@ export default function ProfilePage() {
       }
 
       setNotificationsEnabled(false);
-      alert('Уведомления отключены');
+      alert("Уведомления отключены");
     } catch (err) {
-      console.error('Error disabling notifications:', err);
-      alert('Ошибка при отключении уведомлений');
+      console.error("Error disabling notifications:", err);
+      alert("Ошибка при отключении уведомлений");
     }
   };
 
   const handleLogout = async () => {
-    if (confirm('Вы уверены, что хотите выйти?')) {
+    if (confirm("Вы уверены, что хотите выйти?")) {
       try {
         await signOut();
-        router.push('/sign-in');
+        router.push("/sign-in");
       } catch (err) {
-        console.error('Logout error:', err);
+        console.error("Logout error:", err);
       }
     }
   };
@@ -207,8 +211,12 @@ export default function ProfilePage() {
         <div className="max-w-2xl mx-auto">
           {/* Header */}
           <div className="mb-8">
-            <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Профиль</h1>
-            <p className="text-gray-600 dark:text-gray-400 mt-2">Управление вашей учетной записью</p>
+            <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
+              Профиль
+            </h1>
+            <p className="text-gray-600 dark:text-gray-400 mt-2">
+              Управление вашей учетной записью
+            </p>
           </div>
 
           {/* Profile Section */}
@@ -220,7 +228,7 @@ export default function ProfilePage() {
 
               <div className="flex-1">
                 <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
-                  {profileData.full_name || 'Пользователь'}
+                  {profileData.full_name || "Пользователь"}
                 </h2>
                 <div className="flex items-center gap-2 text-gray-600 dark:text-gray-400">
                   <Mail className="h-5 w-5" />
@@ -256,7 +264,10 @@ export default function ProfilePage() {
                     type="text"
                     value={profileData.full_name}
                     onChange={(e) =>
-                      setProfileData({ ...profileData, full_name: e.target.value })
+                      setProfileData({
+                        ...profileData,
+                        full_name: e.target.value,
+                      })
                     }
                     className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-600"
                   />
@@ -269,7 +280,7 @@ export default function ProfilePage() {
                     className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 text-white rounded-lg transition"
                   >
                     <Save className="h-4 w-4" />
-                    {isSaving ? 'Сохранение...' : 'Сохранить'}
+                    {isSaving ? "Сохранение..." : "Сохранить"}
                   </button>
                   <button
                     type="button"
@@ -289,33 +300,47 @@ export default function ProfilePage() {
           {/* Theme Section */}
           <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6 sm:p-8 mb-6">
             <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
-              {isDark ? <Moon className="h-5 w-5" /> : <Sun className="h-5 w-5" />}
+              {isDark ? (
+                <Moon className="h-5 w-5" />
+              ) : (
+                <Sun className="h-5 w-5" />
+              )}
               Внешний вид
             </h3>
 
             <div className="space-y-3">
               {[
-                { value: 'light' as const, label: 'Светлая тема', icon: Sun },
-                { value: 'dark' as const, label: 'Темная тема', icon: Moon },
-                { value: 'system' as const, label: 'Как в системе', icon: Monitor },
+                { value: "light" as const, label: "Светлая тема", icon: Sun },
+                { value: "dark" as const, label: "Темная тема", icon: Moon },
+                {
+                  value: "system" as const,
+                  label: "Как в системе",
+                  icon: Monitor,
+                },
               ].map(({ value, label, icon: Icon }) => (
                 <button
                   key={value}
                   onClick={() => setTheme(value)}
                   className={`w-full flex items-center gap-3 p-4 rounded-lg border-2 transition ${
                     theme === value
-                      ? 'border-indigo-600 bg-indigo-50 dark:bg-indigo-900/20'
-                      : 'border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700/50'
+                      ? "border-indigo-600 bg-indigo-50 dark:bg-indigo-900/20"
+                      : "border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700/50"
                   }`}
                 >
-                  <Icon className={`h-5 w-5 ${
-                    theme === value ? 'text-indigo-600' : 'text-gray-600 dark:text-gray-400'
-                  }`} />
-                  <span className={`font-medium ${
-                    theme === value
-                      ? 'text-indigo-600 dark:text-indigo-400'
-                      : 'text-gray-900 dark:text-white'
-                  }`}>
+                  <Icon
+                    className={`h-5 w-5 ${
+                      theme === value
+                        ? "text-indigo-600"
+                        : "text-gray-600 dark:text-gray-400"
+                    }`}
+                  />
+                  <span
+                    className={`font-medium ${
+                      theme === value
+                        ? "text-indigo-600 dark:text-indigo-400"
+                        : "text-gray-900 dark:text-white"
+                    }`}
+                  >
                     {label}
                   </span>
                   {theme === value && (
@@ -336,20 +361,26 @@ export default function ProfilePage() {
 
               <p className="text-gray-600 dark:text-gray-400 mb-4">
                 {notificationsEnabled
-                  ? 'Вы получаете уведомления о новых заданиях и событиях'
-                  : 'Включите уведомления, чтобы получать напоминания о заданиях'}
+                  ? "Вы получаете уведомления о новых заданиях и событиях"
+                  : "Включите уведомления, чтобы получать напоминания о заданиях"}
               </p>
 
               <button
-                onClick={notificationsEnabled ? disableNotifications : enableNotifications}
+                onClick={
+                  notificationsEnabled
+                    ? disableNotifications
+                    : enableNotifications
+                }
                 className={`w-full px-4 py-3 rounded-lg font-semibold transition flex items-center justify-center gap-2 ${
                   notificationsEnabled
-                    ? 'bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 hover:bg-red-100 dark:hover:bg-red-900/40'
-                    : 'bg-green-50 dark:bg-green-900/20 text-green-600 dark:text-green-400 hover:bg-green-100 dark:hover:bg-green-900/40'
+                    ? "bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 hover:bg-red-100 dark:hover:bg-red-900/40"
+                    : "bg-green-50 dark:bg-green-900/20 text-green-600 dark:text-green-400 hover:bg-green-100 dark:hover:bg-green-900/40"
                 }`}
               >
                 <Bell className="h-5 w-5" />
-                {notificationsEnabled ? 'Отключить уведомления' : 'Включить уведомления'}
+                {notificationsEnabled
+                  ? "Отключить уведомления"
+                  : "Включить уведомления"}
               </button>
             </div>
           )}
@@ -363,8 +394,12 @@ export default function ProfilePage() {
 
             <div className="space-y-3">
               <div className="flex justify-between items-center p-4 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
-                <span className="text-gray-700 dark:text-gray-300">Статус входа</span>
-                <span className="text-green-600 dark:text-green-400 font-medium">Активен</span>
+                <span className="text-gray-700 dark:text-gray-300">
+                  Статус входа
+                </span>
+                <span className="text-green-600 dark:text-green-400 font-medium">
+                  Активен
+                </span>
               </div>
 
               <button
