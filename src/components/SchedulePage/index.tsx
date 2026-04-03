@@ -1,35 +1,449 @@
-'use client';
+"use client";
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useCallback } from "react";
 import {
-  Calendar,
   Clock,
   MapPin,
   ChevronLeft,
   ChevronRight,
   Plus,
   X,
-  Save,
   Trash2,
   Loader,
   Copy,
-} from 'lucide-react';
-import { useData } from '@/src/lib/DataContext';
-import { useAuth } from '@/src/lib/AuthContext';
+  AlertTriangle,
+} from "lucide-react";
+import { useData } from "@/src/lib/DataContext";
+import { useAuth } from "@/src/lib/AuthContext";
+import { useTheme } from "@/src/lib/ThemeContext";
 
-const DAYS_RU = ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс'];
+const DAYS_RU = ["Пн", "Вт", "Ср", "Чт", "Пт", "Сб", "Вс"];
 const COLORS = [
-  'bg-blue-100',
-  'bg-green-100',
-  'bg-purple-100',
-  'bg-yellow-100',
-  'bg-red-100',
-  'bg-pink-100',
-  'bg-orange-100',
+  "bg-blue-100 dark:bg-blue-900/30 border-blue-200 dark:border-blue-700 text-blue-900 dark:text-blue-100",
+  "bg-green-100 dark:bg-green-900/30 border-green-200 dark:border-green-700 text-green-900 dark:text-green-100",
+  "bg-purple-100 dark:bg-purple-900/30 border-purple-200 dark:border-purple-700 text-purple-900 dark:text-purple-100",
+  "bg-yellow-100 dark:bg-yellow-900/30 border-yellow-200 dark:border-yellow-700 text-yellow-900 dark:text-yellow-100",
+  "bg-red-100 dark:bg-red-900/30 border-red-200 dark:border-red-700 text-red-900 dark:text-red-100",
+  "bg-pink-100 dark:bg-pink-900/30 border-pink-200 dark:border-pink-700 text-pink-900 dark:text-pink-100",
+  "bg-orange-100 dark:bg-orange-900/30 border-orange-200 dark:border-orange-700 text-orange-900 dark:text-orange-100",
 ];
+
+// Компоненты модальных окон вынесены наружу
+const AddScheduleModal = ({
+  isOpen,
+  onClose,
+  onSubmit,
+  isSubmitting,
+  activeStudyPeriod,
+  formData,
+  onFormChange,
+}: any) => {
+  if (!isOpen) return null;
+
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm"
+      onClick={onClose}
+    >
+      <div
+        className="bg-white dark:bg-gray-800 rounded-xl shadow-xl max-w-md w-full max-h-[90vh] overflow-y-auto"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="sticky top-0 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 p-4 flex justify-between items-center">
+          <h3 className="text-lg font-bold text-gray-900 dark:text-white">
+            Добавить пару
+          </h3>
+          <button
+            onClick={onClose}
+            className="p-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded text-gray-500 dark:text-gray-400 transition"
+          >
+            <X className="h-5 w-5" />
+          </button>
+        </div>
+
+        <form onSubmit={onSubmit} className="p-4 space-y-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+              Дата
+            </label>
+            <input
+              type="date"
+              value={formData.date}
+              onChange={(e) =>
+                onFormChange({ ...formData, date: e.target.value })
+              }
+              min={activeStudyPeriod?.start_date}
+              max={activeStudyPeriod?.end_date}
+              className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-600"
+              required
+              autoFocus
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+              Предмет
+            </label>
+            <input
+              type="text"
+              placeholder="Название"
+              value={formData.subject_name}
+              onChange={(e) =>
+                onFormChange({ ...formData, subject_name: e.target.value })
+              }
+              className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-600"
+              required
+            />
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                Начало
+              </label>
+              <input
+                type="time"
+                value={formData.start_time}
+                onChange={(e) =>
+                  onFormChange({ ...formData, start_time: e.target.value })
+                }
+                className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-600"
+                required
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                Конец
+              </label>
+              <input
+                type="time"
+                value={formData.end_time}
+                onChange={(e) =>
+                  onFormChange({ ...formData, end_time: e.target.value })
+                }
+                className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-600"
+                required
+              />
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+              Аудитория
+            </label>
+            <input
+              type="text"
+              placeholder="Например: 101"
+              value={formData.room}
+              onChange={(e) =>
+                onFormChange({ ...formData, room: e.target.value })
+              }
+              className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-600"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+              Цвет
+            </label>
+            <div className="grid grid-cols-4 gap-2">
+              {COLORS.map((color, index) => (
+                <button
+                  key={index}
+                  type="button"
+                  onClick={() => onFormChange({ ...formData, color })}
+                  className={`h-10 rounded-lg border-2 transition ${
+                    formData.color === color
+                      ? "border-indigo-500 ring-2 ring-indigo-500 ring-offset-2 dark:ring-offset-gray-800"
+                      : "border-transparent hover:scale-105"
+                  }`}
+                >
+                  <div
+                    className={`w-full h-full rounded ${color.split(" ")[0]} opacity-70`}
+                  ></div>
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div className="flex gap-2 pt-2">
+            <button
+              type="submit"
+              disabled={isSubmitting}
+              className="flex-1 bg-green-600 hover:bg-green-700 text-white py-2 rounded-lg disabled:opacity-50 transition"
+            >
+              Добавить пару
+            </button>
+            <button
+              type="button"
+              onClick={onClose}
+              className="flex-1 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-900 dark:text-white py-2 rounded-lg transition"
+            >
+              Отмена
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+};
+
+const AddPeriodModal = ({
+  isOpen,
+  onClose,
+  onSubmit,
+  isSubmitting,
+  formData,
+  onFormChange,
+}: any) => {
+  if (!isOpen) return null;
+
+  const currentYear = new Date().getFullYear();
+  const prevYear = currentYear - 1;
+  const nextYear = currentYear + 1;
+
+  const minDate = `${prevYear}-01-01`;
+  const maxDate = `${nextYear}-12-31`;
+
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm"
+      onClick={onClose}
+    >
+      <div
+        className="bg-white dark:bg-gray-800 rounded-xl shadow-xl max-w-md w-full"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="border-b border-gray-200 dark:border-gray-700 p-4 flex justify-between items-center">
+          <h3 className="text-lg font-bold text-gray-900 dark:text-white">
+            Новый период обучения
+          </h3>
+          <button
+            onClick={onClose}
+            className="p-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded text-gray-500 dark:text-gray-400 transition"
+          >
+            <X className="h-5 w-5" />
+          </button>
+        </div>
+
+        <form onSubmit={onSubmit} className="p-4 space-y-4">
+          <input
+            type="text"
+            placeholder="Название периода"
+            value={formData.name}
+            onChange={(e) =>
+              onFormChange({ ...formData, name: e.target.value })
+            }
+            className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-600"
+            required
+            autoFocus
+          />
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+              Начало
+            </label>
+            <input
+              type="date"
+              value={formData.start_date}
+              onChange={(e) =>
+                onFormChange({ ...formData, start_date: e.target.value })
+              }
+              min={minDate}
+              max={maxDate}
+              className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-600"
+              required
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+              Конец
+            </label>
+            <input
+              type="date"
+              value={formData.end_date}
+              onChange={(e) =>
+                onFormChange({ ...formData, end_date: e.target.value })
+              }
+              min={formData.start_date || minDate}
+              max={maxDate}
+              className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-600"
+              required
+            />
+          </div>
+
+          <div className="flex gap-2 pt-2">
+            <button
+              type="submit"
+              disabled={isSubmitting}
+              className="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white py-2 rounded-lg disabled:opacity-50 transition"
+            >
+              Создать
+            </button>
+            <button
+              type="button"
+              onClick={onClose}
+              className="flex-1 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-900 dark:text-white py-2 rounded-lg transition"
+            >
+              Отмена
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+};
+
+const ApplyPresetModal = ({
+  isOpen,
+  onClose,
+  onSubmit,
+  isSubmitting,
+  formData,
+  onFormChange,
+  activeStudyPeriod,
+}: any) => {
+  if (!isOpen) return null;
+
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm"
+      onClick={onClose}
+    >
+      <div
+        className="bg-white dark:bg-gray-800 rounded-xl shadow-xl max-w-md w-full"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="border-b border-gray-200 dark:border-gray-700 p-4 flex justify-between items-center">
+          <h3 className="text-lg font-bold text-gray-900 dark:text-white">
+            Применить пресет
+          </h3>
+          <button
+            onClick={onClose}
+            className="p-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded text-gray-500 dark:text-gray-400 transition"
+          >
+            <X className="h-5 w-5" />
+          </button>
+        </div>
+
+        <form onSubmit={onSubmit} className="p-4 space-y-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+              Пресет
+            </label>
+            <select
+              value={formData.preset_id}
+              onChange={(e) =>
+                onFormChange({ ...formData, preset_id: e.target.value })
+              }
+              className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-600"
+              required
+              autoFocus
+            >
+              <option value="">Выберите пресет</option>
+              {formData.presets?.map((preset: any) => (
+                <option key={preset.id} value={preset.id}>
+                  {preset.name}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+              Начиная с
+            </label>
+            <input
+              type="date"
+              value={formData.start_date}
+              onChange={(e) =>
+                onFormChange({ ...formData, start_date: e.target.value })
+              }
+              min={activeStudyPeriod?.start_date}
+              max={activeStudyPeriod?.end_date}
+              className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-600"
+              required
+            />
+          </div>
+
+          <div className="flex gap-2 pt-2">
+            <button
+              type="submit"
+              disabled={isSubmitting}
+              className="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-2 rounded-lg disabled:opacity-50 transition"
+            >
+              Применить пресет
+            </button>
+            <button
+              type="button"
+              onClick={onClose}
+              className="flex-1 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-900 dark:text-white py-2 rounded-lg transition"
+            >
+              Отмена
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+};
+
+// Модальное окно подтверждения
+const ConfirmModal = ({
+  isOpen,
+  onClose,
+  onConfirm,
+  title,
+  message,
+}: any) => {
+  if (!isOpen) return null;
+
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm"
+      onClick={onClose}
+    >
+      <div
+        className="bg-white dark:bg-gray-800 rounded-xl shadow-xl max-w-md w-full"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="border-b border-gray-200 dark:border-gray-700 p-4 flex items-center gap-3">
+          <div className="p-2 bg-red-100 dark:bg-red-900/30 rounded-full">
+            <AlertTriangle className="h-5 w-5 text-red-600 dark:text-red-400" />
+          </div>
+          <h3 className="text-lg font-bold text-gray-900 dark:text-white">
+            {title}
+          </h3>
+        </div>
+
+        <div className="p-4">
+          <p className="text-gray-700 dark:text-gray-300">{message}</p>
+        </div>
+
+        <div className="border-t border-gray-200 dark:border-gray-700 p-4 flex gap-2">
+          <button
+            onClick={onConfirm}
+            className="flex-1 bg-red-600 hover:bg-red-700 text-white py-2 rounded-lg transition"
+          >
+            Да, удалить и создать
+          </button>
+          <button
+            onClick={onClose}
+            className="flex-1 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-900 dark:text-white py-2 rounded-lg transition"
+          >
+            Отмена
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
 
 export default function SchedulePage() {
   const { user, loading: authLoading } = useAuth();
+  const { isDark } = useTheme();
   const {
     schedules,
     presets,
@@ -42,6 +456,7 @@ export default function SchedulePage() {
     createStudyPeriod,
     setActiveStudyPeriod,
     applyPreset,
+    deleteStudyPeriod,
   } = useData();
 
   const [currentWeekStart, setCurrentWeekStart] = useState<Date>(() => {
@@ -55,26 +470,28 @@ export default function SchedulePage() {
   const [showAddPeriod, setShowAddPeriod] = useState(false);
   const [showAddSchedule, setShowAddSchedule] = useState(false);
   const [showApplyPreset, setShowApplyPreset] = useState(false);
+  const [showConfirm, setShowConfirm] = useState(false);
+  const [pendingPeriodData, setPendingPeriodData] = useState<any>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const [periodForm, setPeriodForm] = useState({
-    name: '',
-    start_date: '',
-    end_date: '',
+    name: "",
+    start_date: "",
+    end_date: "",
   });
 
   const [scheduleForm, setScheduleForm] = useState({
-    date: '',
-    subject_name: '',
-    start_time: '09:00',
-    end_time: '10:35',
-    room: '',
+    date: "",
+    subject_name: "",
+    start_time: "09:00",
+    end_time: "10:35",
+    room: "",
     color: COLORS[0],
   });
 
   const [applyPresetForm, setApplyPresetForm] = useState({
-    preset_id: '',
-    start_date: '',
+    preset_id: "",
+    start_date: "",
   });
 
   // Получаем дни текущей недели
@@ -90,13 +507,15 @@ export default function SchedulePage() {
 
   // Расписание на текущую неделю
   const weekSchedules = useMemo(() => {
-    const start = weekDays[0].toISOString().split('T')[0];
-    const end = weekDays[6].toISOString().split('T')[0];
-    return schedules.filter((s) => s.date >= start && s.date <= end).sort((a, b) => {
-      const dateA = new Date(`2000-01-01 ${a.start_time}`);
-      const dateB = new Date(`2000-01-01 ${b.start_time}`);
-      return dateA.getTime() - dateB.getTime();
-    });
+    const start = weekDays[0].toISOString().split("T")[0];
+    const end = weekDays[6].toISOString().split("T")[0];
+    return schedules
+      .filter((s) => s.date >= start && s.date <= end)
+      .sort((a, b) => {
+        const dateA = new Date(`2000-01-01 ${a.start_time}`);
+        const dateB = new Date(`2000-01-01 ${b.start_time}`);
+        return dateA.getTime() - dateB.getTime();
+      });
   }, [weekDays, schedules]);
 
   const schedulesByDate = useMemo(() => {
@@ -117,37 +536,89 @@ export default function SchedulePage() {
     return nextWeekEnd <= new Date(activeStudyPeriod.end_date);
   };
 
-  const handleCreatePeriod = async (e: React.FormEvent) => {
+  const goToCurrentWeek = () => {
+    const today = new Date();
+    const day = today.getDay();
+    const diff = today.getDate() - (day === 0 ? 6 : day - 1);
+    const currentWeekDate = new Date(today.setDate(diff));
+    setCurrentWeekStart(currentWeekDate);
+  };
+
+  const handleCreatePeriodSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!periodForm.name || !periodForm.start_date || !periodForm.end_date) {
-      alert('Заполните все поля');
+      alert("Заполните все поля");
       return;
     }
 
-    try {
-      setIsSubmitting(true);
-      await createStudyPeriod({
+    const startYear = new Date(periodForm.start_date).getFullYear();
+    const endYear = new Date(periodForm.end_date).getFullYear();
+    const currentYear = new Date().getFullYear();
+    const prevYear = currentYear - 1;
+    const nextYear = currentYear + 1;
+
+    if (startYear < prevYear || startYear > nextYear) {
+      alert(
+        `Год начала должен быть ${prevYear}, ${currentYear} или ${nextYear}`,
+      );
+      return;
+    }
+
+    if (endYear < prevYear || endYear > nextYear) {
+      alert(
+        `Год окончания должен быть ${prevYear}, ${currentYear} или ${nextYear}`,
+      );
+      return;
+    }
+
+    // Если уже есть активный период, показываем предупреждение
+    if (activeStudyPeriod) {
+      setPendingPeriodData({
         name: periodForm.name,
         start_date: periodForm.start_date,
         end_date: periodForm.end_date,
-        is_active: true,
-        user_id: user!.id,
-      
       });
-      setPeriodForm({ name: '', start_date: '', end_date: '' });
+      setShowConfirm(true);
+      return;
+    }
+
+    // Если нет активного периода, создаем сразу
+    await createPeriod();
+  };
+
+  const createPeriod = async () => {
+    try {
+      setIsSubmitting(true);
+      
+      // Если есть старый активный период, удаляем его
+      if (activeStudyPeriod) {
+        await deleteStudyPeriod(activeStudyPeriod.id);
+      }
+      
+      // Создаем новый период
+      await createStudyPeriod({
+        name: pendingPeriodData?.name || periodForm.name,
+        start_date: pendingPeriodData?.start_date || periodForm.start_date,
+        end_date: pendingPeriodData?.end_date || periodForm.end_date,
+        is_active: true,
+      });
+      
+      setPeriodForm({ name: "", start_date: "", end_date: "" });
       setShowAddPeriod(false);
     } catch (err) {
-      console.error('Error:', err);
-      alert('Ошибка при создании периода');
+      console.error("Error:", err);
+      alert("Ошибка при создании периода");
     } finally {
       setIsSubmitting(false);
+      setShowConfirm(false);
+      setPendingPeriodData(null);
     }
   };
 
   const handleAddSchedule = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!activeStudyPeriod) {
-      alert('Выберите период обучения');
+      alert("Выберите период обучения");
       return;
     }
 
@@ -164,17 +635,17 @@ export default function SchedulePage() {
         study_period_id: activeStudyPeriod.id,
       });
       setScheduleForm({
-        date: '',
-        subject_name: '',
-        start_time: '09:00',
-        end_time: '10:35',
-        room: '',
+        date: "",
+        subject_name: "",
+        start_time: "09:00",
+        end_time: "10:35",
+        room: "",
         color: COLORS[0],
       });
       setShowAddSchedule(false);
     } catch (err) {
-      console.error('Error:', err);
-      alert('Ошибка при добавлении пары');
+      console.error("Error:", err);
+      alert("Ошибка при добавлении пары");
     } finally {
       setIsSubmitting(false);
     }
@@ -183,19 +654,21 @@ export default function SchedulePage() {
   const handleApplyPreset = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!applyPresetForm.preset_id || !applyPresetForm.start_date) {
-      alert('Выберите пресет и дату');
+      alert("Выберите пресет и дату");
       return;
     }
 
     try {
       setIsSubmitting(true);
-      await applyPreset(Number(applyPresetForm.preset_id), applyPresetForm.start_date);
-      setApplyPresetForm({ preset_id: '', start_date: '' });
+      await applyPreset(
+        Number(applyPresetForm.preset_id),
+        applyPresetForm.start_date,
+      );
+      setApplyPresetForm({ preset_id: "", start_date: "" });
       setShowApplyPreset(false);
-      alert('Пресет успешно применен!');
     } catch (err) {
-      console.error('Error:', err);
-      alert('Ошибка при применении пресета');
+      console.error("Error:", err);
+      alert("Ошибка при применении пресета");
     } finally {
       setIsSubmitting(false);
     }
@@ -203,10 +676,12 @@ export default function SchedulePage() {
 
   if (authLoading || loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
+      <div className="flex items-center justify-center min-h-[400px]">
         <div className="flex flex-col items-center space-y-4">
           <Loader className="h-8 w-8 text-indigo-600 animate-spin" />
-          <p className="text-gray-600">Загрузка расписания...</p>
+          <p className="text-gray-600 dark:text-gray-400">
+            Загрузка расписания...
+          </p>
         </div>
       </div>
     );
@@ -214,30 +689,42 @@ export default function SchedulePage() {
 
   if (!user) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <p className="text-gray-600">Пожалуйста, войдите в аккаунт</p>
+      <div className="flex items-center justify-center min-h-[400px]">
+        <p className="text-gray-600 dark:text-gray-400">
+          Пожалуйста, войдите в аккаунт
+        </p>
       </div>
     );
   }
 
   return (
-    <div className="p-4 sm:p-8">
+    <div className="p-4 sm:p-8 transition-colors">
       {/* Header */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
         <div>
-          <h2 className="text-2xl sm:text-3xl font-bold text-gray-800">Расписание</h2>
+          <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white">
+            Расписание
+          </h2>
           {activeStudyPeriod ? (
-            <p className="text-gray-500 text-sm sm:text-base">
-              {activeStudyPeriod.name} ({new Date(activeStudyPeriod.start_date).toLocaleDateString('ru-RU')} - {new Date(activeStudyPeriod.end_date).toLocaleDateString('ru-RU')})
+            <p className="text-gray-600 dark:text-gray-400 text-sm sm:text-base">
+              {activeStudyPeriod.name} (
+              {new Date(activeStudyPeriod.start_date).toLocaleDateString(
+                "ru-RU",
+              )}{" "}
+              -{" "}
+              {new Date(activeStudyPeriod.end_date).toLocaleDateString("ru-RU")}
+              )
             </p>
           ) : (
-            <p className="text-amber-600 text-sm sm:text-base font-medium">Создайте период обучения</p>
+            <p className="text-amber-600 dark:text-amber-400 text-sm sm:text-base font-medium">
+              Создайте период обучения
+            </p>
           )}
         </div>
         <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
           <button
             onClick={() => setShowAddPeriod(true)}
-            className="flex items-center justify-center gap-2 px-4 sm:px-6 py-2 sm:py-3 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 text-sm sm:text-base transition"
+            className="flex items-center justify-center gap-2 px-4 sm:px-6 py-2 sm:py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-sm sm:text-base transition"
           >
             <Plus className="h-4 w-4" />
             Новый период
@@ -246,7 +733,7 @@ export default function SchedulePage() {
             <>
               <button
                 onClick={() => setShowAddSchedule(true)}
-                className="flex items-center justify-center gap-2 px-4 sm:px-6 py-2 sm:py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 text-sm sm:text-base transition"
+                className="flex items-center justify-center gap-2 px-4 sm:px-6 py-2 sm:py-3 bg-green-600 hover:bg-green-700 text-white rounded-lg text-sm sm:text-base transition"
               >
                 <Plus className="h-4 w-4" />
                 Добавить пару
@@ -254,7 +741,7 @@ export default function SchedulePage() {
               {presets.length > 0 && (
                 <button
                   onClick={() => setShowApplyPreset(true)}
-                  className="flex items-center justify-center gap-2 px-4 sm:px-6 py-2 sm:py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm sm:text-base transition"
+                  className="flex items-center justify-center gap-2 px-4 sm:px-6 py-2 sm:py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm sm:text-base transition"
                 >
                   <Copy className="h-4 w-4" />
                   Пресет
@@ -265,207 +752,53 @@ export default function SchedulePage() {
         </div>
       </div>
 
-      {/* Create Period Form */}
-      {showAddPeriod && (
-        <div className="bg-white rounded-xl border p-4 sm:p-6 mb-6">
-          <div className="flex justify-between items-center mb-4">
-            <h3 className="text-lg font-bold text-gray-800">Новый период обучения</h3>
-            <button onClick={() => setShowAddPeriod(false)} className="p-1 hover:bg-gray-100 rounded">
-              <X className="h-5 w-5" />
-            </button>
-          </div>
+      {/* Модальные окна */}
+      <AddPeriodModal
+        isOpen={showAddPeriod}
+        onClose={() => setShowAddPeriod(false)}
+        onSubmit={handleCreatePeriodSubmit}
+        isSubmitting={isSubmitting}
+        formData={periodForm}
+        onFormChange={setPeriodForm}
+      />
 
-          <form onSubmit={handleCreatePeriod} className="space-y-4">
-            <input
-              type="text"
-              placeholder="Название периода"
-              value={periodForm.name}
-              onChange={(e) => setPeriodForm({ ...periodForm, name: e.target.value })}
-              className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-600"
-              required
-            />
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Начало</label>
-                <input
-                  type="date"
-                  value={periodForm.start_date}
-                  onChange={(e) => setPeriodForm({ ...periodForm, start_date: e.target.value })}
-                  className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-600"
-                  required
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Конец</label>
-                <input
-                  type="date"
-                  value={periodForm.end_date}
-                  onChange={(e) => setPeriodForm({ ...periodForm, end_date: e.target.value })}
-                  className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-600"
-                  required
-                />
-              </div>
-            </div>
-            <div className="flex gap-2">
-              <button type="submit" disabled={isSubmitting} className="flex-1 bg-indigo-600 text-white py-2 rounded-lg hover:bg-indigo-700 disabled:opacity-50">
-                Создать
-              </button>
-              <button type="button" onClick={() => setShowAddPeriod(false)} className="flex-1 bg-gray-200 text-gray-800 py-2 rounded-lg">
-                Отмена
-              </button>
-            </div>
-          </form>
-        </div>
-      )}
+      <AddScheduleModal
+        isOpen={showAddSchedule}
+        onClose={() => setShowAddSchedule(false)}
+        onSubmit={handleAddSchedule}
+        isSubmitting={isSubmitting}
+        activeStudyPeriod={activeStudyPeriod}
+        formData={scheduleForm}
+        onFormChange={setScheduleForm}
+      />
 
-      {/* Add Schedule Form */}
-      {showAddSchedule && activeStudyPeriod && (
-        <div className="bg-white rounded-xl border p-4 sm:p-6 mb-6">
-          <div className="flex justify-between items-center mb-4">
-            <h3 className="text-lg font-bold text-gray-800">Добавить пару</h3>
-            <button onClick={() => setShowAddSchedule(false)} className="p-1 hover:bg-gray-100 rounded">
-              <X className="h-5 w-5" />
-            </button>
-          </div>
+      <ApplyPresetModal
+        isOpen={showApplyPreset}
+        onClose={() => setShowApplyPreset(false)}
+        onSubmit={handleApplyPreset}
+        isSubmitting={isSubmitting}
+        formData={{ ...applyPresetForm, presets }}
+        onFormChange={setApplyPresetForm}
+        activeStudyPeriod={activeStudyPeriod}
+      />
 
-          <form onSubmit={handleAddSchedule} className="space-y-4">
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Дата</label>
-                <input
-                  type="date"
-                  value={scheduleForm.date}
-                  onChange={(e) => setScheduleForm({ ...scheduleForm, date: e.target.value })}
-                  min={activeStudyPeriod.start_date}
-                  max={activeStudyPeriod.end_date}
-                  className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-600"
-                  required
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Предмет</label>
-                <input
-                  type="text"
-                  placeholder="Название"
-                  value={scheduleForm.subject_name}
-                  onChange={(e) => setScheduleForm({ ...scheduleForm, subject_name: e.target.value })}
-                  className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-600"
-                  required
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Начало</label>
-                <input
-                  type="time"
-                  value={scheduleForm.start_time}
-                  onChange={(e) => setScheduleForm({ ...scheduleForm, start_time: e.target.value })}
-                  className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-600"
-                  required
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Конец</label>
-                <input
-                  type="time"
-                  value={scheduleForm.end_time}
-                  onChange={(e) => setScheduleForm({ ...scheduleForm, end_time: e.target.value })}
-                  className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-600"
-                  required
-                />
-              </div>
-              <div className="sm:col-span-2">
-                <label className="block text-sm font-medium text-gray-700 mb-1">Аудитория</label>
-                <input
-                  type="text"
-                  placeholder="Например: 101"
-                  value={scheduleForm.room}
-                  onChange={(e) => setScheduleForm({ ...scheduleForm, room: e.target.value })}
-                  className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-600"
-                />
-              </div>
-              <div className="sm:col-span-2">
-                <label className="block text-sm font-medium text-gray-700 mb-1">Цвет</label>
-                <div className="flex gap-2 flex-wrap">
-                  {COLORS.map((color) => (
-                    <button
-                      key={color}
-                      type="button"
-                      onClick={() => setScheduleForm({ ...scheduleForm, color })}
-                      className={`w-8 h-8 rounded-lg border-2 ${color} ${
-                        scheduleForm.color === color ? 'border-gray-800' : 'border-transparent'
-                      }`}
-                    />
-                  ))}
-                </div>
-              </div>
-            </div>
-            <div className="flex gap-2">
-              <button type="submit" disabled={isSubmitting} className="flex-1 bg-green-600 text-white py-2 rounded-lg hover:bg-green-700 disabled:opacity-50">
-                Добавить пару
-              </button>
-              <button type="button" onClick={() => setShowAddSchedule(false)} className="flex-1 bg-gray-200 text-gray-800 py-2 rounded-lg">
-                Отмена
-              </button>
-            </div>
-          </form>
-        </div>
-      )}
-
-      {/* Apply Preset Form */}
-      {showApplyPreset && (
-        <div className="bg-white rounded-xl border p-4 sm:p-6 mb-6">
-          <div className="flex justify-between items-center mb-4">
-            <h3 className="text-lg font-bold text-gray-800">Применить пресет</h3>
-            <button onClick={() => setShowApplyPreset(false)} className="p-1 hover:bg-gray-100 rounded">
-              <X className="h-5 w-5" />
-            </button>
-          </div>
-
-          <form onSubmit={handleApplyPreset} className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Пресет</label>
-              <select
-                value={applyPresetForm.preset_id}
-                onChange={(e) => setApplyPresetForm({ ...applyPresetForm, preset_id: e.target.value })}
-                className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-600"
-                required
-              >
-                <option value="">Выберите пресет</option>
-                {presets.map((preset) => (
-                  <option key={preset.id} value={preset.id}>
-                    {preset.name}
-                  </option>
-                ))}
-              </select>
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Начиная с</label>
-              <input
-                type="date"
-                value={applyPresetForm.start_date}
-                onChange={(e) => setApplyPresetForm({ ...applyPresetForm, start_date: e.target.value })}
-                min={activeStudyPeriod?.start_date}
-                max={activeStudyPeriod?.end_date}
-                className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-600"
-                required
-              />
-            </div>
-            <div className="flex gap-2">
-              <button type="submit" disabled={isSubmitting} className="flex-1 bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 disabled:opacity-50">
-                Применить пресет
-              </button>
-              <button type="button" onClick={() => setShowApplyPreset(false)} className="flex-1 bg-gray-200 text-gray-800 py-2 rounded-lg">
-                Отмена
-              </button>
-            </div>
-          </form>
-        </div>
-      )}
+      <ConfirmModal
+        isOpen={showConfirm}
+        onClose={() => {
+          setShowConfirm(false);
+          setPendingPeriodData(null);
+        }}
+        onConfirm={createPeriod}
+        title="Внимание!"
+        message={`У вас уже есть активный период обучения "${activeStudyPeriod?.name}". При создании нового периода старый период и все его пары будут УДАЛЕНЫ. Вы уверены, что хотите продолжить?`}
+      />
 
       {/* No Period Warning */}
       {!activeStudyPeriod && (
-        <div className="bg-amber-50 border border-amber-200 rounded-lg p-4 mb-6 text-center">
-          <p className="text-amber-800 font-medium">Создайте период обучения для начала работы с расписанием</p>
+        <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-700 rounded-lg p-4 mb-6 text-center">
+          <p className="text-amber-800 dark:text-amber-200 font-medium">
+            Создайте период обучения для начала работы с расписанием
+          </p>
         </div>
       )}
 
@@ -473,21 +806,38 @@ export default function SchedulePage() {
       {activeStudyPeriod && (
         <>
           <div className="flex flex-col sm:flex-row justify-between items-center gap-4 mb-6">
-            <button
-              onClick={() => {
-                const newDate = new Date(currentWeekStart);
-                newDate.setDate(newDate.getDate() - 7);
-                setCurrentWeekStart(newDate);
-              }}
-              className="flex items-center gap-2 px-4 py-2 bg-white border rounded-lg hover:bg-gray-50 transition"
-            >
-              <ChevronLeft className="h-4 w-4" />
-              Пред. неделя
-            </button>
+            <div className="flex gap-2">
+              <button
+                onClick={() => {
+                  const newDate = new Date(currentWeekStart);
+                  newDate.setDate(newDate.getDate() - 7);
+                  setCurrentWeekStart(newDate);
+                }}
+                className="flex items-center gap-2 px-4 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition text-gray-700 dark:text-gray-300"
+              >
+                <ChevronLeft className="h-4 w-4" />
+                Пред. неделя
+              </button>
 
-            <h3 className="font-semibold text-gray-800 text-center">
-              {weekDays[0].toLocaleDateString('ru-RU', { day: 'numeric', month: 'short' })} -{' '}
-              {weekDays[6].toLocaleDateString('ru-RU', { day: 'numeric', month: 'short', year: 'numeric' })}
+              <button
+                onClick={goToCurrentWeek}
+                className="flex items-center gap-2 px-4 py-2 bg-indigo-50 dark:bg-indigo-950/30 border border-indigo-200 dark:border-indigo-700 rounded-lg hover:bg-indigo-100 dark:hover:bg-indigo-950/50 transition text-indigo-700 dark:text-indigo-400"
+              >
+                Текущая неделя
+              </button>
+            </div>
+
+            <h3 className="font-semibold text-gray-900 dark:text-white text-center">
+              {weekDays[0].toLocaleDateString("ru-RU", {
+                day: "numeric",
+                month: "short",
+              })}{" "}
+              -{" "}
+              {weekDays[6].toLocaleDateString("ru-RU", {
+                day: "numeric",
+                month: "short",
+                year: "numeric",
+              })}
             </h3>
 
             <button
@@ -497,7 +847,7 @@ export default function SchedulePage() {
                 setCurrentWeekStart(newDate);
               }}
               disabled={!canGoNext()}
-              className="flex items-center gap-2 px-4 py-2 bg-white border rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition"
+              className="flex items-center gap-2 px-4 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed transition text-gray-700 dark:text-gray-300"
             >
               След. неделя
               <ChevronRight className="h-4 w-4" />
@@ -507,14 +857,15 @@ export default function SchedulePage() {
           {/* Week Schedule */}
           <div className="space-y-6">
             {weekDays.map((day) => {
-              const dateStr = day.toISOString().split('T')[0];
+              const dateStr = day.toISOString().split("T")[0];
               const daySchedules = schedulesByDate[dateStr] || [];
-              const dayName = DAYS_RU[day.getDay() === 0 ? 6 : day.getDay() - 1];
+              const dayName =
+                DAYS_RU[day.getDay() === 0 ? 6 : day.getDay() - 1];
 
               return (
                 <div key={dateStr}>
-                  <h3 className="font-bold text-lg text-gray-800 mb-3">
-                    {dayName}, {day.toLocaleDateString('ru-RU')}
+                  <h3 className="font-bold text-lg text-gray-900 dark:text-white mb-3">
+                    {dayName}, {day.toLocaleDateString("ru-RU")}
                   </h3>
 
                   {daySchedules.length > 0 ? (
@@ -526,10 +877,10 @@ export default function SchedulePage() {
                         >
                           <div className="flex justify-between items-start">
                             <div className="flex-1">
-                              <h4 className="font-bold text-gray-800 text-lg">
+                              <h4 className="font-bold text-gray-900 dark:text-gray-100 text-lg">
                                 {schedule.subject_name}
                               </h4>
-                              <div className="flex flex-col sm:flex-row gap-2 sm:gap-4 mt-2 text-sm text-gray-700">
+                              <div className="flex flex-col sm:flex-row gap-2 sm:gap-4 mt-2 text-sm text-gray-700 dark:text-gray-300">
                                 <span className="flex items-center gap-1">
                                   <Clock className="h-4 w-4" />
                                   {schedule.start_time} - {schedule.end_time}
@@ -544,7 +895,7 @@ export default function SchedulePage() {
                             </div>
                             <button
                               onClick={() => deleteSchedule(schedule.id)}
-                              className="p-2 text-gray-600 hover:text-red-600 hover:bg-red-50 rounded transition ml-2 flex-shrink-0"
+                              className="p-2 text-gray-500 dark:text-gray-400 hover:text-red-600 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/50 rounded transition ml-2 flex-shrink-0"
                             >
                               <Trash2 className="h-4 w-4" />
                             </button>
@@ -553,7 +904,7 @@ export default function SchedulePage() {
                       ))}
                     </div>
                   ) : (
-                    <div className="bg-gray-100 rounded-lg p-4 text-center text-gray-500 text-sm">
+                    <div className="bg-gray-50 dark:bg-gray-800/50 rounded-lg p-4 text-center text-gray-500 dark:text-gray-400 text-sm border border-gray-200 dark:border-gray-700">
                       Нет пар
                     </div>
                   )}
@@ -565,8 +916,10 @@ export default function SchedulePage() {
       )}
 
       {error && (
-        <div className="mt-6 p-4 bg-red-50 border border-red-200 rounded-lg">
-          <p className="text-red-600 font-medium">Ошибка: {error}</p>
+        <div className="mt-6 p-4 bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-800 rounded-lg">
+          <p className="text-red-600 dark:text-red-400 font-medium">
+            Ошибка: {error}
+          </p>
         </div>
       )}
     </div>

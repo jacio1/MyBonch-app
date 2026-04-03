@@ -17,14 +17,237 @@ import { useAuth } from '@/src/lib/AuthContext';
 
 const DAYS_RU = ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс'];
 const COLORS = [
-  'bg-blue-100',
-  'bg-green-100',
-  'bg-purple-100',
-  'bg-yellow-100',
-  'bg-red-100',
-  'bg-pink-100',
-  'bg-orange-100',
+  'bg-blue-100 dark:bg-blue-900/30 border-blue-200 dark:border-blue-700 text-blue-900 dark:text-blue-100',
+  'bg-green-100 dark:bg-green-900/30 border-green-200 dark:border-green-700 text-green-900 dark:text-green-100',
+  'bg-purple-100 dark:bg-purple-900/30 border-purple-200 dark:border-purple-700 text-purple-900 dark:text-purple-100',
+  'bg-yellow-100 dark:bg-yellow-900/30 border-yellow-200 dark:border-yellow-700 text-yellow-900 dark:text-yellow-100',
+  'bg-red-100 dark:bg-red-900/30 border-red-200 dark:border-red-700 text-red-900 dark:text-red-100',
+  'bg-pink-100 dark:bg-pink-900/30 border-pink-200 dark:border-pink-700 text-pink-900 dark:text-pink-100',
+  'bg-orange-100 dark:bg-orange-900/30 border-orange-200 dark:border-orange-700 text-orange-900 dark:text-orange-100',
 ];
+
+// Модальное окно для создания/редактирования пресета
+const PresetModal = ({ 
+  isOpen, 
+  onClose, 
+  onSubmit, 
+  isSubmitting, 
+  formData, 
+  onFormChange,
+  editingId 
+}: any) => {
+  if (!isOpen) return null;
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm" onClick={onClose}>
+      <div className="bg-white dark:bg-gray-800 rounded-xl shadow-xl max-w-md w-full" onClick={(e) => e.stopPropagation()}>
+        <div className="border-b border-gray-200 dark:border-gray-700 p-4 flex justify-between items-center">
+          <h3 className="text-lg font-bold text-gray-900 dark:text-white">
+            {editingId ? 'Редактировать пресет' : 'Новый пресет'}
+          </h3>
+          <button 
+            onClick={onClose} 
+            className="p-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded text-gray-500 dark:text-gray-400 transition"
+          >
+            <X className="h-5 w-5" />
+          </button>
+        </div>
+
+        <form onSubmit={onSubmit} className="p-4 space-y-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+              Название пресета <span className="text-red-500">*</span>
+            </label>
+            <input
+              type="text"
+              placeholder="Например: Моё расписание"
+              value={formData.name}
+              onChange={(e) => onFormChange({ ...formData, name: e.target.value })}
+              className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-600"
+              required
+              autoFocus
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+              Описание
+            </label>
+            <textarea
+              placeholder="Описание пресета (опционально)"
+              value={formData.description || ''}
+              onChange={(e) => onFormChange({ ...formData, description: e.target.value })}
+              className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-600 resize-none min-h-20"
+            />
+          </div>
+
+          <div className="flex gap-2 pt-2">
+            <button
+              type="submit"
+              disabled={isSubmitting}
+              className="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white py-2 rounded-lg disabled:opacity-50 transition flex items-center justify-center gap-2"
+            >
+              <Save className="h-4 w-4" />
+              {isSubmitting ? "Сохраняем..." : editingId ? "Обновить" : "Создать"}
+            </button>
+            <button
+              type="button"
+              onClick={onClose}
+              className="flex-1 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-900 dark:text-white py-2 rounded-lg transition"
+            >
+              Отмена
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+};
+
+// Модальное окно для добавления пары в пресет
+const ScheduleModal = ({ 
+  isOpen, 
+  onClose, 
+  onSubmit, 
+  isSubmitting, 
+  formData, 
+  onFormChange,
+  presetId
+}: any) => {
+  if (!isOpen) return null;
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm" onClick={onClose}>
+      <div className="bg-white dark:bg-gray-800 rounded-xl shadow-xl max-w-md w-full" onClick={(e) => e.stopPropagation()}>
+        <div className="border-b border-gray-200 dark:border-gray-700 p-4 flex justify-between items-center">
+          <h3 className="text-lg font-bold text-gray-900 dark:text-white">
+            Добавить пару в пресет
+          </h3>
+          <button 
+            onClick={onClose} 
+            className="p-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded text-gray-500 dark:text-gray-400 transition"
+          >
+            <X className="h-5 w-5" />
+          </button>
+        </div>
+
+        <form onSubmit={(e) => onSubmit(e, presetId)} className="p-4 space-y-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+              День недели
+            </label>
+            <select
+              value={formData.day_of_week}
+              onChange={(e) => onFormChange({ ...formData, day_of_week: Number(e.target.value) })}
+              className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-600"
+            >
+              {DAYS_RU.map((day, idx) => (
+                <option key={idx} value={idx}>
+                  {day}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+              Предмет <span className="text-red-500">*</span>
+            </label>
+            <input
+              type="text"
+              placeholder="Название предмета"
+              value={formData.subject_name}
+              onChange={(e) => onFormChange({ ...formData, subject_name: e.target.value })}
+              className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-600"
+              required
+              autoFocus
+            />
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                Начало
+              </label>
+              <input
+                type="time"
+                value={formData.start_time}
+                onChange={(e) => onFormChange({ ...formData, start_time: e.target.value })}
+                className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-600"
+                required
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                Конец
+              </label>
+              <input
+                type="time"
+                value={formData.end_time}
+                onChange={(e) => onFormChange({ ...formData, end_time: e.target.value })}
+                className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-600"
+                required
+              />
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+              Аудитория
+            </label>
+            <input
+              type="text"
+              placeholder="Например: 101"
+              value={formData.room}
+              onChange={(e) => onFormChange({ ...formData, room: e.target.value })}
+              className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-600"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+              Цвет
+            </label>
+            <div className="grid grid-cols-4 gap-2">
+              {COLORS.map((color, index) => (
+                <button
+                  key={index}
+                  type="button"
+                  onClick={() => onFormChange({ ...formData, color })}
+                  className={`h-10 rounded-lg border-2 transition ${
+                    formData.color === color 
+                      ? 'border-indigo-500 ring-2 ring-indigo-500 ring-offset-2 dark:ring-offset-gray-800' 
+                      : 'border-transparent hover:scale-105'
+                  }`}
+                >
+                  <div className={`w-full h-full rounded ${color.split(' ')[0]} opacity-70`}></div>
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div className="flex gap-2 pt-2">
+            <button
+              type="submit"
+              disabled={isSubmitting}
+              className="flex-1 bg-green-600 hover:bg-green-700 text-white py-2 rounded-lg disabled:opacity-50 transition"
+            >
+              Добавить пару
+            </button>
+            <button
+              type="button"
+              onClick={onClose}
+              className="flex-1 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-900 dark:text-white py-2 rounded-lg transition"
+            >
+              Отмена
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+};
 
 export default function PresetsPage() {
   const { user, loading: authLoading } = useAuth();
@@ -132,10 +355,10 @@ export default function PresetsPage() {
 
   if (authLoading || loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
+      <div className="flex items-center justify-center min-h-[400px]">
         <div className="flex flex-col items-center space-y-4">
           <Loader className="h-8 w-8 text-indigo-600 animate-spin" />
-          <p className="text-gray-600">Загрузка пресетов...</p>
+          <p className="text-gray-600 dark:text-gray-400">Загрузка пресетов...</p>
         </div>
       </div>
     );
@@ -143,20 +366,20 @@ export default function PresetsPage() {
 
   if (!user) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <p className="text-gray-600">Пожалуйста, войдите в аккаунт</p>
+      <div className="flex items-center justify-center min-h-[400px]">
+        <p className="text-gray-600 dark:text-gray-400">Пожалуйста, войдите в аккаунт</p>
       </div>
     );
   }
 
   return (
-    <div className="p-4 sm:p-8">
+    <div className="p-4 sm:p-8 transition-colors">
       {/* Header */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
         <div>
-          <h2 className="text-2xl sm:text-3xl font-bold text-gray-800">Пресеты расписания</h2>
-          <p className="text-gray-500 text-sm sm:text-base">
-            {presets.length} пресетов созданы
+          <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white">Пресеты расписания</h2>
+          <p className="text-gray-600 dark:text-gray-400 text-sm sm:text-base">
+            {presets.length} пресетов создано
           </p>
         </div>
         <button
@@ -175,72 +398,43 @@ export default function PresetsPage() {
           placeholder="Поиск пресетов..."
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
-          className="w-full px-4 py-2 sm:py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-600 text-sm sm:text-base"
+          className="w-full px-4 py-2 sm:py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 text-sm sm:text-base"
         />
       </div>
 
-      {/* Add/Edit Form */}
-      {showAddForm && (
-        <div className="bg-white rounded-xl border p-4 sm:p-6 mb-6">
-          <div className="flex justify-between items-center mb-4">
-            <h3 className="text-lg font-bold text-gray-800">
-              {editingPresetId ? 'Редактировать пресет' : 'Новый пресет'}
-            </h3>
-            <button onClick={resetForm} className="p-1 hover:bg-gray-100 rounded-lg transition">
-              <X className="h-5 w-5" />
-            </button>
-          </div>
+      {/* Модальные окна */}
+      <PresetModal
+        isOpen={showAddForm}
+        onClose={resetForm}
+        onSubmit={handleSubmit}
+        isSubmitting={isSubmitting}
+        formData={formData}
+        onFormChange={setFormData}
+        editingId={editingPresetId}
+      />
 
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <input
-              type="text"
-              placeholder="Название пресета (например: Мой расписание)"
-              value={formData.name}
-              onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-              className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-600"
-              required
-            />
-
-            <textarea
-              placeholder="Описание (опционально)"
-              value={formData.description || ''}
-              onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-              className="w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-600 resize-none min-h-20"
-            />
-
-            <div className="flex gap-2 pt-4">
-              <button
-                type="submit"
-                disabled={isSubmitting}
-                className="flex-1 bg-indigo-600 text-white font-semibold py-2 rounded-lg hover:bg-indigo-700 disabled:opacity-50 transition flex items-center justify-center gap-2"
-              >
-                <Save className="h-4 w-4" />
-                {editingPresetId ? 'Обновить' : 'Создать'}
-              </button>
-              <button
-                type="button"
-                onClick={resetForm}
-                className="flex-1 bg-gray-200 text-gray-800 font-semibold py-2 rounded-lg hover:bg-gray-300 transition"
-              >
-                Отмена
-              </button>
-            </div>
-          </form>
-        </div>
-      )}
+      <ScheduleModal
+        isOpen={showScheduleForm !== null}
+        onClose={resetScheduleForm}
+        onSubmit={handleAddSchedule}
+        isSubmitting={isSubmitting}
+        formData={scheduleForm}
+        onFormChange={setScheduleForm}
+        presetId={showScheduleForm}
+      />
 
       {/* Presets Grid */}
       <div className="space-y-6">
         {filteredPresets.map((preset) => (
-          <div key={preset.id} className="bg-white rounded-xl border p-4 sm:p-6 hover:shadow-md transition">
+          <div key={preset.id} className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-4 sm:p-6 hover:shadow-md transition">
             {/* Header */}
             <div className="flex justify-between items-start mb-4">
               <div className="flex-1 min-w-0">
-                <h3 className="font-bold text-base sm:text-lg text-gray-800">
+                <h3 className="font-bold text-base sm:text-lg text-gray-900 dark:text-white">
                   {preset.name}
                 </h3>
                 {preset.description && (
-                  <p className="text-sm text-gray-600 mt-1 line-clamp-2">
+                  <p className="text-sm text-gray-600 dark:text-gray-400 mt-1 line-clamp-2">
                     {preset.description}
                   </p>
                 )}
@@ -255,14 +449,14 @@ export default function PresetsPage() {
                     setEditingPresetId(preset.id);
                     setShowAddForm(true);
                   }}
-                  className="p-2 text-gray-500 hover:text-indigo-600 hover:bg-indigo-50 rounded transition"
+                  className="p-2 text-gray-500 dark:text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-950/50 rounded transition"
                   title="Редактировать"
                 >
                   <Edit2 className="h-4 w-4" />
                 </button>
                 <button
                   onClick={() => handleDelete(preset.id)}
-                  className="p-2 text-gray-500 hover:text-red-600 hover:bg-red-50 rounded transition"
+                  className="p-2 text-gray-500 dark:text-gray-400 hover:text-red-600 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/50 rounded transition"
                   title="Удалить"
                 >
                   <Trash2 className="h-4 w-4" />
@@ -273,18 +467,18 @@ export default function PresetsPage() {
             {/* Schedules */}
             {preset.schedules && preset.schedules.length > 0 ? (
               <div className="space-y-2 mb-4">
-                <h4 className="text-sm font-semibold text-gray-700">Пары в пресете:</h4>
+                <h4 className="text-sm font-semibold text-gray-700 dark:text-gray-300">Пары в пресете:</h4>
                 <div className="space-y-2 max-h-48 overflow-y-auto">
                   {preset.schedules.map((schedule) => (
                     <div
                       key={schedule.id}
-                      className={`${schedule.color} rounded-lg p-3 flex justify-between items-start`}
+                      className={`${schedule.color} rounded-lg border p-3 flex justify-between items-start`}
                     >
                       <div className="flex-1">
-                        <p className="font-medium text-gray-800 text-sm">
+                        <p className="font-medium text-gray-900 dark:text-gray-100 text-sm">
                           {DAYS_RU[schedule.day_of_week]} - {schedule.subject_name}
                         </p>
-                        <div className="flex flex-col sm:flex-row gap-2 mt-1 text-xs text-gray-700">
+                        <div className="flex flex-col sm:flex-row gap-2 mt-1 text-xs text-gray-700 dark:text-gray-300">
                           <span className="flex items-center gap-1">
                             <Clock className="h-3 w-3" />
                             {schedule.start_time} - {schedule.end_time}
@@ -299,7 +493,7 @@ export default function PresetsPage() {
                       </div>
                       <button
                         onClick={() => deletePresetSchedule(schedule.id)}
-                        className="p-1 text-gray-600 hover:text-red-600 hover:bg-red-200 rounded transition ml-2 flex-shrink-0"
+                        className="p-1 text-gray-600 dark:text-gray-400 hover:text-red-600 dark:hover:text-red-400 hover:bg-red-100 dark:hover:bg-red-950/50 rounded transition ml-2 flex-shrink-0"
                       >
                         <Trash2 className="h-3 w-3" />
                       </button>
@@ -308,129 +502,37 @@ export default function PresetsPage() {
                 </div>
               </div>
             ) : (
-              <div className="bg-gray-50 rounded-lg p-3 mb-4 text-sm text-gray-500 italic text-center">
+              <div className="bg-gray-50 dark:bg-gray-900/50 rounded-lg p-3 mb-4 text-sm text-gray-500 dark:text-gray-400 italic text-center border border-gray-200 dark:border-gray-700">
                 Пары не добавлены
               </div>
             )}
 
             {/* Add Schedule Button */}
-            {showScheduleForm === preset.id ? (
-              <div className="bg-gray-50 rounded-lg p-4 border border-gray-200">
-                <h4 className="font-semibold text-gray-800 mb-4">Добавить пару в пресет</h4>
-                <form
-                  onSubmit={(e) => handleAddSchedule(e, preset.id)}
-                  className="space-y-4"
-                >
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-xs font-medium text-gray-700 mb-1">День</label>
-                      <select
-                        value={scheduleForm.day_of_week}
-                        onChange={(e) =>
-                          setScheduleForm({ ...scheduleForm, day_of_week: Number(e.target.value) })
-                        }
-                        className="w-full px-3 py-2 border rounded text-sm focus:outline-none focus:ring-2 focus:ring-indigo-600"
-                      >
-                        {DAYS_RU.map((day, idx) => (
-                          <option key={idx} value={idx}>
-                            {day}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-                    <div>
-                      <label className="block text-xs font-medium text-gray-700 mb-1">Предмет</label>
-                      <input
-                        type="text"
-                        placeholder="Название"
-                        value={scheduleForm.subject_name}
-                        onChange={(e) =>
-                          setScheduleForm({ ...scheduleForm, subject_name: e.target.value })
-                        }
-                        className="w-full px-3 py-2 border rounded text-sm focus:outline-none focus:ring-2 focus:ring-indigo-600"
-                        required
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-xs font-medium text-gray-700 mb-1">Начало</label>
-                      <input
-                        type="time"
-                        value={scheduleForm.start_time}
-                        onChange={(e) =>
-                          setScheduleForm({ ...scheduleForm, start_time: e.target.value })
-                        }
-                        className="w-full px-3 py-2 border rounded text-sm focus:outline-none focus:ring-2 focus:ring-indigo-600"
-                        required
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-xs font-medium text-gray-700 mb-1">Конец</label>
-                      <input
-                        type="time"
-                        value={scheduleForm.end_time}
-                        onChange={(e) =>
-                          setScheduleForm({ ...scheduleForm, end_time: e.target.value })
-                        }
-                        className="w-full px-3 py-2 border rounded text-sm focus:outline-none focus:ring-2 focus:ring-indigo-600"
-                        required
-                      />
-                    </div>
-                    <div className="sm:col-span-2">
-                      <label className="block text-xs font-medium text-gray-700 mb-1">Аудитория</label>
-                      <input
-                        type="text"
-                        placeholder="Например: 101"
-                        value={scheduleForm.room}
-                        onChange={(e) => setScheduleForm({ ...scheduleForm, room: e.target.value })}
-                        className="w-full px-3 py-2 border rounded text-sm focus:outline-none focus:ring-2 focus:ring-indigo-600"
-                      />
-                    </div>
-                  </div>
-                  <div className="flex gap-2">
-                    <button
-                      type="submit"
-                      disabled={isSubmitting}
-                      className="flex-1 bg-green-600 text-white py-2 rounded text-sm hover:bg-green-700 disabled:opacity-50"
-                    >
-                      Добавить
-                    </button>
-                    <button
-                      type="button"
-                      onClick={resetScheduleForm}
-                      className="flex-1 bg-gray-300 text-gray-800 py-2 rounded text-sm hover:bg-gray-400"
-                    >
-                      Отмена
-                    </button>
-                  </div>
-                </form>
-              </div>
-            ) : (
-              <button
-                onClick={() => setShowScheduleForm(preset.id)}
-                className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-green-50 text-green-600 border border-green-200 rounded-lg hover:bg-green-100 transition font-medium text-sm"
-              >
-                <Plus className="h-4 w-4" />
-                Добавить пару
-              </button>
-            )}
+            <button
+              onClick={() => setShowScheduleForm(preset.id)}
+              className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-green-50 dark:bg-green-950/30 text-green-600 dark:text-green-400 border border-green-200 dark:border-green-800 rounded-lg hover:bg-green-100 dark:hover:bg-green-950/50 transition font-medium text-sm"
+            >
+              <Plus className="h-4 w-4" />
+              Добавить пару
+            </button>
           </div>
         ))}
       </div>
 
       {/* Empty State */}
       {filteredPresets.length === 0 && !showAddForm && (
-        <div className="bg-white rounded-xl border p-8 sm:p-12 text-center">
-          <BookOpen className="h-12 w-12 text-gray-300 mx-auto mb-4" />
-          <h3 className="text-lg sm:text-xl font-medium text-gray-700">Нет пресетов</h3>
-          <p className="text-gray-500 mt-2 text-sm sm:text-base">
+        <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-8 sm:p-12 text-center">
+          <BookOpen className="h-12 w-12 text-gray-400 dark:text-gray-500 mx-auto mb-4" />
+          <h3 className="text-lg sm:text-xl font-medium text-gray-900 dark:text-white">Нет пресетов</h3>
+          <p className="text-gray-600 dark:text-gray-400 mt-2 text-sm sm:text-base">
             {searchQuery ? 'По вашему поиску ничего не найдено' : 'Создайте первый пресет расписания'}
           </p>
         </div>
       )}
 
       {error && (
-        <div className="mt-6 p-4 bg-red-50 border border-red-200 rounded-lg">
-          <p className="text-red-600 font-medium">Ошибка: {error}</p>
+        <div className="mt-6 p-4 bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-800 rounded-lg">
+          <p className="text-red-600 dark:text-red-400 font-medium">Ошибка: {error}</p>
         </div>
       )}
     </div>

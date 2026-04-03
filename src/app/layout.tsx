@@ -33,12 +33,13 @@ export const metadata: Metadata = {
   formatDetection: {
     telephone: false,
   },
-  viewport: {
-    width: "device-width",
-    initialScale: 1,
-    maximumScale: 5,
-    userScalable: true,
-  },
+};
+
+export const viewport = {
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 5,
+  userScalable: true,
 };
 
 export default function RootLayout({
@@ -52,17 +53,20 @@ export default function RootLayout({
         <meta name="theme-color" content="#4f46e5" />
         <meta name="mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
-        <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+        <meta
+          name="apple-mobile-web-app-status-bar-style"
+          content="black-translucent"
+        />
         <meta name="apple-mobile-web-app-title" content="МойБонч" />
       </head>
-      <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
+      <body className={`${geistSans.variable} ${geistMono.variable} antialiased h-screen flex flex-col overflow-hidden`}>
         <ThemeProvider>
           <AuthProvider>
             <DataProvider>
               <Header />
-              <div className="flex flex-1 overflow-hidden min-h-screen pb-16 sm:pb-0">
-                <Sidebar assignmentsCount={0} />
-                <main className="flex-1 overflow-auto bg-light dark:bg-dark transition-colors">
+              <div className="flex flex-1 overflow-hidden">
+                <Sidebar assignmentsCount={0}/>
+                <main className="flex-1 overflow-auto">
                   {children}
                 </main>
               </div>
