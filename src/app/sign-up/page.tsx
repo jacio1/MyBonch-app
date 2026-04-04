@@ -21,7 +21,6 @@ export default function SignUpPage() {
     e.preventDefault();
     setLocalError("");
 
-    // Валидация
     if (!email || !password || !confirmPassword || !fullName) {
       setLocalError("Заполните все поля");
       return;

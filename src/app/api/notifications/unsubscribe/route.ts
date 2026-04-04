@@ -1,5 +1,3 @@
-// app/api/notifications/unsubscribe/route.ts
-
 import { NextRequest, NextResponse } from 'next/server';
 import { supabase } from '@/src/lib/supabase';
 
@@ -14,7 +12,6 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Удаляем подписку из базы данных
     const { error } = await supabase
       .from('push_subscriptions')
       .delete()

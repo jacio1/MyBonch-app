@@ -21,7 +21,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    // Проверяем сессию при загрузке
     const checkSession = async () => {
       try {
         const {
@@ -38,7 +37,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     checkSession();
 
-    // Подписываемся на изменения аутентификации
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((_event, session) => {

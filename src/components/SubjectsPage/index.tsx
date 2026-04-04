@@ -25,21 +25,18 @@ const COLORS = [
   'bg-yellow-100 dark:bg-yellow-900/30 border-yellow-200 dark:border-yellow-700 text-yellow-900 dark:text-yellow-100',
 ];
 
-// Функция для форматирования времени без секунд
 const formatTime = (time: string) => {
   return time.substring(0, 5);
 };
 
-// Функция для проверки пересечения времени
 const isTimeOverlap = (start1: string, end1: string, start2: string, end2: string) => {
   return (
-    (start1 >= start2 && start1 < end2) || // Начало внутри
-    (end1 > start2 && end1 <= end2) || // Конец внутри
-    (start1 <= start2 && end1 >= end2) // Полное перекрытие
+    (start1 >= start2 && start1 < end2) || 
+    (end1 > start2 && end1 <= end2) || 
+    (start1 <= start2 && end1 >= end2) 
   );
 };
 
-// Модальное окно ошибки времени
 const ErrorModal = ({ isOpen, onClose, title, message, conflictSchedule }: any) => {
   if (!isOpen) return null;
 
@@ -92,7 +89,6 @@ const ErrorModal = ({ isOpen, onClose, title, message, conflictSchedule }: any) 
   );
 };
 
-// Модальное окно для создания/редактирования пресета
 const PresetModal = ({ 
   isOpen, 
   onClose, 
@@ -170,7 +166,6 @@ const PresetModal = ({
   );
 };
 
-// Модальное окно для добавления пары в пресет
 const ScheduleModal = ({ 
   isOpen, 
   onClose, 
@@ -349,7 +344,7 @@ export default function PresetsPage() {
   const [errorModalData, setErrorModalData] = useState<{
   title: string;
   message: string;
-  conflictSchedule: any; // или PresetSchedule | null | undefined
+  conflictSchedule: any; 
 }>({
   title: '',
   message: '',
@@ -371,7 +366,6 @@ export default function PresetsPage() {
     is_important: false,
   });
 
-  // Функция проверки пересечения времени в пресете
   const checkTimeOverlapInPreset = useCallback((presetId: number, dayOfWeek: number, startTime: string, endTime: string, excludeScheduleId?: number) => {
     const preset = presets.find(p => p.id === presetId);
     if (!preset || !preset.schedules) return { overlaps: false };
@@ -445,7 +439,6 @@ export default function PresetsPage() {
       return;
     }
 
-    // Проверка на пересечение времени в пресете
     const { overlaps, overlappingSchedule } = checkTimeOverlapInPreset(
       presetId,
       scheduleForm.day_of_week,
@@ -457,7 +450,7 @@ export default function PresetsPage() {
       setErrorModalData({
         title: "Конфликт времени в пресете!",
         message: `Нельзя добавить пару в это время, так как она пересекается с существующей парой в пресете.\n\nПожалуйста, измените время или удалите конфликтующую пару.`,
-        conflictSchedule: overlappingSchedule || null // Добавьте || null
+        conflictSchedule: overlappingSchedule || null
       });
       setShowErrorModal(true);
       return;
@@ -465,10 +458,9 @@ export default function PresetsPage() {
 
     setIsSubmitting(true);
 
-    // ИСПРАВЛЕНО: Добавляем preset_id к данным
     await addPresetSchedule(presetId, {
       ...scheduleForm,
-      preset_id: presetId, // 👈 Добавьте эту строку
+      preset_id: presetId, 
     });
     
     resetScheduleForm();

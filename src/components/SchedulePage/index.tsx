@@ -28,12 +28,10 @@ const COLORS = [
   "bg-yellow-100 dark:bg-yellow-900/30 border-yellow-200 dark:border-yellow-700 text-yellow-900 dark:text-yellow-100",
 ];
 
-// Функция для форматирования времени без секунд
 const formatTime = (time: string) => {
   return time.substring(0, 5);
 };
 
-// Функция для проверки пересечения времени
 const isTimeOverlap = (
   start1: string,
   end1: string,
@@ -41,13 +39,12 @@ const isTimeOverlap = (
   end2: string,
 ) => {
   return (
-    (start1 >= start2 && start1 < end2) || // Начало внутри
-    (end1 > start2 && end1 <= end2) || // Конец внутри
-    (start1 <= start2 && end1 >= end2) // Полное перекрытие
+    (start1 >= start2 && start1 < end2) || 
+    (end1 > start2 && end1 <= end2) || 
+    (start1 <= start2 && end1 >= end2) 
   );
 };
 
-// Модальное окно для добавления/редактирования пары
 const AddScheduleModal = ({
   isOpen,
   onClose,
@@ -236,7 +233,6 @@ const AddScheduleModal = ({
   );
 };
 
-// Модальное окно для создания периода
 const AddPeriodModal = ({
   isOpen,
   onClose,
@@ -344,7 +340,6 @@ const AddPeriodModal = ({
   );
 };
 
-// Модальное окно для применения пресета
 const ApplyPresetModal = ({
   isOpen,
   onClose,
@@ -439,7 +434,6 @@ const ApplyPresetModal = ({
   );
 };
 
-// Модальное окно подтверждения
 const ConfirmModal = ({ isOpen, onClose, onConfirm, title, message }: any) => {
   if (!isOpen) return null;
 
@@ -484,7 +478,6 @@ const ConfirmModal = ({ isOpen, onClose, onConfirm, title, message }: any) => {
   );
 };
 
-// Модальное окно ошибки времени
 const ErrorModal = ({
   isOpen,
   onClose,
@@ -589,7 +582,7 @@ export default function SchedulePage() {
   const [errorModalData, setErrorModalData] = useState<{
     title: string;
     message: string;
-    conflictSchedule: Schedule | null | undefined; // 👈 Добавьте undefined
+    conflictSchedule: Schedule | null | undefined; 
   }>({
     title: "",
     message: "",
@@ -617,7 +610,6 @@ export default function SchedulePage() {
     start_date: "",
   });
 
-  // Проверка на пересечение времени
   const checkTimeOverlap = useCallback(
     (
       date: string,
@@ -650,7 +642,6 @@ export default function SchedulePage() {
     [schedules],
   );
 
-  // Получаем дни текущей недели
   const weekDays = useMemo(() => {
     const days = [];
     for (let i = 0; i < 7; i++) {
@@ -661,7 +652,6 @@ export default function SchedulePage() {
     return days;
   }, [currentWeekStart]);
 
-  // Расписание на текущую неделю
   const weekSchedules = useMemo(() => {
     const start = weekDays[0].toISOString().split("T")[0];
     const end = weekDays[6].toISOString().split("T")[0];
@@ -727,7 +717,6 @@ export default function SchedulePage() {
       return;
     }
 
-    // Если уже есть активный период, показываем предупреждение
     if (activeStudyPeriod) {
       setPendingPeriodData({
         name: periodForm.name,
@@ -738,7 +727,6 @@ export default function SchedulePage() {
       return;
     }
 
-    // Если нет активного периода, создаем сразу
     await createPeriod();
   };
 
@@ -746,12 +734,10 @@ export default function SchedulePage() {
     try {
       setIsSubmitting(true);
 
-      // Если есть старый активный период, удаляем его
       if (activeStudyPeriod) {
         await deleteStudyPeriod(activeStudyPeriod.id);
       }
 
-      // Создаем новый период
       await createStudyPeriod({
         name: pendingPeriodData?.name || periodForm.name,
         start_date: pendingPeriodData?.start_date || periodForm.start_date,
@@ -779,7 +765,6 @@ export default function SchedulePage() {
       return;
     }
 
-    // Проверка на пересечение времени
     const { overlaps, overlappingSchedule } = checkTimeOverlap(
       scheduleForm.date,
       scheduleForm.start_time,
@@ -801,7 +786,6 @@ export default function SchedulePage() {
       setIsSubmitting(true);
 
       if (editingSchedule) {
-        // Редактирование существующей пары
         await updateSchedule(editingSchedule.id, {
           subject_name: scheduleForm.subject_name,
           date: scheduleForm.date,
@@ -812,7 +796,6 @@ export default function SchedulePage() {
           is_important: scheduleForm.is_important,
         });
       } else {
-        // Добавление новой пары
         await addSchedule({
           user_id: user!.id,
           subject_name: scheduleForm.subject_name,
@@ -826,7 +809,6 @@ export default function SchedulePage() {
         });
       }
 
-      // Сброс формы
       setScheduleForm({
         date: "",
         subject_name: "",
@@ -879,7 +861,6 @@ export default function SchedulePage() {
       return;
     }
 
-    // Проверяем все пары пресета на пересечения
     const startDateObj = new Date(applyPresetForm.start_date);
     const dayOfWeekStart =
       startDateObj.getDay() === 0 ? 6 : startDateObj.getDay() - 1;
@@ -892,7 +873,6 @@ export default function SchedulePage() {
       scheduleDate.setDate(scheduleDate.getDate() + dayDiff);
       const dateStr = scheduleDate.toISOString().split("T")[0];
 
-      // Проверяем пересечение с существующими парами
       const { overlaps, overlappingSchedule } = checkTimeOverlap(
         dateStr,
         presetSchedule.start_time,
@@ -900,7 +880,6 @@ export default function SchedulePage() {
       );
 
       if (overlaps && overlappingSchedule) {
-        // 👈 Добавьте проверку overlappingSchedule
         conflicts.push(
           `${dateStr}: ${presetSchedule.subject_name} (${formatTime(presetSchedule.start_time)}-${formatTime(presetSchedule.end_time)}) конфликтует с ${overlappingSchedule.subject_name}`,
         );

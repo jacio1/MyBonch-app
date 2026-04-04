@@ -7,7 +7,6 @@ import { Note, Attachment } from "@/src/types";
 import { useData } from "@/src/lib/DataContext";
 import { FileUploader } from "@/src/components/FileUploader";
 
-// Модальное окно для добавления/редактирования заметки
 const NoteModal = ({
   isOpen,
   onClose,
@@ -162,7 +161,6 @@ const NoteModal = ({
   );
 };
 
-// Модальное окно для просмотра заметки
 const NotePreviewModal = ({ note, onClose, onEdit, onDelete }: any) => {
   if (!note) return null;
 
@@ -296,7 +294,6 @@ export default function NotesPage() {
   const [showPreview, setShowPreview] = useState(false);
   const [currentNoteAttachments, setCurrentNoteAttachments] = useState<Attachment[]>([]);
 
-  // Загружаем вложения при редактировании
   useEffect(() => {
     if (editingId) {
       const attachments = getNoteAttachments(editingId);
@@ -338,15 +335,13 @@ export default function NotesPage() {
         await updateNote(editingId, dataToSave);
       } else {
         const newNote = await addNote(dataToSave);
-        // После создания заметки, устанавливаем editingId для загрузки файлов
         if (newNote) {
           setEditingId(newNote.id);
         }
       }
       
       if (!editingId) {
-        // Если это была новая заметка, не закрываем форму сразу
-        // чтобы можно было загрузить файлы
+
         setFormData({
           title: "",
           subject: "",
@@ -401,7 +396,6 @@ export default function NotesPage() {
       const updatedAttachments = getNoteAttachments(editingId);
       setCurrentNoteAttachments(updatedAttachments);
       
-      // Обновляем выбранную заметку, если она открыта
       if (selectedNote && selectedNote.id === editingId) {
         const updatedNote = { ...selectedNote, attachments: updatedAttachments };
         setSelectedNote(updatedNote);
@@ -419,7 +413,6 @@ export default function NotesPage() {
         const updatedAttachments = editingId ? getNoteAttachments(editingId) : [];
         setCurrentNoteAttachments(updatedAttachments);
         
-        // Обновляем выбранную заметку, если она открыта
         if (selectedNote && selectedNote.id === editingId) {
           const updatedNote = { ...selectedNote, attachments: updatedAttachments };
           setSelectedNote(updatedNote);
@@ -527,7 +520,6 @@ export default function NotesPage() {
             key={note.id}
             className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 hover:shadow-md transition-shadow cursor-pointer"
             onClick={() => {
-              // Загружаем вложения для выбранной заметки
               const attachments = getNoteAttachments(note.id);
               setSelectedNote({ ...note, attachments });
             }}

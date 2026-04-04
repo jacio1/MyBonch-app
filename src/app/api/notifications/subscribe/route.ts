@@ -1,5 +1,3 @@
-// app/api/notifications/subscribe/route.ts
-
 import { NextRequest, NextResponse } from 'next/server';
 import { supabase } from '@/src/lib/supabase';
 
@@ -14,7 +12,6 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Сохраняем подписку в базе данных
     const { error } = await supabase.from('push_subscriptions').upsert({
       user_id: userId,
       subscription: JSON.stringify(subscription),

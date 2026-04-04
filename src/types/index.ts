@@ -1,11 +1,9 @@
-// src/types/index.ts
-
 export type StudyPeriod = {
   id: number;
   user_id: string;
   name: string;
-  start_date: string; // YYYY-MM-DD
-  end_date: string; // YYYY-MM-DD
+  start_date: string; 
+  end_date: string; 
   is_active: boolean;
   created_at?: string;
   updated_at?: string;
@@ -20,12 +18,11 @@ export interface Schedule {
   end_time: string;
   room: string | null;
   color: string;
-  is_important?: boolean; // Добавьте эту строку
+  is_important?: boolean; 
   study_period_id: number;
   created_at?: string;
 }
 
-// Также добавьте в PresetSchedule если нужно
 export interface PresetSchedule {
   id: number;
   preset_id: number;
@@ -35,7 +32,7 @@ export interface PresetSchedule {
   end_time: string;
   room: string | null;
   color: string;
-  is_important?: boolean; // Добавьте эту строку (опционально)
+  is_important?: boolean; 
 }
 
 export type Preset = {
@@ -67,7 +64,6 @@ export type Assignment = {
   priority: "high" | "medium" | "low";
 };
 
-// Добавьте этот тип после существующих
 export type Attachment = {
   id: string;
   note_id: number;
@@ -79,7 +75,6 @@ export type Attachment = {
   created_at: string;
 };
 
-// Обновите тип Note, добавив поле attachments
 export type Note = {
   id: number;
   title: string;
@@ -87,5 +82,5 @@ export type Note = {
   content: string;
   date: string;
   user_id?: string;
-  attachments?: Attachment[]; // Добавляем это поле
+  attachments?: Attachment[]; 
 };

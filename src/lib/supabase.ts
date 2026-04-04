@@ -5,7 +5,6 @@ const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
 
 export const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
-// Функция для получения текущего пользователя
 export async function getCurrentUser() {
   const {
     data: { user },
@@ -13,7 +12,6 @@ export async function getCurrentUser() {
   return user;
 }
 
-// Функция для регистрации
 export async function signUp(email: string, password: string, fullName: string) {
   const { data, error } = await supabase.auth.signUp({
     email,
@@ -27,7 +25,6 @@ export async function signUp(email: string, password: string, fullName: string) 
   return { data, error };
 }
 
-// Функция для входа
 export async function signIn(email: string, password: string) {
   const { data, error } = await supabase.auth.signInWithPassword({
     email,
@@ -36,13 +33,11 @@ export async function signIn(email: string, password: string) {
   return { data, error };
 }
 
-// Функция для выхода
 export async function signOut() {
   const { error } = await supabase.auth.signOut();
   return { error };
 }
 
-// Функция для восстановления пароля
 export async function resetPassword(email: string) {
   const { data, error } = await supabase.auth.resetPasswordForEmail(email);
   return { data, error };

@@ -8,8 +8,7 @@ import { useCallback, useMemo } from 'react';
 export function useDatabase() {
   const { user } = useAuth();
 
-  // Все функции обернуты в useCallback с зависимостью только от user
-  // Это предотвращает создание новых функций при каждом рендере
+
 
   const getSubjects = useCallback(async () => {
     if (!user) return [];
@@ -180,7 +179,6 @@ export function useDatabase() {
     [user]
   );
 
-  // Мемоизируем объект с функциями
   return useMemo(
     () => ({
       getSubjects,

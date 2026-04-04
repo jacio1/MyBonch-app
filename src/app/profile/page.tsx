@@ -33,7 +33,6 @@ export default function ProfilePage() {
   const [notificationsEnabled, setNotificationsEnabled] = useState(false);
   const [isPushSupported, setIsPushSupported] = useState(false);
 
-  // Загружаем данные профиля
   useEffect(() => {
     if (user) {
       loadProfile();
@@ -67,7 +66,6 @@ export default function ProfilePage() {
     setIsPushSupported(isSupported);
 
     if (isSupported) {
-      // Проверяем если уведомления уже включены
       if ('Notification' in window) {
         setNotificationsEnabled(Notification.permission === 'granted');
       }
@@ -115,19 +113,16 @@ export default function ProfilePage() {
         setNotificationsEnabled(true);
         alert('Уведомления включены!');
 
-        // Регистрируем service worker для уведомлений
         if ('serviceWorker' in navigator) {
           const registration = await navigator.serviceWorker.register('/sw.js', {
             scope: '/',
           });
 
-          // Подписываем на push уведомления
           const subscription = await registration.pushManager.subscribe({
             userVisibleOnly: true,
             applicationServerKey: process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY,
           });
 
-          // Отправляем subscription на сервер
           await fetch('/api/notifications/subscribe', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -156,7 +151,6 @@ export default function ProfilePage() {
         if (subscription) {
           await subscription.unsubscribe();
           
-          // Отправляем запрос на удаление подписки с сервера
           await fetch('/api/notifications/unsubscribe', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },

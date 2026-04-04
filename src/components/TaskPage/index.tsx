@@ -19,7 +19,6 @@ import { useData } from "@/src/lib/DataContext";
 
 type FilterType = "all" | "active" | "completed" | "high" | "medium" | "low";
 
-// Модальное окно для добавления/редактирования задания
 const TaskModal = ({
   isOpen,
   onClose,
@@ -31,8 +30,7 @@ const TaskModal = ({
 }: any) => {
   if (!isOpen) return null;
 
-  // Получаем сегодняшнюю дату в формате YYYY-MM-DD для валидации
-  // Получаем сегодняшнюю дату и дату через 1 год
+
   const today = new Date().toISOString().split("T")[0];
   const maxDate = new Date();
   maxDate.setFullYear(maxDate.getFullYear() + 1);

@@ -1,5 +1,3 @@
-// public/sw.js
-
 self.addEventListener('push', function(event) {
   console.log('Push notification received:', event);
 
@@ -59,13 +57,11 @@ self.addEventListener('notificationclick', function(event) {
 
   event.waitUntil(
     clients.matchAll({ type: 'window', includeUncontrolled: true }).then(function(clientList) {
-      // Проверяем если есть открытое окно приложения
       for (let client of clientList) {
         if (client.url === url && 'focus' in client) {
           return client.focus();
         }
       }
-      // Открываем новое окно если нет открытого
       if (clients.openWindow) {
         return clients.openWindow(url);
       }
