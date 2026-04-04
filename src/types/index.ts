@@ -11,30 +11,32 @@ export type StudyPeriod = {
   updated_at?: string;
 };
 
-export type Schedule = {
+export interface Schedule {
   id: number;
   user_id: string;
-  study_period_id?: number;
   subject_name: string;
-  date: string; // YYYY-MM-DD
-  start_time: string; // HH:mm
-  end_time: string; // HH:mm
-  room?: string;
-  color?: string;
-  created_at?: string;
-  updated_at?: string;
-};
-
-export type PresetSchedule = {
-  id: number;
-  preset_id?: number;
-  subject_name: string;
-  day_of_week: number; // 0-6, где 0=Пн, 1=Вт и т.д.
+  date: string;
   start_time: string;
   end_time: string;
-  room?: string;
-  color?: string;
-};
+  room: string | null;
+  color: string;
+  is_important?: boolean; // Добавьте эту строку
+  study_period_id: number;
+  created_at?: string;
+}
+
+// Также добавьте в PresetSchedule если нужно
+export interface PresetSchedule {
+  id: number;
+  preset_id: number;
+  day_of_week: number;
+  subject_name: string;
+  start_time: string;
+  end_time: string;
+  room: string | null;
+  color: string;
+  is_important?: boolean; // Добавьте эту строку (опционально)
+}
 
 export type Preset = {
   id: number;

@@ -379,8 +379,8 @@ export default function ProfilePage() {
 
         {/* Info */}
         <div className="text-center text-sm text-gray-600 dark:text-gray-400">
-          <p>Предрелиз-версия: 0.9</p>
-          <p>Разработал jacio</p>
+          <p>Version: 0.91</p>
+          <p>Developed by jacio</p>
         </div>
       </div>
     </div>

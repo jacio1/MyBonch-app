@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import {
   Plus,
   Loader,
@@ -11,6 +11,8 @@ import {
   X,
   Save,
   Edit2,
+  Star,
+  AlertTriangle,
 } from 'lucide-react';
 import { useData } from '@/src/lib/DataContext';
 import { useAuth } from '@/src/lib/AuthContext';
@@ -21,10 +23,74 @@ const COLORS = [
   'bg-green-100 dark:bg-green-900/30 border-green-200 dark:border-green-700 text-green-900 dark:text-green-100',
   'bg-purple-100 dark:bg-purple-900/30 border-purple-200 dark:border-purple-700 text-purple-900 dark:text-purple-100',
   'bg-yellow-100 dark:bg-yellow-900/30 border-yellow-200 dark:border-yellow-700 text-yellow-900 dark:text-yellow-100',
-  'bg-red-100 dark:bg-red-900/30 border-red-200 dark:border-red-700 text-red-900 dark:text-red-100',
-  'bg-pink-100 dark:bg-pink-900/30 border-pink-200 dark:border-pink-700 text-pink-900 dark:text-pink-100',
-  'bg-orange-100 dark:bg-orange-900/30 border-orange-200 dark:border-orange-700 text-orange-900 dark:text-orange-100',
 ];
+
+// Функция для форматирования времени без секунд
+const formatTime = (time: string) => {
+  return time.substring(0, 5);
+};
+
+// Функция для проверки пересечения времени
+const isTimeOverlap = (start1: string, end1: string, start2: string, end2: string) => {
+  return (
+    (start1 >= start2 && start1 < end2) || // Начало внутри
+    (end1 > start2 && end1 <= end2) || // Конец внутри
+    (start1 <= start2 && end1 >= end2) // Полное перекрытие
+  );
+};
+
+// Модальное окно ошибки времени
+const ErrorModal = ({ isOpen, onClose, title, message, conflictSchedule }: any) => {
+  if (!isOpen) return null;
+
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm"
+      onClick={onClose}
+    >
+      <div
+        className="bg-white dark:bg-gray-800 rounded-xl shadow-xl max-w-md w-full"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="border-b border-gray-200 dark:border-gray-700 p-4 flex items-center gap-3">
+          <div className="p-2 bg-red-100 dark:bg-red-900/30 rounded-full">
+            <AlertTriangle className="h-5 w-5 text-red-600 dark:text-red-400" />
+          </div>
+          <h3 className="text-lg font-bold text-gray-900 dark:text-white">
+            {title}
+          </h3>
+        </div>
+
+        <div className="p-4">
+          <p className="text-gray-700 dark:text-gray-300 whitespace-pre-line">
+            {message}
+          </p>
+          {conflictSchedule && (
+            <div className="mt-4 p-3 bg-red-50 dark:bg-red-950/30 rounded-lg border border-red-200 dark:border-red-800">
+              <p className="text-sm font-medium text-red-800 dark:text-red-200">
+                Конфликтующая пара:
+              </p>
+              <p className="text-sm text-red-700 dark:text-red-300 mt-1">
+                📚 {conflictSchedule.subject_name}<br />
+                ⏰ {formatTime(conflictSchedule.start_time)} - {formatTime(conflictSchedule.end_time)}<br />
+                📅 День: {DAYS_RU[conflictSchedule.day_of_week]}
+              </p>
+            </div>
+          )}
+        </div>
+
+        <div className="border-t border-gray-200 dark:border-gray-700 p-4">
+          <button
+            onClick={onClose}
+            className="w-full bg-red-600 hover:bg-red-700 text-white py-2 rounded-lg transition"
+          >
+            Понятно
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
 
 // Модальное окно для создания/редактирования пресета
 const PresetModal = ({ 
@@ -112,7 +178,8 @@ const ScheduleModal = ({
   isSubmitting, 
   formData, 
   onFormChange,
-  presetId
+  presetId,
+  existingSchedules = []
 }: any) => {
   if (!isOpen) return null;
 
@@ -207,6 +274,26 @@ const ScheduleModal = ({
 
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+              Важная пара
+            </label>
+            <div className="flex items-center gap-3">
+              <button
+                type="button"
+                onClick={() => onFormChange({ ...formData, is_important: !formData.is_important })}
+                className={`flex items-center gap-2 px-4 py-2 rounded-lg transition ${
+                  formData.is_important
+                    ? "bg-yellow-500 text-white"
+                    : "bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300"
+                }`}
+              >
+                <Star className={`h-4 w-4 ${formData.is_important ? "fill-current" : ""}`} />
+                {formData.is_important ? "Важная" : "Обычная"}
+              </button>
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
               Цвет
             </label>
             <div className="grid grid-cols-4 gap-2">
@@ -258,6 +345,12 @@ export default function PresetsPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showScheduleForm, setShowScheduleForm] = useState<number | null>(null);
+  const [showErrorModal, setShowErrorModal] = useState(false);
+  const [errorModalData, setErrorModalData] = useState({
+    title: '',
+    message: '',
+    conflictSchedule: null
+  });
 
   const [formData, setFormData] = useState({
     name: '',
@@ -271,7 +364,29 @@ export default function PresetsPage() {
     end_time: '10:35',
     room: '',
     color: COLORS[0],
+    is_important: false,
   });
+
+  // Функция проверки пересечения времени в пресете
+  const checkTimeOverlapInPreset = useCallback((presetId: number, dayOfWeek: number, startTime: string, endTime: string, excludeScheduleId?: number) => {
+    const preset = presets.find(p => p.id === presetId);
+    if (!preset || !preset.schedules) return { overlaps: false };
+    
+    const schedulesOnDay = preset.schedules.filter(s => 
+      s.day_of_week === dayOfWeek && s.id !== excludeScheduleId
+    );
+    
+    for (const schedule of schedulesOnDay) {
+      if (isTimeOverlap(startTime, endTime, schedule.start_time, schedule.end_time)) {
+        return {
+          overlaps: true,
+          overlappingSchedule: schedule
+        };
+      }
+    }
+    
+    return { overlaps: false };
+  }, [presets]);
 
   const resetForm = () => {
     setFormData({ name: '', description: '' });
@@ -287,6 +402,7 @@ export default function PresetsPage() {
       end_time: '10:35',
       room: '',
       color: COLORS[0],
+      is_important: false,
     });
     setShowScheduleForm(null);
   };
@@ -322,6 +438,24 @@ export default function PresetsPage() {
     try {
       if (!scheduleForm.subject_name) {
         alert('Введите название предмета');
+        return;
+      }
+
+      // Проверка на пересечение времени в пресете
+      const { overlaps, overlappingSchedule } = checkTimeOverlapInPreset(
+        presetId,
+        scheduleForm.day_of_week,
+        scheduleForm.start_time,
+        scheduleForm.end_time
+      );
+
+      if (overlaps) {
+        setErrorModalData({
+          title: "Конфликт времени в пресете!",
+          message: `Нельзя добавить пару в это время, так как она пересекается с существующей парой в пресете.\n\nПожалуйста, измените время или удалите конфликтующую пару.`,
+          conflictSchedule: overlappingSchedule
+        });
+        setShowErrorModal(true);
         return;
       }
 
@@ -421,6 +555,15 @@ export default function PresetsPage() {
         formData={scheduleForm}
         onFormChange={setScheduleForm}
         presetId={showScheduleForm}
+        existingSchedules={showScheduleForm ? presets.find(p => p.id === showScheduleForm)?.schedules || [] : []}
+      />
+
+      <ErrorModal
+        isOpen={showErrorModal}
+        onClose={() => setShowErrorModal(false)}
+        title={errorModalData.title}
+        message={errorModalData.message}
+        conflictSchedule={errorModalData.conflictSchedule}
       />
 
       {/* Presets Grid */}
@@ -472,16 +615,23 @@ export default function PresetsPage() {
                   {preset.schedules.map((schedule) => (
                     <div
                       key={schedule.id}
-                      className={`${schedule.color} rounded-lg border p-3 flex justify-between items-start`}
+                      className={`${schedule.color} rounded-lg border p-3 flex justify-between items-start m-4 ${
+                        schedule.is_important ? "ring-2 ring-yellow-500" : ""
+                      }`}
                     >
                       <div className="flex-1">
-                        <p className="font-medium text-gray-900 dark:text-gray-100 text-sm">
-                          {DAYS_RU[schedule.day_of_week]} - {schedule.subject_name}
-                        </p>
+                        <div className="flex items-center gap-2">
+                          {schedule.is_important && (
+                            <Star className="h-4 w-4 text-yellow-500 fill-current" />
+                          )}
+                          <p className="font-medium text-gray-900 dark:text-gray-100 text-sm">
+                            {DAYS_RU[schedule.day_of_week]} - {schedule.subject_name}
+                          </p>
+                        </div>
                         <div className="flex flex-col sm:flex-row gap-2 mt-1 text-xs text-gray-700 dark:text-gray-300">
                           <span className="flex items-center gap-1">
                             <Clock className="h-3 w-3" />
-                            {schedule.start_time} - {schedule.end_time}
+                            {formatTime(schedule.start_time)} - {formatTime(schedule.end_time)}
                           </span>
                           {schedule.room && (
                             <span className="flex items-center gap-1">

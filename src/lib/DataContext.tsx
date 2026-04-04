@@ -252,6 +252,8 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
     [user]
   );
 
+  
+
   const deleteStudyPeriod = useCallback(
     async (id: number) => {
       if (!user) throw new Error('User not authenticated');
@@ -446,28 +448,32 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
   );
 
   const addPresetSchedule = useCallback(
-    async (presetId: number, schedule: Omit<PresetSchedule, 'id'>) => {
-      const { data, error: err } = await supabase
-        .from('preset_schedules')
-        .insert([{ ...schedule, preset_id: presetId }])
-        .select();
+  async (presetId: number, schedule: Omit<PresetSchedule, 'id'>) => {
+    const { data, error: err } = await supabase
+      .from('preset_schedules')
+      .insert([{ 
+        ...schedule, 
+        preset_id: presetId,
+        is_important: schedule.is_important || false // Добавьте эту строку
+      }])
+      .select();
 
-      if (err) throw err;
+    if (err) throw err;
 
-      const newSchedule = data?.[0];
-      if (newSchedule) {
-        setPresets((prev) =>
-          prev.map((p) =>
-            p.id === presetId
-              ? { ...p, schedules: [...(p.schedules || []), newSchedule] }
-              : p
-          )
-        );
-      }
-      return newSchedule;
-    },
-    []
-  );
+    const newSchedule = data?.[0];
+    if (newSchedule) {
+      setPresets((prev) =>
+        prev.map((p) =>
+          p.id === presetId
+            ? { ...p, schedules: [...(p.schedules || []), newSchedule] }
+            : p
+        )
+      );
+    }
+    return newSchedule;
+  },
+  []
+);
 
   const deletePresetSchedule = useCallback(async (scheduleId: number) => {
     const { error: err } = await supabase.from('preset_schedules').delete().eq('id', scheduleId);
@@ -483,33 +489,34 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const applyPreset = useCallback(
-    async (presetId: number, startDate: string) => {
-      if (!user) throw new Error('User not authenticated');
+  async (presetId: number, startDate: string) => {
+    if (!user) throw new Error('User not authenticated');
 
-      const preset = presets.find((p) => p.id === presetId);
-      if (!preset || !preset.schedules) throw new Error('Preset not found');
+    const preset = presets.find((p) => p.id === presetId);
+    if (!preset || !preset.schedules) throw new Error('Preset not found');
 
-      const startDateObj = new Date(startDate);
-      const dayOfWeekStart = startDateObj.getDay() === 0 ? 6 : startDateObj.getDay() - 1; // Пн = 0
+    const startDateObj = new Date(startDate);
+    const dayOfWeekStart = startDateObj.getDay() === 0 ? 6 : startDateObj.getDay() - 1;
 
-      for (const presetSchedule of preset.schedules) {
-        const dayDiff = (presetSchedule.day_of_week - dayOfWeekStart + 7) % 7;
-        const scheduleDate = new Date(startDate);
-        scheduleDate.setDate(scheduleDate.getDate() + dayDiff);
+    for (const presetSchedule of preset.schedules) {
+      const dayDiff = (presetSchedule.day_of_week - dayOfWeekStart + 7) % 7;
+      const scheduleDate = new Date(startDate);
+      scheduleDate.setDate(scheduleDate.getDate() + dayDiff);
 
-        await addSchedule({
-          user_id: user.id,
-          subject_name: presetSchedule.subject_name,
-          date: scheduleDate.toISOString().split('T')[0],
-          start_time: presetSchedule.start_time,
-          end_time: presetSchedule.end_time,
-          room: presetSchedule.room,
-          color: presetSchedule.color,
-        });
-      }
-    },
-    [user, presets, addSchedule]
-  );
+      await addSchedule({
+        user_id: user.id,
+        subject_name: presetSchedule.subject_name,
+        date: scheduleDate.toISOString().split('T')[0],
+        start_time: presetSchedule.start_time,
+        end_time: presetSchedule.end_time,
+        room: presetSchedule.room,
+        color: presetSchedule.color,
+        is_important: presetSchedule.is_important || false, // Добавьте эту строку
+      });
+    }
+  },
+  [user, presets, addSchedule]
+);
 
   // Assignment Functions
   const addAssignment = useCallback(
