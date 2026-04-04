@@ -3,7 +3,7 @@
 import React, { createContext, useContext, useEffect, useState, useCallback } from 'react';
 import { supabase } from './supabase';
 import { useAuth } from './AuthContext';
-import { Assignment, Note, Schedule, Preset, StudyPeriod, PresetSchedule } from '@/src/types';
+import { Assignment, Note, Schedule, Preset, StudyPeriod, PresetSchedule, Attachment } from '@/src/types';
 
 interface DataContextType {
   // Study Periods
@@ -42,6 +42,13 @@ interface DataContextType {
   updateNote: (id: number, note: Partial<Note>) => Promise<Note>;
   deleteNote: (id: number) => Promise<void>;
 
+  // Attachments
+  attachments: Attachment[];
+  addAttachment: (noteId: number, file: File) => Promise<Attachment>;
+  deleteAttachment: (attachmentId: string) => Promise<void>;
+  getNoteAttachments: (noteId: number) => Attachment[];
+  uploadingFiles: boolean;
+
   // Loading
   loading: boolean;
   error: string | null;
@@ -56,6 +63,7 @@ let cachedData = {
   presets: null as Preset[] | null,
   assignments: null as Assignment[] | null,
   notes: null as Note[] | null,
+  attachments: null as Attachment[] | null,
   loading: false,
   loadPromise: null as Promise<void> | null,
 };
@@ -68,6 +76,8 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
   const [presets, setPresets] = useState<Preset[]>([]);
   const [assignments, setAssignments] = useState<Assignment[]>([]);
   const [notes, setNotes] = useState<Note[]>([]);
+  const [attachments, setAttachments] = useState<Attachment[]>([]);
+  const [uploadingFiles, setUploadingFiles] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -81,6 +91,7 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
         presets: null,
         assignments: null,
         notes: null,
+        attachments: null,
         loading: false,
         loadPromise: null,
       };
@@ -90,6 +101,7 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
       setPresets([]);
       setAssignments([]);
       setNotes([]);
+      setAttachments([]);
       setLoading(false);
       return;
     }
@@ -101,6 +113,7 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
       setPresets(cachedData.presets || []);
       setAssignments(cachedData.assignments || []);
       setNotes(cachedData.notes || []);
+      setAttachments(cachedData.attachments || []);
       const active = cachedData.studyPeriods.find((p) => p.is_active) || null;
       setActiveStudyPeriod(active);
       setLoading(false);
@@ -115,6 +128,7 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
         setPresets(cachedData.presets || []);
         setAssignments(cachedData.assignments || []);
         setNotes(cachedData.notes || []);
+        setAttachments(cachedData.attachments || []);
         const active = cachedData.studyPeriods?.find((p) => p.is_active) || null;
         setActiveStudyPeriod(active);
         setLoading(false);
@@ -132,13 +146,8 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
 
         console.log('🔄 Загружаем данные для user:', user.id);
 
-        const [
-          studyPeriodsRes,
-          schedulesRes,
-          presetsRes,
-          assignmentsRes,
-          notesRes,
-        ] = await Promise.all([
+        // Сначала загружаем основные данные
+        const [studyPeriodsRes, schedulesRes, presetsRes, assignmentsRes, notesRes] = await Promise.all([
           supabase.from('study_periods').select('*').eq('user_id', user.id),
           supabase.from('schedules').select('*').eq('user_id', user.id),
           supabase.from('presets').select('*').eq('user_id', user.id),
@@ -167,11 +176,23 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
           });
         }
 
+        // Загружаем вложения для заметок
+        let attachmentsData: Attachment[] = [];
+        if (notesData.length > 0) {
+          const { data: attachmentsRes } = await supabase
+            .from('attachments')
+            .select('*')
+            .in('note_id', notesData.map(n => n.id));
+          
+          attachmentsData = attachmentsRes || [];
+        }
+
         cachedData.studyPeriods = studyPeriodsData;
         cachedData.schedules = schedulesData;
         cachedData.presets = presetsData;
         cachedData.assignments = assignmentsData;
         cachedData.notes = notesData;
+        cachedData.attachments = attachmentsData;
         cachedData.loading = false;
 
         setStudyPeriods(studyPeriodsData);
@@ -179,6 +200,7 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
         setPresets(presetsData);
         setAssignments(assignmentsData);
         setNotes(notesData);
+        setAttachments(attachmentsData);
 
         const active = studyPeriodsData.find((p) => p.is_active) || null;
         setActiveStudyPeriod(active);
@@ -251,8 +273,6 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
     },
     [user]
   );
-
-  
 
   const deleteStudyPeriod = useCallback(
     async (id: number) => {
@@ -448,32 +468,28 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
   );
 
   const addPresetSchedule = useCallback(
-  async (presetId: number, schedule: Omit<PresetSchedule, 'id'>) => {
-    const { data, error: err } = await supabase
-      .from('preset_schedules')
-      .insert([{ 
-        ...schedule, 
-        preset_id: presetId,
-        is_important: schedule.is_important || false // Добавьте эту строку
-      }])
-      .select();
+    async (presetId: number, schedule: Omit<PresetSchedule, 'id'>) => {
+      const { data, error: err } = await supabase
+        .from('preset_schedules')
+        .insert([{ ...schedule, preset_id: presetId }])
+        .select();
 
-    if (err) throw err;
+      if (err) throw err;
 
-    const newSchedule = data?.[0];
-    if (newSchedule) {
-      setPresets((prev) =>
-        prev.map((p) =>
-          p.id === presetId
-            ? { ...p, schedules: [...(p.schedules || []), newSchedule] }
-            : p
-        )
-      );
-    }
-    return newSchedule;
-  },
-  []
-);
+      const newSchedule = data?.[0];
+      if (newSchedule) {
+        setPresets((prev) =>
+          prev.map((p) =>
+            p.id === presetId
+              ? { ...p, schedules: [...(p.schedules || []), newSchedule] }
+              : p
+          )
+        );
+      }
+      return newSchedule;
+    },
+    []
+  );
 
   const deletePresetSchedule = useCallback(async (scheduleId: number) => {
     const { error: err } = await supabase.from('preset_schedules').delete().eq('id', scheduleId);
@@ -491,6 +507,10 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
   const applyPreset = useCallback(
   async (presetId: number, startDate: string) => {
     if (!user) throw new Error('User not authenticated');
+    
+    // Получаем активный период обучения
+    const activePeriod = studyPeriods.find(p => p.is_active);
+    if (!activePeriod) throw new Error('No active study period found');
 
     const preset = presets.find((p) => p.id === presetId);
     if (!preset || !preset.schedules) throw new Error('Preset not found');
@@ -505,17 +525,18 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
 
       await addSchedule({
         user_id: user.id,
+        study_period_id: activePeriod.id, // 👈 Исправлено: используем ID активного периода
         subject_name: presetSchedule.subject_name,
         date: scheduleDate.toISOString().split('T')[0],
         start_time: presetSchedule.start_time,
         end_time: presetSchedule.end_time,
         room: presetSchedule.room,
         color: presetSchedule.color,
-        is_important: presetSchedule.is_important || false, // Добавьте эту строку
+        is_important: presetSchedule.is_important || false, // 👈 Добавьте это поле
       });
     }
   },
-  [user, presets, addSchedule]
+  [user, presets, addSchedule, studyPeriods] // 👈 Добавьте studyPeriods в зависимости
 );
 
   // Assignment Functions
@@ -649,6 +670,104 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
     [user]
   );
 
+  // Attachment Functions
+  const addAttachment = useCallback(async (noteId: number, file: File): Promise<Attachment> => {
+    if (!user) throw new Error('User not authenticated');
+
+    setUploadingFiles(true);
+    
+    try {
+      // Проверка типа файла
+      const isImage = file.type.startsWith('image/');
+      const fileType = isImage ? 'image' : 'document';
+      
+      // Проверка размера (максимум 10MB)
+      if (file.size > 10 * 1024 * 1024) {
+        throw new Error('Файл слишком большой. Максимальный размер 10MB');
+      }
+
+      // Создаем уникальное имя файла
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${Date.now()}_${Math.random().toString(36).substring(7)}.${fileExt}`;
+      const filePath = `${user.id}/${noteId}/${fileName}`;
+
+      // Загружаем файл в Supabase Storage
+      const { data: uploadData, error: uploadError } = await supabase.storage
+        .from('note-attachments')
+        .upload(filePath, file, {
+          cacheControl: '3600',
+          upsert: false
+        });
+
+      if (uploadError) throw uploadError;
+
+      // Получаем публичный URL
+      const { data: { publicUrl } } = supabase.storage
+        .from('note-attachments')
+        .getPublicUrl(filePath);
+
+      // Сохраняем информацию о файле в БД
+      const { data: attachmentData, error: dbError } = await supabase
+        .from('attachments')
+        .insert([{
+          note_id: noteId,
+          file_name: file.name,
+          file_url: publicUrl,
+          file_type: fileType,
+          file_size: file.size,
+          mime_type: file.type
+        }])
+        .select()
+        .single();
+
+      if (dbError) throw dbError;
+
+      // Обновляем локальное состояние
+      setAttachments(prev => [...prev, attachmentData]);
+      if (cachedData.attachments) {
+        cachedData.attachments = [...cachedData.attachments, attachmentData];
+      }
+
+      return attachmentData;
+    } finally {
+      setUploadingFiles(false);
+    }
+  }, [user]);
+
+  const deleteAttachment = useCallback(async (attachmentId: string) => {
+    if (!user) throw new Error('User not authenticated');
+
+    // Находим attachment
+    const attachment = attachments.find(a => a.id === attachmentId);
+    if (!attachment) throw new Error('Attachment not found');
+
+    // Удаляем файл из Storage
+    const filePath = attachment.file_url.split('/').slice(-3).join('/');
+    const { error: storageError } = await supabase.storage
+      .from('note-attachments')
+      .remove([filePath]);
+
+    if (storageError) console.error('Storage delete error:', storageError);
+
+    // Удаляем запись из БД
+    const { error: dbError } = await supabase
+      .from('attachments')
+      .delete()
+      .eq('id', attachmentId);
+
+    if (dbError) throw dbError;
+
+    // Обновляем локальное состояние
+    setAttachments(prev => prev.filter(a => a.id !== attachmentId));
+    if (cachedData.attachments) {
+      cachedData.attachments = cachedData.attachments.filter(a => a.id !== attachmentId);
+    }
+  }, [user, attachments]);
+
+  const getNoteAttachments = useCallback((noteId: number) => {
+    return attachments.filter(a => a.note_id === noteId);
+  }, [attachments]);
+
   const value: DataContextType = {
     studyPeriods,
     activeStudyPeriod,
@@ -676,6 +795,11 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
     addNote,
     updateNote,
     deleteNote,
+    attachments,
+    addAttachment,
+    deleteAttachment,
+    getNoteAttachments,
+    uploadingFiles,
     loading,
     error,
   };

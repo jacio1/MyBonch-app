@@ -1,10 +1,11 @@
 "use client";
 
-import { useState } from "react";
-import { Plus, X, Save, Trash2, Loader, Search } from "lucide-react";
+import { useState, useEffect } from "react";
+import { Plus, X, Save, Trash2, Loader, Search, FileText, Image as ImageIcon } from "lucide-react";
 import { useAuth } from "@/src/lib/AuthContext";
-import { Note } from "@/src/types";
+import { Note, Attachment } from "@/src/types";
 import { useData } from "@/src/lib/DataContext";
+import { FileUploader } from "@/src/components/FileUploader";
 
 // Модальное окно для добавления/редактирования заметки
 const NoteModal = ({
@@ -17,6 +18,11 @@ const NoteModal = ({
   editingId,
   showPreview,
   onTogglePreview,
+  noteId,
+  onFileUpload,
+  onDeleteAttachment,
+  noteAttachments = [],
+  isUploadingFiles = false,
 }: any) => {
   if (!isOpen) return null;
 
@@ -88,6 +94,22 @@ const NoteModal = ({
               required
             />
           </div>
+
+          {/* Вложения */}
+          {noteId && onFileUpload && onDeleteAttachment && (
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                Вложения (фотографии и документы)
+              </label>
+              <FileUploader
+                noteId={noteId}
+                onUpload={onFileUpload}
+                onDelete={onDeleteAttachment}
+                attachments={noteAttachments}
+                isUploading={isUploadingFiles}
+              />
+            </div>
+          )}
 
           <div className="flex gap-2 pt-2">
             <button
@@ -182,6 +204,43 @@ const NotePreviewModal = ({ note, onClose, onEdit, onDelete }: any) => {
               {note.content}
             </p>
           </div>
+
+          {/* Отображение вложений */}
+          {note.attachments && note.attachments.length > 0 && (
+            <div className="mt-6">
+              <h3 className="font-semibold text-gray-900 dark:text-white mb-3">
+                Вложения ({note.attachments.length})
+              </h3>
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                {note.attachments.map((attachment: Attachment) => (
+                  <a
+                    key={attachment.id}
+                    href={attachment.file_url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="block p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition group"
+                  >
+                    {attachment.file_type === 'image' ? (
+                      <div className="relative">
+                        <img 
+                          src={attachment.file_url} 
+                          alt={attachment.file_name}
+                          className="w-full h-24 object-cover rounded mb-2"
+                        />
+                      </div>
+                    ) : (
+                      <div className="flex flex-col items-center">
+                        <FileText className="h-12 w-12 text-gray-400 mb-2" />
+                      </div>
+                    )}
+                    <p className="text-xs text-gray-600 dark:text-gray-400 truncate text-center">
+                      {attachment.file_name}
+                    </p>
+                  </a>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
 
         <div className="sticky bottom-0 bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 p-4 sm:p-6 flex gap-2">
@@ -211,7 +270,18 @@ const NotePreviewModal = ({ note, onClose, onEdit, onDelete }: any) => {
 
 export default function NotesPage() {
   const { user, loading: authLoading } = useAuth();
-  const { notes, loading, error, addNote, updateNote, deleteNote } = useData();
+  const { 
+    notes, 
+    loading, 
+    error, 
+    addNote, 
+    updateNote, 
+    deleteNote,
+    addAttachment,
+    deleteAttachment,
+    getNoteAttachments,
+    uploadingFiles 
+  } = useData();
   const [showAddForm, setShowAddForm] = useState(false);
   const [editingId, setEditingId] = useState<number | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
@@ -224,6 +294,17 @@ export default function NotesPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [selectedNote, setSelectedNote] = useState<Note | null>(null);
   const [showPreview, setShowPreview] = useState(false);
+  const [currentNoteAttachments, setCurrentNoteAttachments] = useState<Attachment[]>([]);
+
+  // Загружаем вложения при редактировании
+  useEffect(() => {
+    if (editingId) {
+      const attachments = getNoteAttachments(editingId);
+      setCurrentNoteAttachments(attachments);
+    } else {
+      setCurrentNoteAttachments([]);
+    }
+  }, [editingId, getNoteAttachments]);
 
   const resetForm = () => {
     setFormData({
@@ -235,6 +316,7 @@ export default function NotesPage() {
     setEditingId(null);
     setShowAddForm(false);
     setShowPreview(false);
+    setCurrentNoteAttachments([]);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -248,7 +330,6 @@ export default function NotesPage() {
         return;
       }
 
-      // Если создаем новую заметку, устанавливаем текущую дату
       const dataToSave = editingId
         ? formData
         : { ...formData, date: new Date().toISOString().split("T")[0] };
@@ -256,9 +337,25 @@ export default function NotesPage() {
       if (editingId) {
         await updateNote(editingId, dataToSave);
       } else {
-        await addNote(dataToSave);
+        const newNote = await addNote(dataToSave);
+        // После создания заметки, устанавливаем editingId для загрузки файлов
+        if (newNote) {
+          setEditingId(newNote.id);
+        }
       }
-      resetForm();
+      
+      if (!editingId) {
+        // Если это была новая заметка, не закрываем форму сразу
+        // чтобы можно было загрузить файлы
+        setFormData({
+          title: "",
+          subject: "",
+          content: "",
+          date: new Date().toISOString().split("T")[0],
+        });
+      } else {
+        resetForm();
+      }
     } catch (error) {
       console.error("Error saving note:", error);
       alert("Ошибка сохранения. Попробуйте снова.");
@@ -266,6 +363,7 @@ export default function NotesPage() {
       setIsSubmitting(false);
     }
   };
+
   const handleEdit = (note: Note) => {
     setFormData({
       title: note.title,
@@ -288,6 +386,47 @@ export default function NotesPage() {
       } catch (error) {
         console.error("Error deleting note:", error);
         alert("Ошибка удаления. Попробуйте снова.");
+      }
+    }
+  };
+
+  const handleFileUpload = async (file: File) => {
+    if (!editingId) {
+      alert('Сначала сохраните заметку, затем добавляйте файлы');
+      return;
+    }
+    
+    try {
+      await addAttachment(editingId, file);
+      const updatedAttachments = getNoteAttachments(editingId);
+      setCurrentNoteAttachments(updatedAttachments);
+      
+      // Обновляем выбранную заметку, если она открыта
+      if (selectedNote && selectedNote.id === editingId) {
+        const updatedNote = { ...selectedNote, attachments: updatedAttachments };
+        setSelectedNote(updatedNote);
+      }
+    } catch (error) {
+      console.error('Upload error:', error);
+      alert(error instanceof Error ? error.message : 'Ошибка загрузки файла');
+    }
+  };
+
+  const handleDeleteAttachment = async (attachmentId: string) => {
+    if (confirm('Удалить этот файл?')) {
+      try {
+        await deleteAttachment(attachmentId);
+        const updatedAttachments = editingId ? getNoteAttachments(editingId) : [];
+        setCurrentNoteAttachments(updatedAttachments);
+        
+        // Обновляем выбранную заметку, если она открыта
+        if (selectedNote && selectedNote.id === editingId) {
+          const updatedNote = { ...selectedNote, attachments: updatedAttachments };
+          setSelectedNote(updatedNote);
+        }
+      } catch (error) {
+        console.error('Delete error:', error);
+        alert('Ошибка удаления файла');
       }
     }
   };
@@ -374,6 +513,11 @@ export default function NotesPage() {
         editingId={editingId}
         showPreview={showPreview}
         onTogglePreview={togglePreview}
+        noteId={editingId}
+        onFileUpload={handleFileUpload}
+        onDeleteAttachment={handleDeleteAttachment}
+        noteAttachments={currentNoteAttachments}
+        isUploadingFiles={uploadingFiles}
       />
 
       {/* Notes Grid */}
@@ -383,7 +527,9 @@ export default function NotesPage() {
             key={note.id}
             className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 hover:shadow-md transition-shadow cursor-pointer"
             onClick={() => {
-              setSelectedNote(note);
+              // Загружаем вложения для выбранной заметки
+              const attachments = getNoteAttachments(note.id);
+              setSelectedNote({ ...note, attachments });
             }}
           >
             <div className="p-4 sm:p-6">

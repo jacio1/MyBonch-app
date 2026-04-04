@@ -67,10 +67,25 @@ export type Assignment = {
   priority: "high" | "medium" | "low";
 };
 
+// Добавьте этот тип после существующих
+export type Attachment = {
+  id: string;
+  note_id: number;
+  file_name: string;
+  file_url: string;
+  file_type: 'image' | 'document';
+  file_size: number;
+  mime_type: string;
+  created_at: string;
+};
+
+// Обновите тип Note, добавив поле attachments
 export type Note = {
   id: number;
   title: string;
   subject: string;
   content: string;
   date: string;
+  user_id?: string;
+  attachments?: Attachment[]; // Добавляем это поле
 };

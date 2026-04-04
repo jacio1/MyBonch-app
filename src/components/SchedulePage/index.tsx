@@ -18,6 +18,7 @@ import {
 import { useData } from "@/src/lib/DataContext";
 import { useAuth } from "@/src/lib/AuthContext";
 import { useTheme } from "@/src/lib/ThemeContext";
+import { Schedule } from "@/src/types";
 
 const DAYS_RU = ["Пн", "Вт", "Ср", "Чт", "Пт", "Сб", "Вс"];
 const COLORS = [
@@ -25,7 +26,6 @@ const COLORS = [
   "bg-green-100 dark:bg-green-900/30 border-green-200 dark:border-green-700 text-green-900 dark:text-green-100",
   "bg-purple-100 dark:bg-purple-900/30 border-purple-200 dark:border-purple-700 text-purple-900 dark:text-purple-100",
   "bg-yellow-100 dark:bg-yellow-900/30 border-yellow-200 dark:border-yellow-700 text-yellow-900 dark:text-yellow-100",
-
 ];
 
 // Функция для форматирования времени без секунд
@@ -34,7 +34,12 @@ const formatTime = (time: string) => {
 };
 
 // Функция для проверки пересечения времени
-const isTimeOverlap = (start1: string, end1: string, start2: string, end2: string) => {
+const isTimeOverlap = (
+  start1: string,
+  end1: string,
+  start2: string,
+  end2: string,
+) => {
   return (
     (start1 >= start2 && start1 < end2) || // Начало внутри
     (end1 > start2 && end1 <= end2) || // Конец внутри
@@ -166,7 +171,10 @@ const AddScheduleModal = ({
               <button
                 type="button"
                 onClick={() =>
-                  onFormChange({ ...formData, is_important: !formData.is_important })
+                  onFormChange({
+                    ...formData,
+                    is_important: !formData.is_important,
+                  })
                 }
                 className={`flex items-center gap-2 px-4 py-2 rounded-lg transition ${
                   formData.is_important
@@ -174,7 +182,9 @@ const AddScheduleModal = ({
                     : "bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300"
                 }`}
               >
-                <Star className={`h-4 w-4 ${formData.is_important ? "fill-current" : ""}`} />
+                <Star
+                  className={`h-4 w-4 ${formData.is_important ? "fill-current" : ""}`}
+                />
                 {formData.is_important ? "Важная" : "Обычная"}
               </button>
             </div>
@@ -430,13 +440,7 @@ const ApplyPresetModal = ({
 };
 
 // Модальное окно подтверждения
-const ConfirmModal = ({
-  isOpen,
-  onClose,
-  onConfirm,
-  title,
-  message,
-}: any) => {
+const ConfirmModal = ({ isOpen, onClose, onConfirm, title, message }: any) => {
   if (!isOpen) return null;
 
   return (
@@ -481,7 +485,19 @@ const ConfirmModal = ({
 };
 
 // Модальное окно ошибки времени
-const ErrorModal = ({ isOpen, onClose, title, message, conflictSchedule }: any) => {
+const ErrorModal = ({
+  isOpen,
+  onClose,
+  title,
+  message,
+  conflictSchedule,
+}: {
+  isOpen: boolean;
+  onClose: () => void;
+  title: string;
+  message: string;
+  conflictSchedule?: Schedule | null;
+}) => {
   if (!isOpen) return null;
 
   return (
@@ -512,8 +528,10 @@ const ErrorModal = ({ isOpen, onClose, title, message, conflictSchedule }: any) 
                 Конфликтующая пара:
               </p>
               <p className="text-sm text-red-700 dark:text-red-300 mt-1">
-                📚 {conflictSchedule.subject_name}<br />
-                ⏰ {formatTime(conflictSchedule.start_time)} - {formatTime(conflictSchedule.end_time)}<br />
+                📚 {conflictSchedule.subject_name}
+                <br />⏰ {formatTime(conflictSchedule.start_time)} -{" "}
+                {formatTime(conflictSchedule.end_time)}
+                <br />
                 📅 {conflictSchedule.date}
               </p>
             </div>
@@ -568,10 +586,14 @@ export default function SchedulePage() {
   const [pendingPeriodData, setPendingPeriodData] = useState<any>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [editingSchedule, setEditingSchedule] = useState<any>(null);
-  const [errorModalData, setErrorModalData] = useState({
-    title: '',
-    message: '',
-    conflictSchedule: null
+  const [errorModalData, setErrorModalData] = useState<{
+    title: string;
+    message: string;
+    conflictSchedule: Schedule | null | undefined; // 👈 Добавьте undefined
+  }>({
+    title: "",
+    message: "",
+    conflictSchedule: null,
   });
 
   const [periodForm, setPeriodForm] = useState({
@@ -596,20 +618,37 @@ export default function SchedulePage() {
   });
 
   // Проверка на пересечение времени
-  const checkTimeOverlap = useCallback((date: string, startTime: string, endTime: string, excludeScheduleId?: number) => {
-    const schedulesOnDate = schedules.filter(s => s.date === date && s.id !== excludeScheduleId);
-    
-    for (const schedule of schedulesOnDate) {
-      if (isTimeOverlap(startTime, endTime, schedule.start_time, schedule.end_time)) {
-        return {
-          overlaps: true,
-          overlappingSchedule: schedule
-        };
+  const checkTimeOverlap = useCallback(
+    (
+      date: string,
+      startTime: string,
+      endTime: string,
+      excludeScheduleId?: number,
+    ) => {
+      const schedulesOnDate = schedules.filter(
+        (s) => s.date === date && s.id !== excludeScheduleId,
+      );
+
+      for (const schedule of schedulesOnDate) {
+        if (
+          isTimeOverlap(
+            startTime,
+            endTime,
+            schedule.start_time,
+            schedule.end_time,
+          )
+        ) {
+          return {
+            overlaps: true,
+            overlappingSchedule: schedule,
+          };
+        }
       }
-    }
-    
-    return { overlaps: false };
-  }, [schedules]);
+
+      return { overlaps: false };
+    },
+    [schedules],
+  );
 
   // Получаем дни текущей недели
   const weekDays = useMemo(() => {
@@ -706,20 +745,21 @@ export default function SchedulePage() {
   const createPeriod = async () => {
     try {
       setIsSubmitting(true);
-      
+
       // Если есть старый активный период, удаляем его
       if (activeStudyPeriod) {
         await deleteStudyPeriod(activeStudyPeriod.id);
       }
-      
+
       // Создаем новый период
       await createStudyPeriod({
         name: pendingPeriodData?.name || periodForm.name,
         start_date: pendingPeriodData?.start_date || periodForm.start_date,
         end_date: pendingPeriodData?.end_date || periodForm.end_date,
         is_active: true,
+        user_id: user!.id,
       });
-      
+
       setPeriodForm({ name: "", start_date: "", end_date: "" });
       setShowAddPeriod(false);
     } catch (err) {
@@ -744,14 +784,14 @@ export default function SchedulePage() {
       scheduleForm.date,
       scheduleForm.start_time,
       scheduleForm.end_time,
-      editingSchedule?.id
+      editingSchedule?.id,
     );
 
     if (overlaps) {
       setErrorModalData({
         title: "Конфликт времени!",
         message: `Нельзя ${editingSchedule ? "сохранить" : "добавить"} пару в это время, так как она пересекается с существующей парой.\n\nПожалуйста, измените время или удалите конфликтующую пару.`,
-        conflictSchedule: overlappingSchedule
+        conflictSchedule: overlappingSchedule,
       });
       setShowErrorModal(true);
       return;
@@ -759,7 +799,7 @@ export default function SchedulePage() {
 
     try {
       setIsSubmitting(true);
-      
+
       if (editingSchedule) {
         // Редактирование существующей пары
         await updateSchedule(editingSchedule.id, {
@@ -785,7 +825,7 @@ export default function SchedulePage() {
           study_period_id: activeStudyPeriod.id,
         });
       }
-      
+
       // Сброс формы
       setScheduleForm({
         date: "",
@@ -800,7 +840,11 @@ export default function SchedulePage() {
       setShowAddSchedule(false);
     } catch (err) {
       console.error("Error:", err);
-      alert(editingSchedule ? "Ошибка при редактировании пары" : "Ошибка при добавлении пары");
+      alert(
+        editingSchedule
+          ? "Ошибка при редактировании пары"
+          : "Ошибка при добавлении пары",
+      );
     } finally {
       setIsSubmitting(false);
     }
@@ -827,7 +871,9 @@ export default function SchedulePage() {
       return;
     }
 
-    const preset = presets.find(p => p.id === Number(applyPresetForm.preset_id));
+    const preset = presets.find(
+      (p) => p.id === Number(applyPresetForm.preset_id),
+    );
     if (!preset || !preset.schedules) {
       alert("Пресет не найден");
       return;
@@ -835,35 +881,37 @@ export default function SchedulePage() {
 
     // Проверяем все пары пресета на пересечения
     const startDateObj = new Date(applyPresetForm.start_date);
-    const dayOfWeekStart = startDateObj.getDay() === 0 ? 6 : startDateObj.getDay() - 1;
-    
+    const dayOfWeekStart =
+      startDateObj.getDay() === 0 ? 6 : startDateObj.getDay() - 1;
+
     const conflicts: string[] = [];
-    
+
     for (const presetSchedule of preset.schedules) {
       const dayDiff = (presetSchedule.day_of_week - dayOfWeekStart + 7) % 7;
       const scheduleDate = new Date(applyPresetForm.start_date);
       scheduleDate.setDate(scheduleDate.getDate() + dayDiff);
-      const dateStr = scheduleDate.toISOString().split('T')[0];
-      
+      const dateStr = scheduleDate.toISOString().split("T")[0];
+
       // Проверяем пересечение с существующими парами
       const { overlaps, overlappingSchedule } = checkTimeOverlap(
         dateStr,
         presetSchedule.start_time,
-        presetSchedule.end_time
+        presetSchedule.end_time,
       );
-      
-      if (overlaps) {
+
+      if (overlaps && overlappingSchedule) {
+        // 👈 Добавьте проверку overlappingSchedule
         conflicts.push(
-          `${dateStr}: ${presetSchedule.subject_name} (${formatTime(presetSchedule.start_time)}-${formatTime(presetSchedule.end_time)}) конфликтует с ${overlappingSchedule.subject_name}`
+          `${dateStr}: ${presetSchedule.subject_name} (${formatTime(presetSchedule.start_time)}-${formatTime(presetSchedule.end_time)}) конфликтует с ${overlappingSchedule.subject_name}`,
         );
       }
     }
-    
+
     if (conflicts.length > 0) {
       setErrorModalData({
         title: "Невозможно применить пресет!",
-        message: `Обнаружены конфликты:\n\n${conflicts.join('\n')}\n\nПожалуйста, удалите конфликтующие пары или выберите другую дату.`,
-        conflictSchedule: null
+        message: `Обнаружены конфликты:\n\n${conflicts.join("\n")}\n\nПожалуйста, удалите конфликтующие пары или выберите другую дату.`,
+        conflictSchedule: null,
       });
       setShowErrorModal(true);
       return;
@@ -1110,7 +1158,9 @@ export default function SchedulePage() {
                         <div
                           key={schedule.id}
                           className={`${schedule.color} rounded-lg border p-4 hover:shadow-md transition ${
-                            schedule.is_important ? "ring-2 ring-yellow-500" : ""
+                            schedule.is_important
+                              ? "ring-2 ring-yellow-500"
+                              : ""
                           }`}
                         >
                           <div className="flex justify-between items-start">
@@ -1126,7 +1176,8 @@ export default function SchedulePage() {
                               <div className="flex flex-col sm:flex-row gap-2 sm:gap-4 mt-2 text-sm text-gray-700 dark:text-gray-300">
                                 <span className="flex items-center gap-1">
                                   <Clock className="h-4 w-4" />
-                                  {formatTime(schedule.start_time)} - {formatTime(schedule.end_time)}
+                                  {formatTime(schedule.start_time)} -{" "}
+                                  {formatTime(schedule.end_time)}
                                 </span>
                                 {schedule.room && (
                                   <span className="flex items-center gap-1">

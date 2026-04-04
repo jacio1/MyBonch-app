@@ -346,11 +346,15 @@ export default function PresetsPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showScheduleForm, setShowScheduleForm] = useState<number | null>(null);
   const [showErrorModal, setShowErrorModal] = useState(false);
-  const [errorModalData, setErrorModalData] = useState({
-    title: '',
-    message: '',
-    conflictSchedule: null
-  });
+  const [errorModalData, setErrorModalData] = useState<{
+  title: string;
+  message: string;
+  conflictSchedule: any; // или PresetSchedule | null | undefined
+}>({
+  title: '',
+  message: '',
+  conflictSchedule: null
+});
 
   const [formData, setFormData] = useState({
     name: '',
@@ -433,43 +437,48 @@ export default function PresetsPage() {
   };
 
   const handleAddSchedule = async (e: React.FormEvent, presetId: number) => {
-    e.preventDefault();
+  e.preventDefault();
 
-    try {
-      if (!scheduleForm.subject_name) {
-        alert('Введите название предмета');
-        return;
-      }
-
-      // Проверка на пересечение времени в пресете
-      const { overlaps, overlappingSchedule } = checkTimeOverlapInPreset(
-        presetId,
-        scheduleForm.day_of_week,
-        scheduleForm.start_time,
-        scheduleForm.end_time
-      );
-
-      if (overlaps) {
-        setErrorModalData({
-          title: "Конфликт времени в пресете!",
-          message: `Нельзя добавить пару в это время, так как она пересекается с существующей парой в пресете.\n\nПожалуйста, измените время или удалите конфликтующую пару.`,
-          conflictSchedule: overlappingSchedule
-        });
-        setShowErrorModal(true);
-        return;
-      }
-
-      setIsSubmitting(true);
-
-      await addPresetSchedule(presetId, scheduleForm);
-      resetScheduleForm();
-    } catch (err) {
-      console.error('Error:', err);
-      alert('Ошибка при добавлении пары');
-    } finally {
-      setIsSubmitting(false);
+  try {
+    if (!scheduleForm.subject_name) {
+      alert('Введите название предмета');
+      return;
     }
-  };
+
+    // Проверка на пересечение времени в пресете
+    const { overlaps, overlappingSchedule } = checkTimeOverlapInPreset(
+      presetId,
+      scheduleForm.day_of_week,
+      scheduleForm.start_time,
+      scheduleForm.end_time
+    );
+
+    if (overlaps) {
+      setErrorModalData({
+        title: "Конфликт времени в пресете!",
+        message: `Нельзя добавить пару в это время, так как она пересекается с существующей парой в пресете.\n\nПожалуйста, измените время или удалите конфликтующую пару.`,
+        conflictSchedule: overlappingSchedule || null // Добавьте || null
+      });
+      setShowErrorModal(true);
+      return;
+    }
+
+    setIsSubmitting(true);
+
+    // ИСПРАВЛЕНО: Добавляем preset_id к данным
+    await addPresetSchedule(presetId, {
+      ...scheduleForm,
+      preset_id: presetId, // 👈 Добавьте эту строку
+    });
+    
+    resetScheduleForm();
+  } catch (err) {
+    console.error('Error:', err);
+    alert('Ошибка при добавлении пары');
+  } finally {
+    setIsSubmitting(false);
+  }
+};
 
   const handleDelete = async (id: number) => {
     if (confirm('Удалить этот пресет?')) {
