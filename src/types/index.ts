@@ -2,8 +2,8 @@ export type StudyPeriod = {
   id: number;
   user_id: string;
   name: string;
-  start_date: string; 
-  end_date: string; 
+  start_date: string;
+  end_date: string;
   is_active: boolean;
   created_at?: string;
   updated_at?: string;
@@ -18,7 +18,7 @@ export interface Schedule {
   end_time: string;
   room: string | null;
   color: string;
-  is_important?: boolean; 
+  is_important?: boolean;
   study_period_id: number;
   created_at?: string;
 }
@@ -32,7 +32,7 @@ export interface PresetSchedule {
   end_time: string;
   room: string | null;
   color: string;
-  is_important?: boolean; 
+  is_important?: boolean;
 }
 
 export type Preset = {
@@ -61,7 +61,7 @@ export type Assignment = {
   subject: string;
   deadline: string;
   completed: boolean;
-  priority: "high" | "medium" | "low";
+  priority: 'high' | 'medium' | 'low';
 };
 
 export type Attachment = {
@@ -82,5 +82,16 @@ export type Note = {
   content: string;
   date: string;
   user_id?: string;
-  attachments?: Attachment[]; 
+  attachments?: Attachment[];
+};
+
+export type Timing = {
+  id: number;
+  user_id: string;
+  label: string;      // "1 пара"
+  start_time: string; // "09:00"
+  end_time: string;   // "10:35"
+  sort_order: number;
+  created_at?: string;
+  updated_at?: string;
 };

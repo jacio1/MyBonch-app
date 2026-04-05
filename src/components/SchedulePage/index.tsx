@@ -14,6 +14,8 @@ import {
   AlertTriangle,
   Edit2,
   Star,
+  Circle,
+  PlusCircle,
 } from "lucide-react";
 import { useData } from "@/src/lib/DataContext";
 import { useAuth } from "@/src/lib/AuthContext";
@@ -45,6 +47,11 @@ const isTimeOverlap = (
   );
 };
 
+
+
+
+import { Timing } from '@/src/types';
+
 const AddScheduleModal = ({
   isOpen,
   onClose,
@@ -54,8 +61,11 @@ const AddScheduleModal = ({
   formData,
   onFormChange,
   editingId,
+  timings,            // <-- новый проп
 }: any) => {
   if (!isOpen) return null;
+
+  const hasTimings = timings && timings.length > 0;
 
   return (
     <div
@@ -68,7 +78,7 @@ const AddScheduleModal = ({
       >
         <div className="sticky top-0 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 p-4 flex justify-between items-center">
           <h3 className="text-lg font-bold text-gray-900 dark:text-white">
-            {editingId ? "Редактировать пару" : "Добавить пару"}
+            {editingId ? 'Редактировать пару' : 'Добавить пару'}
           </h3>
           <button
             onClick={onClose}
@@ -79,6 +89,7 @@ const AddScheduleModal = ({
         </div>
 
         <form onSubmit={onSubmit} className="p-4 space-y-4">
+          {/* Дата */}
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
               Дата
@@ -86,9 +97,7 @@ const AddScheduleModal = ({
             <input
               type="date"
               value={formData.date}
-              onChange={(e) =>
-                onFormChange({ ...formData, date: e.target.value })
-              }
+              onChange={(e) => onFormChange({ ...formData, date: e.target.value })}
               min={activeStudyPeriod?.start_date}
               max={activeStudyPeriod?.end_date}
               className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-600"
@@ -97,6 +106,7 @@ const AddScheduleModal = ({
             />
           </div>
 
+          {/* Предмет */}
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
               Предмет
@@ -105,46 +115,87 @@ const AddScheduleModal = ({
               type="text"
               placeholder="Название"
               value={formData.subject_name}
-              onChange={(e) =>
-                onFormChange({ ...formData, subject_name: e.target.value })
-              }
+              onChange={(e) => onFormChange({ ...formData, subject_name: e.target.value })}
               className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-600"
               required
             />
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                Начало
-              </label>
-              <input
-                type="time"
-                value={formData.start_time}
-                onChange={(e) =>
-                  onFormChange({ ...formData, start_time: e.target.value })
-                }
-                className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-600"
-                required
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                Конец
-              </label>
-              <input
-                type="time"
-                value={formData.end_time}
-                onChange={(e) =>
-                  onFormChange({ ...formData, end_time: e.target.value })
-                }
-                className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-600"
-                required
-              />
-            </div>
+          {/* Время — кнопки из таймингов ИЛИ ручной ввод */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              Время пары
+            </label>
+            {hasTimings ? (
+              <>
+                <div className="grid grid-cols-2 gap-2">
+                  {timings.map((t: Timing) => {
+                    const isSelected =
+                      formData.start_time === t.start_time &&
+                      formData.end_time === t.end_time;
+                    return (
+                      <button
+                        key={t.id}
+                        type="button"
+                        onClick={() =>
+                          onFormChange({
+                            ...formData,
+                            start_time: t.start_time,
+                            end_time: t.end_time,
+                          })
+                        }
+                        className={`px-3 py-2.5 rounded-lg border text-left transition ${
+                          isSelected
+                            ? 'bg-indigo-600 border-indigo-600 text-white'
+                            : 'bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:border-indigo-400 dark:hover:border-indigo-500'
+                        }`}
+                      >
+                        <p className="text-xs font-semibold">{t.label}</p>
+                        <p className="text-xs opacity-75 mt-0.5">
+                          {t.start_time.substring(0, 5)} — {t.end_time.substring(0, 5)}
+                        </p>
+                      </button>
+                    );
+                  })}
+                </div>
+                {formData.start_time && (
+                  <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400 bg-gray-50 dark:bg-gray-700/50 rounded-lg px-3 py-2 mt-2">
+                    <Clock className="h-4 w-4" />
+                    <span>
+                      Выбрано: {formData.start_time.substring(0, 5)} —{' '}
+                      {formData.end_time.substring(0, 5)}
+                    </span>
+                  </div>
+                )}
+              </>
+            ) : (
+              // Fallback: ручной ввод если таймингов нет
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs text-gray-500 dark:text-gray-400 mb-1">Начало</label>
+                  <input
+                    type="time"
+                    value={formData.start_time}
+                    onChange={(e) => onFormChange({ ...formData, start_time: e.target.value })}
+                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-600"
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs text-gray-500 dark:text-gray-400 mb-1">Конец</label>
+                  <input
+                    type="time"
+                    value={formData.end_time}
+                    onChange={(e) => onFormChange({ ...formData, end_time: e.target.value })}
+                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-600"
+                    required
+                  />
+                </div>
+              </div>
+            )}
           </div>
 
+          {/* Аудитория */}
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
               Аудитория
@@ -153,13 +204,12 @@ const AddScheduleModal = ({
               type="text"
               placeholder="Например: 101"
               value={formData.room}
-              onChange={(e) =>
-                onFormChange({ ...formData, room: e.target.value })
-              }
+              onChange={(e) => onFormChange({ ...formData, room: e.target.value })}
               className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-600"
             />
           </div>
 
+          {/* Важная пара */}
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
               Важная пара
@@ -167,26 +217,20 @@ const AddScheduleModal = ({
             <div className="flex items-center gap-3">
               <button
                 type="button"
-                onClick={() =>
-                  onFormChange({
-                    ...formData,
-                    is_important: !formData.is_important,
-                  })
-                }
+                onClick={() => onFormChange({ ...formData, is_important: !formData.is_important })}
                 className={`flex items-center gap-2 px-4 py-2 rounded-lg transition ${
                   formData.is_important
-                    ? "bg-yellow-500 text-white"
-                    : "bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300"
+                    ? 'bg-yellow-500 text-white'
+                    : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300'
                 }`}
               >
-                <Star
-                  className={`h-4 w-4 ${formData.is_important ? "fill-current" : ""}`}
-                />
-                {formData.is_important ? "Важная" : "Обычная"}
+                <Star className={`h-4 w-4 ${formData.is_important ? 'fill-current' : ''}`} />
+                {formData.is_important ? 'Важная' : 'Обычная'}
               </button>
             </div>
           </div>
 
+          {/* Цвет */}
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
               Цвет
@@ -199,13 +243,11 @@ const AddScheduleModal = ({
                   onClick={() => onFormChange({ ...formData, color })}
                   className={`h-10 rounded-lg border-2 transition ${
                     formData.color === color
-                      ? "border-indigo-500 ring-2 ring-indigo-500 ring-offset-2 dark:ring-offset-gray-800"
-                      : "border-transparent hover:scale-105"
+                      ? 'border-indigo-500 ring-2 ring-indigo-500 ring-offset-2 dark:ring-offset-gray-800'
+                      : 'border-transparent hover:scale-105'
                   }`}
                 >
-                  <div
-                    className={`w-full h-full rounded ${color.split(" ")[0]} opacity-70`}
-                  ></div>
+                  <div className={`w-full h-full rounded ${color.split(' ')[0]} opacity-70`} />
                 </button>
               ))}
             </div>
@@ -217,7 +259,7 @@ const AddScheduleModal = ({
               disabled={isSubmitting}
               className="flex-1 bg-green-600 hover:bg-green-700 text-white py-2 rounded-lg disabled:opacity-50 transition"
             >
-              {editingId ? "Сохранить изменения" : "Добавить пару"}
+              {editingId ? 'Сохранить изменения' : 'Добавить пару'}
             </button>
             <button
               type="button"
@@ -232,6 +274,8 @@ const AddScheduleModal = ({
     </div>
   );
 };
+
+
 
 const AddPeriodModal = ({
   isOpen,
@@ -552,6 +596,7 @@ export default function SchedulePage() {
     presets,
     studyPeriods,
     activeStudyPeriod,
+    timings,
     loading,
     error,
     addSchedule,
@@ -1025,6 +1070,7 @@ export default function SchedulePage() {
         formData={scheduleForm}
         onFormChange={setScheduleForm}
         editingId={editingSchedule?.id}
+        timings = {timings}
       />
 
       <ApplyPresetModal
@@ -1188,8 +1234,11 @@ export default function SchedulePage() {
                     </div>
                   ) : (
                     <div className="bg-gray-50 dark:bg-gray-800/50 rounded-lg p-4 text-center text-gray-500 dark:text-gray-400 text-sm border border-gray-200 dark:border-gray-700">
-                      Нет пар
+                      <PlusCircle />
+                      <span>Добавить пару</span>
                     </div>
+                    
+                    
                   )}
                 </div>
               );

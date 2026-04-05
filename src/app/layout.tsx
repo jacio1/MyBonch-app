@@ -3,6 +3,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import Header from "@/src/components/Layout/Header";
 import Sidebar from "@/src/components/Layout/Sidebar";
+import Footer from "@/src/components/Layout/Footer"; // 👈 1. Импорт Footer
 import { AuthProvider } from "@/src/lib/AuthContext";
 import { DataProvider } from "@/src/lib/DataContext";
 import { ThemeProvider } from "@/src/lib/ThemeContext";
@@ -59,15 +60,18 @@ export default function RootLayout({
         />
         <meta name="apple-mobile-web-app-title" content="МойБонч" />
       </head>
-      <body className={`${geistSans.variable} ${geistMono.variable} antialiased h-screen flex flex-col overflow-hidden`}>
+      <body
+        className={`${geistSans.variable} ${geistMono.variable} antialiased h-screen flex flex-col overflow-hidden`}
+      >
         <ThemeProvider>
           <AuthProvider>
             <DataProvider>
               <Header />
               <div className="flex flex-1 overflow-hidden">
-                <Sidebar assignmentsCount={0}/>
+                <Sidebar assignmentsCount={0} />
                 <main className="flex-1 overflow-auto">
                   {children}
+                  <Footer />
                 </main>
               </div>
             </DataProvider>

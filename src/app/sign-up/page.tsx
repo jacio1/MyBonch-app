@@ -4,11 +4,13 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { BookOpen, Eye, EyeOff, Mail, Lock, User } from "lucide-react";
 import { useAuth } from "@/src/lib/AuthContext";
+import { useTheme } from "@/src/lib/ThemeContext";
 import Link from "next/link";
 
 export default function SignUpPage() {
   const router = useRouter();
   const { signUp, error, loading } = useAuth();
+  const { isDark } = useTheme();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -53,31 +55,31 @@ export default function SignUpPage() {
   const displayError = localError || error;
 
   return (
-    <div className="h-full bg-[#0a0a0a]  flex items-center justify-center p-4 sm:p-8">
-      <div className="w-full max-w-md bg-[#131313] rounded-2xl">
+    <div className="flex items-center justify-center min-h-[calc(100vh-200px)] p-4 sm:p-8 transition-colors">
+      <div className="w-full max-w-md">
         {/* Header */}
-        <div className="text-center mt-8">
+        <div className="text-center mb-8">
           <div className="flex justify-center mb-4">
-            <div className="bg-white dark:bg-indigo-900 rounded-full p-3 sm:p-4">
+            <div className="bg-white dark:bg-indigo-900/50 rounded-full p-3 sm:p-4">
               <BookOpen className="h-8 w-8 sm:h-10 sm:w-10 text-indigo-600 dark:text-indigo-400" />
             </div>
           </div>
-          <h1 className="text-2xl sm:text-3xl font-bold text-white mb-2">
+          <h1 className="text-3xl sm:text-4xl font-bold text-gray-900 dark:text-white mb-2">
             МойБонч
           </h1>
-          <p className="text-indigo-100 text-sm sm:text-base">
+          <p className="text-gray-600 dark:text-gray-400 text-sm sm:text-base">
             Создайте аккаунт для управления учебой
           </p>
         </div>
 
         {/* Form Card */}
-        <div className="bg-[var(--color-card)] rounded-2xl shadow-2xl p-6 sm:p-8 w-full">
-          <h2 className="text-xl sm:text-2xl font-bold text-primary mb-6">
+        <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6 sm:p-8 shadow-sm">
+          <h2 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white mb-6">
             Регистрация
           </h2>
 
           {displayError && (
-            <div className="mb-6 p-4 bg-red-50 dark:bg-red-950 border border-red-200 dark:border-red-800 rounded-lg">
+            <div className="mb-6 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
               <p className="text-red-600 dark:text-red-400 text-sm font-medium">
                 {displayError}
               </p>
@@ -89,19 +91,19 @@ export default function SignUpPage() {
             <div>
               <label
                 htmlFor="fullName"
-                className="block text-sm font-medium text-primary mb-2"
+                className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
               >
                 Имя пользователя
               </label>
               <div className="relative">
-                <User className="absolute left-3 top-3 h-5 w-5 text-secondary" />
+                <User className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400 dark:text-gray-500" />
                 <input
                   id="fullName"
                   type="text"
                   value={fullName}
                   onChange={(e) => setFullName(e.target.value)}
                   placeholder="Username"
-                  className="h-12 rounded-xl border input-base w-full pl-10 pr-4"
+                  className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-600 disabled:opacity-50 disabled:cursor-not-allowed"
                   disabled={loading}
                   maxLength={15}
                 />
@@ -112,19 +114,19 @@ export default function SignUpPage() {
             <div>
               <label
                 htmlFor="email"
-                className="block text-sm font-medium text-primary mb-2"
+                className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
               >
                 Email
               </label>
               <div className="relative">
-                <Mail className="absolute left-3 top-3 h-5 w-5 text-secondary" />
+                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400 dark:text-gray-500" />
                 <input
                   id="email"
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="you@example.com"
-                  className="h-12 rounded-xl border input-base w-full pl-10 pr-4"
+                  className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-600 disabled:opacity-50 disabled:cursor-not-allowed"
                   disabled={loading}
                 />
               </div>
@@ -134,25 +136,25 @@ export default function SignUpPage() {
             <div>
               <label
                 htmlFor="password"
-                className="block text-sm font-medium text-primary mb-2"
+                className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
               >
                 Пароль
               </label>
               <div className="relative">
-                <Lock className="absolute left-3 top-3 h-5 w-5 text-secondary" />
+                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400 dark:text-gray-500" />
                 <input
                   id="password"
                   type={showPassword ? "text" : "password"}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="••••••••"
-                  className="h-12 rounded-xl border input-base w-full pl-10 pr-10"
+                  className="w-full pl-10 pr-10 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-600 disabled:opacity-50 disabled:cursor-not-allowed"
                   disabled={loading}
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-3 text-secondary hover:text-primary transition"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 transition"
                 >
                   {showPassword ? (
                     <EyeOff className="h-5 w-5" />
@@ -161,32 +163,34 @@ export default function SignUpPage() {
                   )}
                 </button>
               </div>
-              <p className="text-xs text-secondary mt-1">Минимум 6 символов</p>
+              <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                Минимум 6 символов
+              </p>
             </div>
 
             {/* Confirm Password Input */}
             <div>
               <label
                 htmlFor="confirmPassword"
-                className="block text-sm font-medium text-primary mb-2"
+                className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
               >
                 Подтвердите пароль
               </label>
               <div className="relative">
-                <Lock className="absolute left-3 top-3 h-5 w-5 text-secondary" />
+                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400 dark:text-gray-500" />
                 <input
                   id="confirmPassword"
                   type={showConfirmPassword ? "text" : "password"}
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
                   placeholder="••••••••"
-                  className="h-12 rounded-xl border input-base w-full pl-10 pr-10"
+                  className="w-full pl-10 pr-10 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-600 disabled:opacity-50 disabled:cursor-not-allowed"
                   disabled={loading}
                 />
                 <button
                   type="button"
                   onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                  className="absolute right-3 top-3 text-secondary hover:text-primary transition"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 transition"
                 >
                   {showConfirmPassword ? (
                     <EyeOff className="h-5 w-5" />
@@ -201,22 +205,21 @@ export default function SignUpPage() {
             <button
               type="submit"
               disabled={loading}
-              className="bg-indigo-600 hover:bg-indigo-800 rounded-2xl h-12 w-full btn-primary disabled:opacity-50 disabled:cursor-not-allowed text-sm sm:text-base"
+              className="mt-4 w-full flex items-center justify-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-lg font-semibold transition text-sm sm:text-base"
             >
               {loading ? "Регистрация..." : "Зарегистрироваться"}
             </button>
           </form>
 
           {/* Divider */}
-          <div className="my-6 relative">
+          <div className="relative my-6">
             <div className="absolute inset-0 flex items-center">
-              <div className="w-full border-t"></div>
+              <div className="w-full border-t border-gray-200 dark:border-gray-700"></div>
             </div>
-            <div className="relative flex justify-center text-sm"></div>
           </div>
 
           {/* Sign In Link */}
-          <p className="text-center text-secondary text-sm sm:text-base">
+          <p className="text-center text-gray-600 dark:text-gray-400 text-sm sm:text-base">
             Уже есть аккаунт?{" "}
             <Link
               href="/sign-in"

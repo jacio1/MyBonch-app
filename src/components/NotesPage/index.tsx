@@ -198,7 +198,7 @@ const NotePreviewModal = ({ note, onClose, onEdit, onDelete }: any) => {
 
         <div className="p-4 sm:p-6">
           <div className="prose prose-sm sm:prose max-w-none">
-            <p className="text-gray-700 dark:text-gray-300 whitespace-pre-wrap text-sm sm:text-base">
+            <p className="text-gray-700 dark:text-gray-300 whitespace-pre-wrap text-sm sm:text-base wrap-break-word">
               {note.content}
             </p>
           </div>
@@ -538,7 +538,7 @@ export default function NotesPage() {
                   {new Date(note.date).toLocaleDateString("ru-RU")}
                 </span>
               </div>
-              <p className="text-gray-600 dark:text-gray-300 text-sm line-clamp-3 mb-4">
+              <p className="text-gray-600 dark:text-gray-300 text-sm line-clamp-3 mb-4 wrap-break-word">
                 {note.content}
               </p>
               <div className="flex items-center justify-between pt-4 border-t border-gray-200 dark:border-gray-700 gap-2 flex-wrap">

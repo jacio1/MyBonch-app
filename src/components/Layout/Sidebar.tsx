@@ -6,6 +6,7 @@ import {
   FileText,
   Settings,
   Plus,
+  User,
   X,
   LogOut,
 } from "lucide-react";
@@ -33,8 +34,8 @@ export default function Sidebar({ assignmentsCount }: SidebarProps) {
       label: "Задания",
     },
     { href: "/notes", icon: FileText, label: "Конспекты" },
-    { href: "/subjects", icon: FileText, label: "Дисциплины" },
-    { href: "/profile", icon: Settings, label: "Профиль" },
+    { href: "/subjects", icon: Settings, label: "Настройки" },
+    { href: "/profile", icon: User, label: "Профиль" },
   ];
 
   const handleSignOut = async () => {
