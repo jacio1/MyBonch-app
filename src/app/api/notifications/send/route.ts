@@ -16,7 +16,10 @@ webpush.setVapidDetails(
 );
 
 // Вспомогательная функция для форматирования времени в московском часовом поясе
-function formatMoscowTime(date: Date, options: Intl.DateTimeFormatOptions = {}) {
+function formatMoscowTime(
+  date: Date,
+  options: Intl.DateTimeFormatOptions = {},
+) {
   return date.toLocaleTimeString("ru-RU", {
     timeZone: "Europe/Moscow",
     hour: "2-digit",
@@ -122,10 +125,10 @@ async function handler(request: NextRequest) {
     if (allSubs?.length) {
       let testSent = 0;
 
-      const moscowTime = formatMoscowTime(new Date(), { 
-        hour: "2-digit", 
-        minute: "2-digit", 
-        second: "2-digit" 
+      const moscowTime = formatMoscowTime(new Date(), {
+        hour: "2-digit",
+        minute: "2-digit",
+        second: "2-digit",
       });
 
       for (const sub of allSubs) {
@@ -196,10 +199,27 @@ async function handler(request: NextRequest) {
           .eq("user_id", userId)
           .eq("date", todayStr)
           .order("start_time", { ascending: true });
+
         if (s.schedule_important_only) query = query.eq("is_important", true);
         const { data: classes } = await query;
+
         if (classes?.length) {
           const offset: number = s.schedule_offset_minutes ?? 30;
+
+          // ВАЖНО: берём подписки ТОЛЬКО этого пользователя
+          const { data: userSubs } = await supabaseAdmin
+            .from("push_subscriptions")
+            .select("subscription")
+            .eq("user_id", userId);
+
+          if (!userSubs?.length) continue;
+
+          const parsedUserSubs = userSubs.map((row: any) =>
+            typeof row.subscription === "string"
+              ? JSON.parse(row.subscription)
+              : row.subscription,
+          );
+
           if (s.schedule_daily_only) {
             const first = classes[0];
             const fireAt = notifyTime(todayStr, first.start_time, offset);
@@ -222,7 +242,7 @@ async function handler(request: NextRequest) {
                 requireInteraction: false,
                 url: "/schedule",
               };
-              for (const sub of parsedSubs)
+              for (const sub of parsedUserSubs)
                 if (await sendPush(sub, payload)) totalSent++;
               await markSent(userId, "schedule_daily", 0, todayStr);
             }
@@ -232,12 +252,14 @@ async function handler(request: NextRequest) {
               if (!inWindow(fireAt, now)) continue;
               if (await alreadySent(userId, "schedule", cls.id, todayStr))
                 continue;
+
               const offsetLabel =
                 offset >= 1440
                   ? "за сутки"
                   : offset >= 60
                     ? `за ${offset / 60} ч`
                     : `за ${offset} мин`;
+
               const payload = {
                 title: `${cls.is_important ? "⭐ " : ""}${cls.subject_name}`,
                 body: `${offsetLabel} · ${cls.start_time.substring(0, 5)}–${cls.end_time.substring(0, 5)}${cls.room ? ` · ауд. ${cls.room}` : ""}`,
@@ -247,14 +269,13 @@ async function handler(request: NextRequest) {
                 requireInteraction: Boolean(cls.is_important),
                 url: "/schedule",
               };
-              for (const sub of parsedSubs)
+              for (const sub of parsedUserSubs)
                 if (await sendPush(sub, payload)) totalSent++;
               await markSent(userId, "schedule", cls.id, todayStr);
             }
           }
         }
       }
-
       // Assignment notifications
       if (s.assignments_enabled) {
         const offsetDays: number = s.assignment_offset_days ?? 1;
@@ -267,29 +288,29 @@ async function handler(request: NextRequest) {
           .eq("user_id", userId)
           .eq("deadline", targetDateStr)
           .eq("completed", false);
-        
+
         for (const task of tasks ?? []) {
           if (await alreadySent(userId, "assignment", task.id, todayStr))
             continue;
-          
+
           const daysLabel =
             offsetDays === 7
               ? "через неделю"
               : offsetDays === 1
                 ? "завтра"
                 : `через ${offsetDays} дня`;
-          
+
           const priorityIcon =
             task.priority === "high"
               ? "🔴 "
               : task.priority === "medium"
                 ? "🟡 "
                 : "🟢 ";
-          
+
           // Исправляем дату дедлайна с московским часовым поясом
           const deadlineDate = new Date(task.deadline);
           const formattedDeadline = formatMoscowDate(deadlineDate);
-          
+
           const payload = {
             title: `${priorityIcon}Дедлайн ${daysLabel}`,
             body: `${task.title}${task.subject ? ` · ${task.subject}` : ""}\nДо ${formattedDeadline}`,
