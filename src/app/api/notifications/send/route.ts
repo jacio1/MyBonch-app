@@ -55,14 +55,12 @@ async function markSent(
   entityId: number,
   sentDate: string,
 ) {
-  await supabaseAdmin
-    .from("notification_sent_log")
-    .upsert({
-      user_id: userId,
-      entity_type: entityType,
-      entity_id: entityId,
-      sent_date: sentDate,
-    });
+  await supabaseAdmin.from("notification_sent_log").upsert({
+    user_id: userId,
+    entity_type: entityType,
+    entity_id: entityId,
+    sent_date: sentDate,
+  });
 }
 
 async function sendPush(subscription: any, payload: object): Promise<boolean> {
@@ -94,59 +92,52 @@ async function handler(request: NextRequest) {
 
   // ========== ВРЕМЕННЫЙ ТЕСТОВЫЙ КОД ==========
   // 🔥 ВСТАВЬТЕ ЭТОТ БЛОК ПРЯМО СЮДА 🔥
-  const moscowTime = new Date().toLocaleTimeString("ru-RU", {
-    timeZone: "Europe/Moscow",
-    hour: "2-digit",
-    minute: "2-digit",
-  });
   const isTestMode = request.headers.get("X-Test-Mode") === "true";
 
   if (isTestMode) {
-  console.log('🧪 ТЕСТОВЫЙ РЕЖИМ: отправка тестового уведомления');
-  
-  const { data: allSubs } = await supabaseAdmin
-    .from('push_subscriptions')
-    .select('user_id, subscription');
-  
-  if (allSubs?.length) {
-    let testSent = 0;
-    
-    // 👇 ПОЛУЧАЕМ МОСКОВСКОЕ ВРЕМЯ
-    const moscowTime = new Date().toLocaleTimeString('ru-RU', { 
-      timeZone: 'Europe/Moscow',
-      hour: '2-digit',
-      minute: '2-digit',
-      second: '2-digit'
-    });
-    
-    for (const sub of allSubs) {
-      const parsedSub = typeof sub.subscription === 'string' 
-        ? JSON.parse(sub.subscription) 
-        : sub.subscription;
-      
-      const testPayload = {
-        title: '🧪 Тестовое уведомление',
-        body: `Привет! Московское время: ${moscowTime}`,
-        icon: '/icon-192.png',
-        badge: '/icon-192.png',
-        tag: 'test-notification',
-        requireInteraction: true,
-        url: '/profile',
-      };
-      
-      const sent = await sendPush(parsedSub, testPayload);
-      if (sent) testSent++;
+    console.log("🧪 ТЕСТОВЫЙ РЕЖИМ: отправка тестового уведомления");
+
+    const { data: allSubs } = await supabaseAdmin
+      .from("push_subscriptions")
+      .select("user_id, subscription");
+
+    if (allSubs?.length) {
+      let testSent = 0;
+
+      // 👇 ПОЛУЧАЕМ МОСКОВСКОЕ ВРЕМЯ
+      const moscowTime = new Date().toLocaleTimeString("ru-RU", {
+        timeZone: "Europe/Moscow",
+        hour: "2-digit",
+        minute: "2-digit",
+        second: "2-digit",
+      });
+
+      for (const sub of allSubs) {
+        const parsedSub =
+          typeof sub.subscription === "string"
+            ? JSON.parse(sub.subscription)
+            : sub.subscription;
+
+        const testPayload = {
+          title: "🧪 Тестовое уведомление",
+          body: `Привет! Московское время: ${moscowTime}`,
+          icon: "/icon-192.png",
+          badge: "/icon-192.png",
+          tag: "test-notification",
+          requireInteraction: true,
+          url: "/profile",
+        };
+
+        const sent = await sendPush(parsedSub, testPayload);
+        if (sent) testSent++;
+      }
+
+      return NextResponse.json({
+        test_mode: true,
+        sent: testSent,
+        total_subscriptions: allSubs.length,
+      });
     }
-    
-    return NextResponse.json({ 
-      test_mode: true, 
-      sent: testSent,
-      total_subscriptions: allSubs.length 
-    });
-  }
-  
-  return NextResponse.json({ test_mode: true, error: 'Нет активных подписок' });
-}
 
     return NextResponse.json({
       test_mode: true,
