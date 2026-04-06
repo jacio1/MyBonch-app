@@ -201,7 +201,15 @@ async function handler(request: NextRequest) {
       );
 
       // Schedule notifications
+      // Schedule notifications - с подробными логами
       if (s.schedule_enabled) {
+        console.log(`\n🔔 === ПРОВЕРКА РАСПИСАНИЯ для user ${userId} ===`);
+        console.log(`📅 Сегодня: ${todayStr}`);
+        console.log(`🕐 Текущее время (UTC): ${now.toISOString()}`);
+        console.log(
+          `🕐 Текущее время (MSK): ${new Date().toLocaleString("ru-RU", { timeZone: "Europe/Moscow" })}`,
+        );
+
         let query = supabaseAdmin
           .from("schedules")
           .select("*")
@@ -212,75 +220,74 @@ async function handler(request: NextRequest) {
         if (s.schedule_important_only) query = query.eq("is_important", true);
         const { data: classes } = await query;
 
+        console.log(`📚 Найдено пар на сегодня: ${classes?.length || 0}`);
+
         if (classes?.length) {
-          const offset: number = s.schedule_offset_minutes ?? 30;
+          for (const cls of classes) {
+            console.log(
+              `\n📖 Пара: ${cls.subject_name}, время: ${cls.start_time}, важная: ${cls.is_important}`,
+            );
 
-          // ВАЖНО: берём подписки ТОЛЬКО этого пользователя
-          const { data: userSubs } = await supabaseAdmin
-            .from("push_subscriptions")
-            .select("subscription")
-            .eq("user_id", userId);
+            const offset: number = s.schedule_offset_minutes ?? 30;
+            console.log(`⏰ Оффсет: ${offset} минут`);
 
-          if (!userSubs?.length) continue;
+            const fireAt = notifyTime(todayStr, cls.start_time, offset);
+            console.log(`⏰ Время отправки (UTC): ${fireAt.toISOString()}`);
+            console.log(
+              `⏰ Время отправки (MSK): ${fireAt.toLocaleString("ru-RU", { timeZone: "Europe/Moscow" })}`,
+            );
 
-          const parsedUserSubs = userSubs.map((row: any) =>
-            typeof row.subscription === "string"
-              ? JSON.parse(row.subscription)
-              : row.subscription,
-          );
+            const inWindowResult = inWindow(fireAt, now);
+            console.log(`🎯 В окне отправки: ${inWindowResult}`);
 
-          if (s.schedule_daily_only) {
-            const first = classes[0];
-            const fireAt = notifyTime(todayStr, first.start_time, offset);
-            if (
-              inWindow(fireAt, now) &&
-              !(await alreadySent(userId, "schedule_daily", 0, todayStr))
-            ) {
-              const lines = classes
-                .map(
-                  (c: any) =>
-                    `${c.start_time.substring(0, 5)} — ${c.subject_name}${c.is_important ? " ⭐" : ""}${c.room ? ` (${c.room})` : ""}`,
-                )
-                .join("\n");
-              const payload = {
-                title: `Расписание на сегодня · ${classes.length} ${pluralPairs(classes.length)}`,
-                body: lines,
-                icon: "/icon-192x192.png",
-                badge: "/icon-192x192.png",
-                tag: `schedule-daily-${todayStr}`,
-                requireInteraction: false,
-                url: "/schedule",
-              };
-              for (const sub of parsedUserSubs)
-                if (await sendPush(sub, payload)) totalSent++;
-              await markSent(userId, "schedule_daily", 0, todayStr);
-            }
-          } else {
-            for (const cls of classes) {
-              const fireAt = notifyTime(todayStr, cls.start_time, offset);
-              if (!inWindow(fireAt, now)) continue;
-              if (await alreadySent(userId, "schedule", cls.id, todayStr))
-                continue;
+            const alreadySentToday = await alreadySent(
+              userId,
+              "schedule",
+              cls.id,
+              todayStr,
+            );
+            console.log(`📝 Уже отправлено сегодня: ${alreadySentToday}`);
 
+            if (inWindowResult && !alreadySentToday) {
+              console.log(`✅ ДОЛЖНО ОТПРАВИТЬСЯ!`);
               const offsetLabel =
                 offset >= 1440
                   ? "за сутки"
                   : offset >= 60
                     ? `за ${offset / 60} ч`
                     : `за ${offset} мин`;
-
               const payload = {
                 title: `${cls.is_important ? "⭐ " : ""}${cls.subject_name}`,
                 body: `${offsetLabel} · ${cls.start_time.substring(0, 5)}–${cls.end_time.substring(0, 5)}${cls.room ? ` · ауд. ${cls.room}` : ""}`,
-                icon: "/icon-192x192.png",
-                badge: "/icon-192x192.png",
+                icon: "/icon-192.png",
+                badge: "/icon-192.png",
                 tag: `schedule-${cls.id}-${todayStr}`,
                 requireInteraction: Boolean(cls.is_important),
                 url: "/schedule",
               };
-              for (const sub of parsedUserSubs)
-                if (await sendPush(sub, payload)) totalSent++;
+
+              // Получаем подписки пользователя
+              const { data: userSubs } = await supabaseAdmin
+                .from("push_subscriptions")
+                .select("subscription")
+                .eq("user_id", userId);
+
+              if (userSubs?.length) {
+                for (const sub of userSubs) {
+                  const parsedSub =
+                    typeof sub.subscription === "string"
+                      ? JSON.parse(sub.subscription)
+                      : sub.subscription;
+                  const sent = await sendPush(parsedSub, payload);
+                  console.log(`📤 Отправлено: ${sent}`);
+                  if (sent) totalSent++;
+                }
+              }
               await markSent(userId, "schedule", cls.id, todayStr);
+            } else {
+              console.log(
+                `❌ НЕ отправляется: inWindow=${inWindowResult}, alreadySent=${alreadySentToday}`,
+              );
             }
           }
         }
