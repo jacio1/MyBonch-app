@@ -68,6 +68,51 @@ async function handler(request: NextRequest) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
+  // ========== ВРЕМЕННЫЙ ТЕСТОВЫЙ КОД ==========
+  // 🔥 ВСТАВЬТЕ ЭТОТ БЛОК ПРЯМО СЮДА 🔥
+  const isTestMode = request.headers.get('X-Test-Mode') === 'true';
+  
+  if (isTestMode) {
+    console.log('🧪 ТЕСТОВЫЙ РЕЖИМ: отправка тестового уведомления');
+    
+    // Получаем все активные подписки
+    const { data: allSubs } = await supabaseAdmin
+      .from('push_subscriptions')
+      .select('user_id, subscription');
+    
+    if (allSubs?.length) {
+      let testSent = 0;
+      for (const sub of allSubs) {
+        const parsedSub = typeof sub.subscription === 'string' 
+          ? JSON.parse(sub.subscription) 
+          : sub.subscription;
+        
+        const testPayload = {
+          title: '🧪 Тестовое уведомление',
+          body: `Привет! Время: ${new Date().toLocaleTimeString('ru-RU')}`,
+          icon: '/icon-192.png',
+          badge: '/icon-192.png',
+          tag: 'test-notification',
+          requireInteraction: true,
+          url: '/profile',
+        };
+        
+        const sent = await sendPush(parsedSub, testPayload);
+        if (sent) testSent++;
+      }
+      
+      return NextResponse.json({ 
+        test_mode: true, 
+        sent: testSent,
+        total_subscriptions: allSubs.length 
+      });
+    }
+    
+    return NextResponse.json({ test_mode: true, error: 'Нет активных подписок' });
+  }
+  // ========== КОНЕЦ ТЕСТОВОГО КОДА ==========
+
+
   const now = new Date();
   const todayStr = now.toISOString().split('T')[0];
   let totalSent = 0;
