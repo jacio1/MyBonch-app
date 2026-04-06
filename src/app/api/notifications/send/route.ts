@@ -2,6 +2,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import webpush from "web-push";
+import { fromZonedTime } from "date-fns-tz";
+const TIMEZONE = "Europe/Moscow";
 
 const supabaseAdmin = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -43,13 +45,20 @@ function notifyTime(
   offsetMinutes: number,
 ): Date {
   const [h, m] = timeStr.substring(0, 5).split(":").map(Number);
-  const dt = new Date(
-    `${date}T${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}:00`,
-  );
-  dt.setMinutes(dt.getMinutes() - offsetMinutes);
-  return dt;
-}
 
+  // Формируем строку с московским временем
+  const hour = String(h).padStart(2, "0");
+  const minute = String(m).padStart(2, "0");
+  const moscowDateTimeStr = `${date}T${hour}:${minute}:00`;
+
+  // Конвертируем из МСК в UTC (fromZonedTime = из часового пояса в UTC)
+  const utcDate = fromZonedTime(moscowDateTimeStr, TIMEZONE);
+
+  // Вычитаем оффсет
+  utcDate.setMinutes(utcDate.getMinutes() - offsetMinutes);
+
+  return utcDate;
+}
 function inWindow(target: Date, now: Date): boolean {
   return Math.abs(target.getTime() - now.getTime()) <= 5 * 60 * 1000;
 }
