@@ -149,8 +149,8 @@ async function handler(request: NextRequest) {
         const testPayload = {
           title: "🧪 Тестовое уведомление",
           body: `Привет! Московское время: ${moscowTime}`,
-          icon: "/icon-192.png",
-          badge: "/icon-192.png",
+          icon: "/icon-192x192.png",
+          badge: "/icon-192x192.png",
           tag: "test-notification",
           requireInteraction: true,
           url: "/profile",
@@ -245,8 +245,8 @@ async function handler(request: NextRequest) {
               const payload = {
                 title: `Расписание на сегодня · ${classes.length} ${pluralPairs(classes.length)}`,
                 body: lines,
-                icon: "/icon-192.png",
-                badge: "/icon-192.png",
+                icon: "/icon-192x192.png",
+                badge: "/icon-192x192.png",
                 tag: `schedule-daily-${todayStr}`,
                 requireInteraction: false,
                 url: "/schedule",
@@ -272,8 +272,8 @@ async function handler(request: NextRequest) {
               const payload = {
                 title: `${cls.is_important ? "⭐ " : ""}${cls.subject_name}`,
                 body: `${offsetLabel} · ${cls.start_time.substring(0, 5)}–${cls.end_time.substring(0, 5)}${cls.room ? ` · ауд. ${cls.room}` : ""}`,
-                icon: "/icon-192.png",
-                badge: "/icon-192.png",
+                icon: "/icon-192x192.png",
+                badge: "/icon-192x192.png",
                 tag: `schedule-${cls.id}-${todayStr}`,
                 requireInteraction: Boolean(cls.is_important),
                 url: "/schedule",
@@ -323,8 +323,8 @@ async function handler(request: NextRequest) {
           const payload = {
             title: `${priorityIcon}Дедлайн ${daysLabel}`,
             body: `${task.title}${task.subject ? ` · ${task.subject}` : ""}\nДо ${formattedDeadline}`,
-            icon: "/icon-192.png",
-            badge: "/icon-192.png",
+            icon: "/icon-192x192.png",
+            badge: "/icon-192x192.png",
             tag: `assignment-${task.id}-${todayStr}`,
             requireInteraction: task.priority === "high",
             url: "/task",
