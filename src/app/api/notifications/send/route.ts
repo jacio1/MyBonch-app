@@ -15,6 +15,25 @@ webpush.setVapidDetails(
   process.env.VAPID_PRIVATE_KEY!,
 );
 
+// Вспомогательная функция для форматирования времени в московском часовом поясе
+function formatMoscowTime(date: Date, options: Intl.DateTimeFormatOptions = {}) {
+  return date.toLocaleTimeString("ru-RU", {
+    timeZone: "Europe/Moscow",
+    hour: "2-digit",
+    minute: "2-digit",
+    ...options,
+  });
+}
+
+function formatMoscowDate(date: Date) {
+  return date.toLocaleDateString("ru-RU", {
+    timeZone: "Europe/Moscow",
+    day: "numeric",
+    month: "numeric",
+    year: "numeric",
+  });
+}
+
 function notifyTime(
   date: string,
   timeStr: string,
@@ -90,8 +109,7 @@ async function handler(request: NextRequest) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  // ========== ВРЕМЕННЫЙ ТЕСТОВЫЙ КОД ==========
-  // 🔥 ВСТАВЬТЕ ЭТОТ БЛОК ПРЯМО СЮДА 🔥
+  // ========== ТЕСТОВЫЙ РЕЖИМ ==========
   const isTestMode = request.headers.get("X-Test-Mode") === "true";
 
   if (isTestMode) {
@@ -104,12 +122,10 @@ async function handler(request: NextRequest) {
     if (allSubs?.length) {
       let testSent = 0;
 
-      // 👇 ПОЛУЧАЕМ МОСКОВСКОЕ ВРЕМЯ
-      const moscowTime = new Date().toLocaleTimeString("ru-RU", {
-        timeZone: "Europe/Moscow",
-        hour: "2-digit",
-        minute: "2-digit",
-        second: "2-digit",
+      const moscowTime = formatMoscowTime(new Date(), { 
+        hour: "2-digit", 
+        minute: "2-digit", 
+        second: "2-digit" 
       });
 
       for (const sub of allSubs) {
@@ -144,7 +160,7 @@ async function handler(request: NextRequest) {
       error: "Нет активных подписок",
     });
   }
-  // ========== КОНЕЦ ТЕСТОВОГО КОДА ==========
+  // ========== КОНЕЦ ТЕСТОВОГО РЕЖИМА ==========
 
   const now = new Date();
   const todayStr = now.toISOString().split("T")[0];
@@ -251,24 +267,32 @@ async function handler(request: NextRequest) {
           .eq("user_id", userId)
           .eq("deadline", targetDateStr)
           .eq("completed", false);
+        
         for (const task of tasks ?? []) {
           if (await alreadySent(userId, "assignment", task.id, todayStr))
             continue;
+          
           const daysLabel =
             offsetDays === 7
               ? "через неделю"
               : offsetDays === 1
                 ? "завтра"
                 : `через ${offsetDays} дня`;
+          
           const priorityIcon =
             task.priority === "high"
               ? "🔴 "
               : task.priority === "medium"
                 ? "🟡 "
                 : "🟢 ";
+          
+          // Исправляем дату дедлайна с московским часовым поясом
+          const deadlineDate = new Date(task.deadline);
+          const formattedDeadline = formatMoscowDate(deadlineDate);
+          
           const payload = {
             title: `${priorityIcon}Дедлайн ${daysLabel}`,
-            body: `${task.title}${task.subject ? ` · ${task.subject}` : ""}\nДо ${new Date(task.deadline).toLocaleDateString("ru-RU")}`,
+            body: `${task.title}${task.subject ? ` · ${task.subject}` : ""}\nДо ${formattedDeadline}`,
             icon: "/icon-192.png",
             badge: "/icon-192.png",
             tag: `assignment-${task.id}-${todayStr}`,
