@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo, useCallback } from "react";
+import { useState, useMemo, useCallback, useEffect } from "react";
 import {
   Clock,
   MapPin,
@@ -14,13 +14,12 @@ import {
   AlertTriangle,
   Edit2,
   Star,
-  Circle,
   PlusCircle,
 } from "lucide-react";
 import { useData } from "@/src/lib/DataContext";
 import { useAuth } from "@/src/lib/AuthContext";
 import { useTheme } from "@/src/lib/ThemeContext";
-import { Schedule } from "@/src/types";
+import { Schedule, Timing } from "@/src/types";
 
 const DAYS_RU = ["Пн", "Вт", "Ср", "Чт", "Пт", "Сб", "Вс"];
 const COLORS = [
@@ -41,16 +40,11 @@ const isTimeOverlap = (
   end2: string,
 ) => {
   return (
-    (start1 >= start2 && start1 < end2) || 
-    (end1 > start2 && end1 <= end2) || 
-    (start1 <= start2 && end1 >= end2) 
+    (start1 >= start2 && start1 < end2) ||
+    (end1 > start2 && end1 <= end2) ||
+    (start1 <= start2 && end1 >= end2)
   );
 };
-
-
-
-
-import { Timing } from '@/src/types';
 
 const AddScheduleModal = ({
   isOpen,
@@ -61,7 +55,7 @@ const AddScheduleModal = ({
   formData,
   onFormChange,
   editingId,
-  timings,            // <-- новый проп
+  timings,
 }: any) => {
   if (!isOpen) return null;
 
@@ -78,7 +72,7 @@ const AddScheduleModal = ({
       >
         <div className="sticky top-0 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 p-4 flex justify-between items-center">
           <h3 className="text-lg font-bold text-gray-900 dark:text-white">
-            {editingId ? 'Редактировать пару' : 'Добавить пару'}
+            {editingId ? "Редактировать пару" : "Добавить пару"}
           </h3>
           <button
             onClick={onClose}
@@ -89,7 +83,6 @@ const AddScheduleModal = ({
         </div>
 
         <form onSubmit={onSubmit} className="p-4 space-y-4">
-          {/* Дата */}
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
               Дата
@@ -97,16 +90,18 @@ const AddScheduleModal = ({
             <input
               type="date"
               value={formData.date}
-              onChange={(e) => onFormChange({ ...formData, date: e.target.value })}
+              onChange={(e) =>
+                onFormChange({ ...formData, date: e.target.value })
+              }
               min={activeStudyPeriod?.start_date}
               max={activeStudyPeriod?.end_date}
               className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-600"
               required
               autoFocus
+              disabled
             />
           </div>
 
-          {/* Предмет */}
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
               Предмет
@@ -115,13 +110,14 @@ const AddScheduleModal = ({
               type="text"
               placeholder="Название"
               value={formData.subject_name}
-              onChange={(e) => onFormChange({ ...formData, subject_name: e.target.value })}
+              onChange={(e) =>
+                onFormChange({ ...formData, subject_name: e.target.value })
+              }
               className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-600"
               required
             />
           </div>
 
-          {/* Время — кнопки из таймингов ИЛИ ручной ввод */}
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
               Время пары
@@ -146,13 +142,14 @@ const AddScheduleModal = ({
                         }
                         className={`px-3 py-2.5 rounded-lg border text-left transition ${
                           isSelected
-                            ? 'bg-indigo-600 border-indigo-600 text-white'
-                            : 'bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:border-indigo-400 dark:hover:border-indigo-500'
+                            ? "bg-indigo-600 border-indigo-600 text-white"
+                            : "bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:border-indigo-400 dark:hover:border-indigo-500"
                         }`}
                       >
                         <p className="text-xs font-semibold">{t.label}</p>
                         <p className="text-xs opacity-75 mt-0.5">
-                          {t.start_time.substring(0, 5)} — {t.end_time.substring(0, 5)}
+                          {t.start_time.substring(0, 5)} —{" "}
+                          {t.end_time.substring(0, 5)}
                         </p>
                       </button>
                     );
@@ -162,31 +159,38 @@ const AddScheduleModal = ({
                   <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400 bg-gray-50 dark:bg-gray-700/50 rounded-lg px-3 py-2 mt-2">
                     <Clock className="h-4 w-4" />
                     <span>
-                      Выбрано: {formData.start_time.substring(0, 5)} —{' '}
+                      Выбрано: {formData.start_time.substring(0, 5)} —{" "}
                       {formData.end_time.substring(0, 5)}
                     </span>
                   </div>
                 )}
               </>
             ) : (
-              // Fallback: ручной ввод если таймингов нет
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-xs text-gray-500 dark:text-gray-400 mb-1">Начало</label>
+                  <label className="block text-xs text-gray-500 dark:text-gray-400 mb-1">
+                    Начало
+                  </label>
                   <input
                     type="time"
                     value={formData.start_time}
-                    onChange={(e) => onFormChange({ ...formData, start_time: e.target.value })}
+                    onChange={(e) =>
+                      onFormChange({ ...formData, start_time: e.target.value })
+                    }
                     className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-600"
                     required
                   />
                 </div>
                 <div>
-                  <label className="block text-xs text-gray-500 dark:text-gray-400 mb-1">Конец</label>
+                  <label className="block text-xs text-gray-500 dark:text-gray-400 mb-1">
+                    Конец
+                  </label>
                   <input
                     type="time"
                     value={formData.end_time}
-                    onChange={(e) => onFormChange({ ...formData, end_time: e.target.value })}
+                    onChange={(e) =>
+                      onFormChange({ ...formData, end_time: e.target.value })
+                    }
                     className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-600"
                     required
                   />
@@ -195,7 +199,6 @@ const AddScheduleModal = ({
             )}
           </div>
 
-          {/* Аудитория */}
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
               Аудитория
@@ -204,12 +207,13 @@ const AddScheduleModal = ({
               type="text"
               placeholder="Например: 101"
               value={formData.room}
-              onChange={(e) => onFormChange({ ...formData, room: e.target.value })}
+              onChange={(e) =>
+                onFormChange({ ...formData, room: e.target.value })
+              }
               className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-600"
             />
           </div>
 
-          {/* Важная пара */}
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
               Важная пара
@@ -217,20 +221,26 @@ const AddScheduleModal = ({
             <div className="flex items-center gap-3">
               <button
                 type="button"
-                onClick={() => onFormChange({ ...formData, is_important: !formData.is_important })}
+                onClick={() =>
+                  onFormChange({
+                    ...formData,
+                    is_important: !formData.is_important,
+                  })
+                }
                 className={`flex items-center gap-2 px-4 py-2 rounded-lg transition ${
                   formData.is_important
-                    ? 'bg-yellow-500 text-white'
-                    : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300'
+                    ? "bg-yellow-500 text-white"
+                    : "bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300"
                 }`}
               >
-                <Star className={`h-4 w-4 ${formData.is_important ? 'fill-current' : ''}`} />
-                {formData.is_important ? 'Важная' : 'Обычная'}
+                <Star
+                  className={`h-4 w-4 ${formData.is_important ? "fill-current" : ""}`}
+                />
+                {formData.is_important ? "Важная" : "Обычная"}
               </button>
             </div>
           </div>
 
-          {/* Цвет */}
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
               Цвет
@@ -243,11 +253,13 @@ const AddScheduleModal = ({
                   onClick={() => onFormChange({ ...formData, color })}
                   className={`h-10 rounded-lg border-2 transition ${
                     formData.color === color
-                      ? 'border-indigo-500 ring-2 ring-indigo-500 ring-offset-2 dark:ring-offset-gray-800'
-                      : 'border-transparent hover:scale-105'
+                      ? "border-indigo-500 ring-2 ring-indigo-500 ring-offset-2 dark:ring-offset-gray-800"
+                      : "border-transparent hover:scale-105"
                   }`}
                 >
-                  <div className={`w-full h-full rounded ${color.split(' ')[0]} opacity-70`} />
+                  <div
+                    className={`w-full h-full rounded ${color.split(" ")[0]} opacity-70`}
+                  />
                 </button>
               ))}
             </div>
@@ -259,7 +271,7 @@ const AddScheduleModal = ({
               disabled={isSubmitting}
               className="flex-1 bg-green-600 hover:bg-green-700 text-white py-2 rounded-lg disabled:opacity-50 transition"
             >
-              {editingId ? 'Сохранить изменения' : 'Добавить пару'}
+              {editingId ? "Сохранить изменения" : "Добавить пару"}
             </button>
             <button
               type="button"
@@ -274,8 +286,6 @@ const AddScheduleModal = ({
     </div>
   );
 };
-
-
 
 const AddPeriodModal = ({
   isOpen,
@@ -606,6 +616,7 @@ export default function SchedulePage() {
     setActiveStudyPeriod,
     applyPreset,
     deleteStudyPeriod,
+    refreshData,
   } = useData();
 
   const [currentWeekStart, setCurrentWeekStart] = useState<Date>(() => {
@@ -627,7 +638,7 @@ export default function SchedulePage() {
   const [errorModalData, setErrorModalData] = useState<{
     title: string;
     message: string;
-    conflictSchedule: Schedule | null | undefined; 
+    conflictSchedule: Schedule | null | undefined;
   }>({
     title: "",
     message: "",
@@ -654,6 +665,13 @@ export default function SchedulePage() {
     preset_id: "",
     start_date: "",
   });
+
+  // Синхронизация текущей недели с активным периодом
+  useEffect(() => {
+    if (activeStudyPeriod) {
+      goToCurrentWeek();
+    }
+  }, [activeStudyPeriod]);
 
   const checkTimeOverlap = useCallback(
     (
@@ -720,20 +738,74 @@ export default function SchedulePage() {
     return grouped;
   }, [weekSchedules]);
 
-  const canGoNext = () => {
+  // Проверка возможности перехода на следующую неделю
+  const canGoNext = useCallback(() => {
     if (!activeStudyPeriod) return false;
-    const nextWeekEnd = new Date(currentWeekStart);
-    nextWeekEnd.setDate(nextWeekEnd.getDate() + 13);
-    return nextWeekEnd <= new Date(activeStudyPeriod.end_date);
-  };
+    const nextWeekStart = new Date(currentWeekStart);
+    nextWeekStart.setDate(nextWeekStart.getDate() + 7);
+    const nextWeekStartDate = nextWeekStart.toISOString().split("T")[0];
+    const periodEndDate = activeStudyPeriod.end_date;
+    return nextWeekStartDate <= periodEndDate;
+  }, [activeStudyPeriod, currentWeekStart]);
 
-  const goToCurrentWeek = () => {
+  // Проверка возможности перехода на предыдущую неделю
+  const canGoPrev = useCallback(() => {
+    if (!activeStudyPeriod) return false;
+    const prevWeekStart = new Date(currentWeekStart);
+    prevWeekStart.setDate(prevWeekStart.getDate() - 7);
+    const prevWeekEnd = new Date(prevWeekStart);
+    prevWeekEnd.setDate(prevWeekEnd.getDate() + 6);
+    const prevWeekEndDate = prevWeekEnd.toISOString().split("T")[0];
+    const periodStartDate = activeStudyPeriod.start_date;
+    return prevWeekEndDate >= periodStartDate;
+  }, [activeStudyPeriod, currentWeekStart]);
+
+  // Функция для перехода к текущей неделе с проверкой границ
+  const goToCurrentWeek = useCallback(() => {
+    if (!activeStudyPeriod) return;
+
     const today = new Date();
     const day = today.getDay();
     const diff = today.getDate() - (day === 0 ? 6 : day - 1);
-    const currentWeekDate = new Date(today.setDate(diff));
+    let currentWeekDate = new Date(today.setDate(diff));
+
+    const weekEnd = new Date(currentWeekDate);
+    weekEnd.setDate(weekEnd.getDate() + 6);
+    const weekEndDate = weekEnd.toISOString().split("T")[0];
+    const weekStartDate = currentWeekDate.toISOString().split("T")[0];
+
+    if (weekEndDate < activeStudyPeriod.start_date) {
+      currentWeekDate = new Date(activeStudyPeriod.start_date);
+      const startDay = currentWeekDate.getDay();
+      const startDiff =
+        currentWeekDate.getDate() - (startDay === 0 ? 6 : startDay - 1);
+      currentWeekDate = new Date(currentWeekDate.setDate(startDiff));
+    } else if (weekStartDate > activeStudyPeriod.end_date) {
+      currentWeekDate = new Date(activeStudyPeriod.end_date);
+      const endDay = currentWeekDate.getDay();
+      const endDiff =
+        currentWeekDate.getDate() - (endDay === 0 ? 6 : endDay - 1);
+      currentWeekDate = new Date(currentWeekDate.setDate(endDiff));
+    }
+
     setCurrentWeekStart(currentWeekDate);
-  };
+  }, [activeStudyPeriod]);
+
+  // Функция для перехода на следующую неделю
+  const goToNextWeek = useCallback(() => {
+    if (!canGoNext()) return;
+    const newDate = new Date(currentWeekStart);
+    newDate.setDate(newDate.getDate() + 7);
+    setCurrentWeekStart(newDate);
+  }, [canGoNext, currentWeekStart]);
+
+  // Функция для перехода на предыдущую неделю
+  const goToPrevWeek = useCallback(() => {
+    if (!canGoPrev()) return;
+    const newDate = new Date(currentWeekStart);
+    newDate.setDate(newDate.getDate() - 7);
+    setCurrentWeekStart(newDate);
+  }, [canGoPrev, currentWeekStart]);
 
   const handleCreatePeriodSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -781,9 +853,12 @@ export default function SchedulePage() {
 
       if (activeStudyPeriod) {
         await deleteStudyPeriod(activeStudyPeriod.id);
+
+        // Вручную очищаем локальное состояние расписания
+        // так как deleteStudyPeriod уже должен был это сделать
       }
 
-      await createStudyPeriod({
+      const newPeriod = await createStudyPeriod({
         name: pendingPeriodData?.name || periodForm.name,
         start_date: pendingPeriodData?.start_date || periodForm.start_date,
         end_date: pendingPeriodData?.end_date || periodForm.end_date,
@@ -791,8 +866,24 @@ export default function SchedulePage() {
         user_id: user!.id,
       });
 
+      // Вместо refreshData() просто обновляем необходимые состояния
+      // и сбрасываем текущую неделю
+
       setPeriodForm({ name: "", start_date: "", end_date: "" });
       setShowAddPeriod(false);
+
+      // Обновляем текущую неделю, чтобы показать новый период
+      if (newPeriod) {
+        // Принудительно устанавливаем активный период в состояние
+        // (он уже должен обновиться через setActiveStudyPeriodState в createStudyPeriod)
+
+        // Сбрасываем неделю на текущую
+        const today = new Date();
+        const day = today.getDay();
+        const diff = today.getDate() - (day === 0 ? 6 : day - 1);
+        const currentWeekDate = new Date(today.setDate(diff));
+        setCurrentWeekStart(currentWeekDate);
+      }
     } catch (err) {
       console.error("Error:", err);
       alert("Ошибка при создании периода");
@@ -1070,7 +1161,7 @@ export default function SchedulePage() {
         formData={scheduleForm}
         onFormChange={setScheduleForm}
         editingId={editingSchedule?.id}
-        timings = {timings}
+        timings={timings}
       />
 
       <ApplyPresetModal
@@ -1117,12 +1208,9 @@ export default function SchedulePage() {
           <div className="flex flex-col sm:flex-row justify-between items-center gap-4 mb-6">
             <div className="flex gap-2">
               <button
-                onClick={() => {
-                  const newDate = new Date(currentWeekStart);
-                  newDate.setDate(newDate.getDate() - 7);
-                  setCurrentWeekStart(newDate);
-                }}
-                className="flex items-center gap-2 px-4 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition text-gray-700 dark:text-gray-300"
+                onClick={goToPrevWeek}
+                disabled={!canGoPrev()}
+                className="flex items-center gap-2 px-4 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed transition text-gray-700 dark:text-gray-300"
               >
                 <ChevronLeft className="h-4 w-4" />
                 Пред. неделя
@@ -1150,11 +1238,7 @@ export default function SchedulePage() {
             </h3>
 
             <button
-              onClick={() => {
-                const newDate = new Date(currentWeekStart);
-                newDate.setDate(newDate.getDate() + 7);
-                setCurrentWeekStart(newDate);
-              }}
+              onClick={goToNextWeek}
               disabled={!canGoNext()}
               className="flex items-center gap-2 px-4 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed transition text-gray-700 dark:text-gray-300"
             >
@@ -1233,12 +1317,25 @@ export default function SchedulePage() {
                       ))}
                     </div>
                   ) : (
-                    <div className="bg-gray-50 dark:bg-gray-800/50 rounded-lg p-4 text-center text-gray-500 dark:text-gray-400 text-sm border border-gray-200 dark:border-gray-700">
-                      <PlusCircle />
+                    <div
+                      onClick={() => {
+                        setEditingSchedule(null);
+                        setScheduleForm({
+                          date: dateStr,
+                          subject_name: "",
+                          start_time: "09:00",
+                          end_time: "10:35",
+                          room: "",
+                          color: COLORS[0],
+                          is_important: false,
+                        });
+                        setShowAddSchedule(true);
+                      }}
+                      className="bg-gray-50 dark:bg-gray-800/50 rounded-lg p-4 text-center text-gray-500 dark:text-gray-400 text-sm border border-gray-200 dark:border-gray-700 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-800 transition flex flex-col items-center gap-2"
+                    >
+                      <PlusCircle className="h-6 w-6" />
                       <span>Добавить пару</span>
                     </div>
-                    
-                    
                   )}
                 </div>
               );

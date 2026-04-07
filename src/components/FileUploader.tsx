@@ -1,8 +1,8 @@
-'use client';
+"use client";
 
-import { useState, useRef } from 'react';
-import { Upload, X, FileText, Image, Loader2 } from 'lucide-react';
-import { Attachment } from '@/src/types';
+import { useState, useRef } from "react";
+import { Upload, X, FileText, Image, Loader2 } from "lucide-react";
+import { Attachment } from "@/src/types";
 
 interface FileUploaderProps {
   noteId: number;
@@ -12,12 +12,12 @@ interface FileUploaderProps {
   isUploading?: boolean;
 }
 
-export const FileUploader = ({ 
-  noteId, 
-  onUpload, 
-  onDelete, 
+export const FileUploader = ({
+  noteId,
+  onUpload,
+  onDelete,
   attachments,
-  isUploading = false 
+  isUploading = false,
 }: FileUploaderProps) => {
   const [dragActive, setDragActive] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -36,7 +36,7 @@ export const FileUploader = ({
     e.preventDefault();
     e.stopPropagation();
     setDragActive(false);
-    
+
     const files = Array.from(e.dataTransfer.files);
     if (files.length > 0) {
       await onUpload(files[0]);
@@ -49,20 +49,20 @@ export const FileUploader = ({
       await onUpload(files[0]);
     }
     if (fileInputRef.current) {
-      fileInputRef.current.value = '';
+      fileInputRef.current.value = "";
     }
   };
 
   const formatFileSize = (bytes: number) => {
-    if (bytes === 0) return '0 Bytes';
+    if (bytes === 0) return "0 Bytes";
     const k = 1024;
-    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+    const sizes = ["Bytes", "KB", "MB", "GB"];
     const i = Math.floor(Math.log(bytes) / Math.log(k));
-    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + " " + sizes[i];
   };
 
   const getFileIcon = (fileType: string) => {
-    if (fileType === 'image') {
+    if (fileType === "image") {
       return <Image className="h-5 w-5 text-blue-500" />;
     }
     return <FileText className="h-5 w-5 text-gray-500" />;
@@ -73,9 +73,10 @@ export const FileUploader = ({
       {/* Область загрузки */}
       <div
         className={`relative border-2 border-dashed rounded-lg p-4 text-center transition-colors
-          ${dragActive 
-            ? 'border-indigo-500 bg-indigo-50 dark:bg-indigo-950/20' 
-            : 'border-gray-300 dark:border-gray-600 hover:border-indigo-400 dark:hover:border-indigo-500'
+          ${
+            dragActive
+              ? "border-indigo-500 bg-indigo-50 dark:bg-indigo-950/20"
+              : "border-gray-300 dark:border-gray-600 hover:border-indigo-400 dark:hover:border-indigo-500"
           }`}
         onDragEnter={handleDrag}
         onDragLeave={handleDrag}
@@ -90,7 +91,7 @@ export const FileUploader = ({
           className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
           disabled={isUploading}
         />
-        
+
         <div className="flex flex-col items-center gap-2">
           {isUploading ? (
             <Loader2 className="h-8 w-8 text-indigo-600 animate-spin" />
@@ -119,9 +120,9 @@ export const FileUploader = ({
                 className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition"
               >
                 <div className="flex items-center gap-3 flex-1 min-w-0">
-                  {attachment.file_type === 'image' ? (
-                    <img 
-                      src={attachment.file_url} 
+                  {attachment.file_type === "image" ? (
+                    <img
+                      src={attachment.file_url}
                       alt={attachment.file_name}
                       className="w-10 h-10 object-cover rounded"
                     />

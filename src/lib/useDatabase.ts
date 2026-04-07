@@ -1,182 +1,197 @@
-'use client';
+"use client";
 
-import { useAuth } from './AuthContext';
-import { supabase } from './supabase';
-import { Assignment, Note, Subject } from '@/src/types';
-import { useCallback, useMemo } from 'react';
+import { useAuth } from "./AuthContext";
+import { supabase } from "./supabase";
+import { Assignment, Note, Subject } from "@/src/types";
+import { useCallback, useMemo } from "react";
 
 export function useDatabase() {
   const { user } = useAuth();
 
-
-
   const getSubjects = useCallback(async () => {
     if (!user) return [];
 
-    const { data, error } = await supabase.from('subjects').select('*').eq('user_id', user.id);
+    const { data, error } = await supabase
+      .from("subjects")
+      .select("*")
+      .eq("user_id", user.id);
 
     if (error) {
-      console.error('Error fetching subjects:', error);
+      console.error("Error fetching subjects:", error);
       return [];
     }
     return data || [];
   }, [user]);
 
   const addSubject = useCallback(
-    async (subject: Omit<Subject, 'id'>) => {
-      if (!user) throw new Error('User not authenticated');
+    async (subject: Omit<Subject, "id">) => {
+      if (!user) throw new Error("User not authenticated");
 
       const { data, error } = await supabase
-        .from('subjects')
+        .from("subjects")
         .insert([{ ...subject, user_id: user.id }])
         .select();
 
       if (error) throw error;
       return data?.[0];
     },
-    [user]
+    [user],
   );
 
   const updateSubject = useCallback(
     async (id: number, subject: Partial<Subject>) => {
-      if (!user) throw new Error('User not authenticated');
+      if (!user) throw new Error("User not authenticated");
 
       const { data, error } = await supabase
-        .from('subjects')
+        .from("subjects")
         .update(subject)
-        .eq('id', id)
-        .eq('user_id', user.id)
+        .eq("id", id)
+        .eq("user_id", user.id)
         .select();
 
       if (error) throw error;
       return data?.[0];
     },
-    [user]
+    [user],
   );
 
   const deleteSubject = useCallback(
     async (id: number) => {
-      if (!user) throw new Error('User not authenticated');
+      if (!user) throw new Error("User not authenticated");
 
-      const { error } = await supabase.from('subjects').delete().eq('id', id).eq('user_id', user.id);
+      const { error } = await supabase
+        .from("subjects")
+        .delete()
+        .eq("id", id)
+        .eq("user_id", user.id);
 
       if (error) throw error;
     },
-    [user]
+    [user],
   );
 
   const getAssignments = useCallback(async () => {
     if (!user) return [];
 
-    const { data, error } = await supabase.from('assignments').select('*').eq('user_id', user.id);
+    const { data, error } = await supabase
+      .from("assignments")
+      .select("*")
+      .eq("user_id", user.id);
 
     if (error) {
-      console.error('Error fetching assignments:', error);
+      console.error("Error fetching assignments:", error);
       return [];
     }
     return data || [];
   }, [user]);
 
   const addAssignment = useCallback(
-    async (assignment: Omit<Assignment, 'id'>) => {
-      if (!user) throw new Error('User not authenticated');
+    async (assignment: Omit<Assignment, "id">) => {
+      if (!user) throw new Error("User not authenticated");
 
       const { data, error } = await supabase
-        .from('assignments')
+        .from("assignments")
         .insert([{ ...assignment, user_id: user.id }])
         .select();
 
       if (error) throw error;
       return data?.[0];
     },
-    [user]
+    [user],
   );
 
   const updateAssignment = useCallback(
     async (id: number, assignment: Partial<Assignment>) => {
-      if (!user) throw new Error('User not authenticated');
+      if (!user) throw new Error("User not authenticated");
 
       const { data, error } = await supabase
-        .from('assignments')
+        .from("assignments")
         .update(assignment)
-        .eq('id', id)
-        .eq('user_id', user.id)
+        .eq("id", id)
+        .eq("user_id", user.id)
         .select();
 
       if (error) throw error;
       return data?.[0];
     },
-    [user]
+    [user],
   );
 
   const deleteAssignment = useCallback(
     async (id: number) => {
-      if (!user) throw new Error('User not authenticated');
+      if (!user) throw new Error("User not authenticated");
 
       const { error } = await supabase
-        .from('assignments')
+        .from("assignments")
         .delete()
-        .eq('id', id)
-        .eq('user_id', user.id);
+        .eq("id", id)
+        .eq("user_id", user.id);
 
       if (error) throw error;
     },
-    [user]
+    [user],
   );
 
   const getNotes = useCallback(async () => {
     if (!user) return [];
 
-    const { data, error } = await supabase.from('notes').select('*').eq('user_id', user.id);
+    const { data, error } = await supabase
+      .from("notes")
+      .select("*")
+      .eq("user_id", user.id);
 
     if (error) {
-      console.error('Error fetching notes:', error);
+      console.error("Error fetching notes:", error);
       return [];
     }
     return data || [];
   }, [user]);
 
   const addNote = useCallback(
-    async (note: Omit<Note, 'id'>) => {
-      if (!user) throw new Error('User not authenticated');
+    async (note: Omit<Note, "id">) => {
+      if (!user) throw new Error("User not authenticated");
 
       const { data, error } = await supabase
-        .from('notes')
+        .from("notes")
         .insert([{ ...note, user_id: user.id }])
         .select();
 
       if (error) throw error;
       return data?.[0];
     },
-    [user]
+    [user],
   );
 
   const updateNote = useCallback(
     async (id: number, note: Partial<Note>) => {
-      if (!user) throw new Error('User not authenticated');
+      if (!user) throw new Error("User not authenticated");
 
       const { data, error } = await supabase
-        .from('notes')
+        .from("notes")
         .update(note)
-        .eq('id', id)
-        .eq('user_id', user.id)
+        .eq("id", id)
+        .eq("user_id", user.id)
         .select();
 
       if (error) throw error;
       return data?.[0];
     },
-    [user]
+    [user],
   );
 
   const deleteNote = useCallback(
     async (id: number) => {
-      if (!user) throw new Error('User not authenticated');
+      if (!user) throw new Error("User not authenticated");
 
-      const { error } = await supabase.from('notes').delete().eq('id', id).eq('user_id', user.id);
+      const { error } = await supabase
+        .from("notes")
+        .delete()
+        .eq("id", id)
+        .eq("user_id", user.id);
 
       if (error) throw error;
     },
-    [user]
+    [user],
   );
 
   return useMemo(
@@ -207,6 +222,6 @@ export function useDatabase() {
       addNote,
       updateNote,
       deleteNote,
-    ]
+    ],
   );
 }

@@ -1,7 +1,17 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { Plus, X, Save, Trash2, Loader, Search, FileText, Image as ImageIcon } from "lucide-react";
+import { useState, useEffect, useMemo } from "react";
+import {
+  Plus,
+  X,
+  Save,
+  Trash2,
+  Loader,
+  Search,
+  FileText,
+  Image as ImageIcon,
+  BookOpen,
+} from "lucide-react";
 import { useAuth } from "@/src/lib/AuthContext";
 import { Note, Attachment } from "@/src/types";
 import { useData } from "@/src/lib/DataContext";
@@ -22,8 +32,13 @@ const NoteModal = ({
   onDeleteAttachment,
   noteAttachments = [],
   isUploadingFiles = false,
+  subjects = [],
 }: any) => {
   if (!isOpen) return null;
+
+  const [isCustomSubject, setIsCustomSubject] = useState(
+    !formData.subject || !subjects.includes(formData.subject),
+  );
 
   return (
     <div
@@ -68,15 +83,67 @@ const NoteModal = ({
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
               Предмет
             </label>
-            <input
-              type="text"
-              placeholder="Например: Математика"
-              value={formData.subject}
-              onChange={(e) =>
-                onFormChange({ ...formData, subject: e.target.value })
-              }
-              className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-600"
-            />
+
+            {/* Переключатель между выбором из списка и ручным вводом */}
+            <div className="flex gap-2 mb-3">
+              <button
+                type="button"
+                onClick={() => setIsCustomSubject(false)}
+                className={`flex-1 px-3 py-1.5 text-sm rounded-lg transition ${
+                  !isCustomSubject
+                    ? "bg-indigo-600 text-white"
+                    : "bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600"
+                }`}
+              >
+                Выбрать из списка
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setIsCustomSubject(true);
+                  onFormChange({ ...formData, subject: "" });
+                }}
+                className={`flex-1 px-3 py-1.5 text-sm rounded-lg transition ${
+                  isCustomSubject
+                    ? "bg-indigo-600 text-white"
+                    : "bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600"
+                }`}
+              >
+                Ввести вручную
+              </button>
+            </div>
+
+            {!isCustomSubject ? (
+              // Выбор из существующих предметов
+              <div className="relative">
+                <BookOpen className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                <select
+                  value={formData.subject}
+                  onChange={(e) =>
+                    onFormChange({ ...formData, subject: e.target.value })
+                  }
+                  className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-600"
+                >
+                  <option value="">Выберите предмет</option>
+                  {subjects.map((subject: string, index: number) => (
+                    <option key={index} value={subject}>
+                      {subject}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            ) : (
+              // Ручной ввод
+              <input
+                type="text"
+                placeholder="Например: Математика"
+                value={formData.subject}
+                onChange={(e) =>
+                  onFormChange({ ...formData, subject: e.target.value })
+                }
+                className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-600"
+              />
+            )}
           </div>
 
           <div>
@@ -218,10 +285,10 @@ const NotePreviewModal = ({ note, onClose, onEdit, onDelete }: any) => {
                     rel="noopener noreferrer"
                     className="block p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition group"
                   >
-                    {attachment.file_type === 'image' ? (
+                    {attachment.file_type === "image" ? (
                       <div className="relative">
-                        <img 
-                          src={attachment.file_url} 
+                        <img
+                          src={attachment.file_url}
                           alt={attachment.file_name}
                           className="w-full h-24 object-cover rounded mb-2"
                         />
@@ -268,17 +335,18 @@ const NotePreviewModal = ({ note, onClose, onEdit, onDelete }: any) => {
 
 export default function NotesPage() {
   const { user, loading: authLoading } = useAuth();
-  const { 
-    notes, 
-    loading, 
-    error, 
-    addNote, 
-    updateNote, 
+  const {
+    notes,
+    schedules,
+    loading,
+    error,
+    addNote,
+    updateNote,
     deleteNote,
     addAttachment,
     deleteAttachment,
     getNoteAttachments,
-    uploadingFiles 
+    uploadingFiles,
   } = useData();
   const [showAddForm, setShowAddForm] = useState(false);
   const [editingId, setEditingId] = useState<number | null>(null);
@@ -292,7 +360,20 @@ export default function NotesPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [selectedNote, setSelectedNote] = useState<Note | null>(null);
   const [showPreview, setShowPreview] = useState(false);
-  const [currentNoteAttachments, setCurrentNoteAttachments] = useState<Attachment[]>([]);
+  const [currentNoteAttachments, setCurrentNoteAttachments] = useState<
+    Attachment[]
+  >([]);
+
+  // Получаем уникальные предметы из расписания
+  const subjectsFromSchedules = useMemo(() => {
+    const subjects = new Set<string>();
+    schedules.forEach((schedule) => {
+      if (schedule.subject_name) {
+        subjects.add(schedule.subject_name);
+      }
+    });
+    return Array.from(subjects).sort();
+  }, [schedules]);
 
   useEffect(() => {
     if (editingId) {
@@ -339,9 +420,8 @@ export default function NotesPage() {
           setEditingId(newNote.id);
         }
       }
-      
-      if (!editingId) {
 
+      if (!editingId) {
         setFormData({
           title: "",
           subject: "",
@@ -387,39 +467,47 @@ export default function NotesPage() {
 
   const handleFileUpload = async (file: File) => {
     if (!editingId) {
-      alert('Сначала сохраните заметку, затем добавляйте файлы');
+      alert("Сначала сохраните заметку, затем добавляйте файлы");
       return;
     }
-    
+
     try {
       await addAttachment(editingId, file);
       const updatedAttachments = getNoteAttachments(editingId);
       setCurrentNoteAttachments(updatedAttachments);
-      
+
       if (selectedNote && selectedNote.id === editingId) {
-        const updatedNote = { ...selectedNote, attachments: updatedAttachments };
+        const updatedNote = {
+          ...selectedNote,
+          attachments: updatedAttachments,
+        };
         setSelectedNote(updatedNote);
       }
     } catch (error) {
-      console.error('Upload error:', error);
-      alert(error instanceof Error ? error.message : 'Ошибка загрузки файла');
+      console.error("Upload error:", error);
+      alert(error instanceof Error ? error.message : "Ошибка загрузки файла");
     }
   };
 
   const handleDeleteAttachment = async (attachmentId: string) => {
-    if (confirm('Удалить этот файл?')) {
+    if (confirm("Удалить этот файл?")) {
       try {
         await deleteAttachment(attachmentId);
-        const updatedAttachments = editingId ? getNoteAttachments(editingId) : [];
+        const updatedAttachments = editingId
+          ? getNoteAttachments(editingId)
+          : [];
         setCurrentNoteAttachments(updatedAttachments);
-        
+
         if (selectedNote && selectedNote.id === editingId) {
-          const updatedNote = { ...selectedNote, attachments: updatedAttachments };
+          const updatedNote = {
+            ...selectedNote,
+            attachments: updatedAttachments,
+          };
           setSelectedNote(updatedNote);
         }
       } catch (error) {
-        console.error('Delete error:', error);
-        alert('Ошибка удаления файла');
+        console.error("Delete error:", error);
+        alert("Ошибка удаления файла");
       }
     }
   };
@@ -511,6 +599,7 @@ export default function NotesPage() {
         onDeleteAttachment={handleDeleteAttachment}
         noteAttachments={currentNoteAttachments}
         isUploadingFiles={uploadingFiles}
+        subjects={subjectsFromSchedules}
       />
 
       {/* Notes Grid */}
@@ -530,9 +619,12 @@ export default function NotesPage() {
                   <h3 className="font-bold text-base sm:text-lg text-gray-900 dark:text-white truncate">
                     {note.title}
                   </h3>
-                  <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400 truncate">
-                    {note.subject || "Без предмета"}
-                  </p>
+                  <div className="flex items-center gap-1 mt-1">
+                    <BookOpen className="h-3 w-3 text-gray-400" />
+                    <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400 truncate">
+                      {note.subject || "Без предмета"}
+                    </p>
+                  </div>
                 </div>
                 <span className="text-xs text-gray-400 dark:text-gray-500 ml-2 shrink-0">
                   {new Date(note.date).toLocaleDateString("ru-RU")}

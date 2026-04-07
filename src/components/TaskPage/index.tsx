@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import {
   Filter,
   Plus,
@@ -12,6 +12,7 @@ import {
   Trash2,
   CheckCircle2,
   Circle,
+  BookOpen,
 } from "lucide-react";
 import { useAuth } from "@/src/lib/AuthContext";
 import { Assignment } from "@/src/types";
@@ -27,14 +28,18 @@ const TaskModal = ({
   formData,
   onFormChange,
   editingId,
+  subjects,
 }: any) => {
   if (!isOpen) return null;
-
 
   const today = new Date().toISOString().split("T")[0];
   const maxDate = new Date();
   maxDate.setFullYear(maxDate.getFullYear() + 1);
   const maxDateStr = maxDate.toISOString().split("T")[0];
+
+  const [isCustomSubject, setIsCustomSubject] = useState(
+    !formData.subject || !subjects.includes(formData.subject),
+  );
 
   return (
     <div
@@ -79,15 +84,67 @@ const TaskModal = ({
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
               Предмет
             </label>
-            <input
-              type="text"
-              placeholder="Например: Вышмат"
-              value={formData.subject}
-              onChange={(e) =>
-                onFormChange({ ...formData, subject: e.target.value })
-              }
-              className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-600"
-            />
+
+            {/* Переключатель между выбором из списка и ручным вводом */}
+            <div className="flex gap-2 mb-3">
+              <button
+                type="button"
+                onClick={() => setIsCustomSubject(false)}
+                className={`flex-1 px-3 py-1.5 text-sm rounded-lg transition ${
+                  !isCustomSubject
+                    ? "bg-indigo-600 text-white"
+                    : "bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600"
+                }`}
+              >
+                Выбрать из списка
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setIsCustomSubject(true);
+                  onFormChange({ ...formData, subject: "" });
+                }}
+                className={`flex-1 px-3 py-1.5 text-sm rounded-lg transition ${
+                  isCustomSubject
+                    ? "bg-indigo-600 text-white"
+                    : "bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600"
+                }`}
+              >
+                Ввести вручную
+              </button>
+            </div>
+
+            {!isCustomSubject ? (
+              // Выбор из существующих предметов
+              <div className="relative">
+                <BookOpen className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                <select
+                  value={formData.subject}
+                  onChange={(e) =>
+                    onFormChange({ ...formData, subject: e.target.value })
+                  }
+                  className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-600"
+                >
+                  <option value="">Выберите предмет</option>
+                  {subjects.map((subject: string, index: number) => (
+                    <option key={index} value={subject}>
+                      {subject}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            ) : (
+              // Ручной ввод
+              <input
+                type="text"
+                placeholder="Например: Вышмат"
+                value={formData.subject}
+                onChange={(e) =>
+                  onFormChange({ ...formData, subject: e.target.value })
+                }
+                className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-600"
+              />
+            )}
           </div>
 
           <div>
@@ -162,6 +219,7 @@ export default function TaskPage() {
   const { user, loading: authLoading } = useAuth();
   const {
     assignments,
+    schedules,
     loading,
     error,
     addAssignment,
@@ -179,6 +237,17 @@ export default function TaskPage() {
     priority: "medium",
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // Получаем уникальные предметы из расписания
+  const subjectsFromSchedules = useMemo(() => {
+    const subjects = new Set<string>();
+    schedules.forEach((schedule) => {
+      if (schedule.subject_name) {
+        subjects.add(schedule.subject_name);
+      }
+    });
+    return Array.from(subjects).sort();
+  }, [schedules]);
 
   const getPriorityColor = (priority: string) => {
     switch (priority) {
@@ -357,10 +426,6 @@ export default function TaskPage() {
           </p>
         </div>
         <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
-          <button className="flex items-center gap-2 px-3 sm:px-4 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 text-sm sm:text-base transition">
-            <Filter className="h-4 w-4" />
-            <span>Фильтр</span>
-          </button>
           <button
             onClick={() => setShowAddForm(true)}
             className="flex items-center gap-2 px-3 sm:px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 text-sm sm:text-base transition"
@@ -380,6 +445,7 @@ export default function TaskPage() {
         formData={formData}
         onFormChange={setFormData}
         editingId={editingId}
+        subjects={subjectsFromSchedules}
       />
 
       {/* Filters */}
@@ -474,7 +540,12 @@ export default function TaskPage() {
                       {assignment.title}
                     </h4>
                     <div className="flex items-center gap-2 sm:gap-4 mt-2 text-xs sm:text-sm text-gray-500 dark:text-gray-400 flex-wrap">
-                      {assignment.subject && <span>{assignment.subject}</span>}
+                      {assignment.subject && (
+                        <span className="flex items-center gap-1">
+                          <BookOpen className="h-3 w-3" />
+                          {assignment.subject}
+                        </span>
+                      )}
                       {assignment.subject && assignment.deadline && (
                         <span>•</span>
                       )}
