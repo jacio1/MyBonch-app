@@ -69,9 +69,9 @@ export default function RootLayout({
               <Header />
               <div className="flex flex-1 overflow-hidden">
                 <Sidebar assignmentsCount={0} />
-                <main className="flex-1 overflow-auto">
+                <main className="flex-1 overflow-auto pb-16">
                   {children}
-                  <Footer />
+
                 </main>
               </div>
             </DataProvider>

@@ -21,7 +21,7 @@ import { useData } from "@/src/lib/DataContext";
 import { useAuth } from "@/src/lib/AuthContext";
 import { Timing } from "@/src/types";
 
-const DAYS_RU = ["Пн", "Вт", "Ср", "Чт", "Пт", "Сб", "Вс"];
+const DAYS_RU = ["Понедельник", "Вторник", "Среда", "Четверг", "Пятница", "Суббота"];
 
 const COLORS = [
   "bg-blue-100 dark:bg-blue-900/30 border-blue-200 dark:border-blue-700 text-blue-900 dark:text-blue-100",
@@ -183,7 +183,7 @@ function TimingSettings() {
             );
           })}
 
-          <div className="flex gap-2 pt-1">
+          <div className="flex gap-4 pt-1">
             <button
               onClick={handleAdd}
               disabled={timings.length >= 8}
@@ -806,7 +806,7 @@ export default function PresetsPage() {
   }
 
   return (
-    <div className="p-4 sm:p-8 transition-colors">
+    <div className="p-4 sm:p-8 transition-colors mx-auto space-y-6 max-w-6xl">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
         <div>
           <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white">

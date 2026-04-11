@@ -1073,7 +1073,7 @@ export default function SchedulePage() {
   }
 
   return (
-    <div className="p-4 sm:p-8 transition-colors">
+    <div className="p-4 sm:p-8 transition-colors mx-auto space-y-6 max-w-6xl">
       {/* Header */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
         <div>
@@ -1331,9 +1331,9 @@ export default function SchedulePage() {
                         });
                         setShowAddSchedule(true);
                       }}
-                      className="bg-gray-50 dark:bg-gray-800/50 rounded-lg p-4 text-center text-gray-500 dark:text-gray-400 text-sm border border-gray-200 dark:border-gray-700 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-800 transition flex flex-col items-center gap-2"
+                      className="bg-gray-50 dark:bg-gray-800/50 rounded-lg p-4 text-center text-gray-500 dark:text-gray-400 text-sm border border-gray-200 dark:border-gray-700 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-800 transition flex justify-center items-center gap-2"
                     >
-                      <PlusCircle className="h-6 w-6" />
+                      <Plus className="h-4 w-4" />
                       <span>Добавить пару</span>
                     </div>
                   )}

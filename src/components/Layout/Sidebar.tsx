@@ -65,7 +65,7 @@ export default function Sidebar({ assignmentsCount }: SidebarProps) {
                 href={item.href}
                 className={`flex items-center space-x-3 w-full p-3 rounded-lg transition-all ${
                   isActive
-                    ? "bg-indigo-50 dark:bg-indigo-950/50 text-indigo-700 dark:text-indigo-400"
+                    ? "bg-indigo-50 dark:bg-indigo-950/50 text-indigo-700 dark:text-indigo-400 "
                     : "text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
                 }`}
               >

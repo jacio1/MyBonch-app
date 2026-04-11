@@ -170,7 +170,7 @@ export default function ProfilePage() {
       .from("profiles")
       .select("full_name, avatar_url")
       .eq("id", user.id)
-      .single();
+      .maybeSingle();
     if (data)
       setProfileData({
         full_name: data.full_name || "",
@@ -195,7 +195,7 @@ export default function ProfilePage() {
         .from("notification_settings")
         .select("*")
         .eq("user_id", user.id)
-        .single();
+        .maybeSingle();
       if (data) setNotifSettings(data);
     } catch {
       // no settings yet — use defaults
@@ -206,24 +206,34 @@ export default function ProfilePage() {
 
   // ── Profile save ────────────────────────────────────────────────────────────
 
-  const saveProfile = async () => {
-    if (!user) return;
-    setIsSaving(true);
-    try {
-      const { error } = await supabase.from("profiles").upsert({
-        id: user.id,
-        full_name: profileData.full_name,
-        avatar_url: profileData.avatar_url,
-        updated_at: new Date().toISOString(),
-      });
-      if (error) throw error;
-      setIsEditing(false);
-    } catch {
-      alert("Ошибка при сохранении профиля");
-    } finally {
-      setIsSaving(false);
-    }
-  };
+const saveProfile = async () => {
+  if (!user) return;
+  setIsSaving(true);
+  try {
+    // 1. Сохраняем в таблицу profiles
+    const { error: profileError } = await supabase.from("profiles").upsert({
+      id: user.id,
+      full_name: profileData.full_name,
+      avatar_url: profileData.avatar_url,
+      updated_at: new Date().toISOString(),
+    });
+    if (profileError) throw profileError;
+    
+    // 2. Обновляем user_metadata (чтобы имя было везде одинаковым)
+    const { error: userError } = await supabase.auth.updateUser({
+      data: { full_name: profileData.full_name }
+    });
+    if (userError) throw userError;
+    
+    setIsEditing(false);
+    alert("Профиль успешно сохранён!");
+  } catch (error) {
+    console.error("Ошибка сохранения:", error);
+    alert("Ошибка при сохранении профиля");
+  } finally {
+    setIsSaving(false);
+  }
+};
 
   // ── Push subscription ───────────────────────────────────────────────────────
 
@@ -364,13 +374,14 @@ export default function ProfilePage() {
   }
 
   const pushEnabled = notifSettings.push_enabled;
-
+  const userName =
+    user?.user_metadata?.full_name || user?.email || "Пользователь";
   return (
-    <div className="p-4 sm:p-8 transition-colors">
-      <div className="max-w-2xl mx-auto space-y-6">
+    <div className="p-8 sm:p-8 transition-colors">
+      <div className="max-w-3xl mx-auto space-y-6 p-4">
         {/* Header */}
         <div>
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
             Профиль
           </h1>
           <p className="text-gray-600 dark:text-gray-400 mt-1">
@@ -386,7 +397,7 @@ export default function ProfilePage() {
             </div>
             <div className="flex-1">
               <h2 className="text-xl font-bold text-gray-900 dark:text-white">
-                {profileData.full_name || "Пользователь"}
+                {userName || "Пользователь"}
               </h2>
               <div className="flex items-center gap-2 text-gray-500 dark:text-gray-400 mt-1">
                 <Mail className="h-4 w-4" />
