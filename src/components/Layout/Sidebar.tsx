@@ -50,7 +50,7 @@ export default function Sidebar({ assignmentsCount }: SidebarProps) {
   return (
     <>
       {/* Desktop Sidebar */}
-      <nav className=" hidden sm:flex w-64 bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 flex-col p-6 space-y-8 transition-colors z-10 pb-[env(safe-area-inset-bottom)]">
+      <nav className="px-2 hidden sm:flex w-64 bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 flex-col p-6 space-y-8 transition-colors z-10 pb-[env(safe-area-inset-bottom)]">
         <div className="space-y-2">
           <h2 className="text-xs uppercase text-gray-500 dark:text-gray-400 font-semibold tracking-wider">
             Навигация
