@@ -377,7 +377,7 @@ const saveProfile = async () => {
   const userName =
     user?.user_metadata?.full_name || user?.email || "Пользователь";
   return (
-    <div className="p-8 sm:p-8 transition-colors">
+    <div className=" sm:p-8 transition-colors">
       <div className="max-w-3xl mx-auto space-y-6 p-4">
         {/* Header */}
         <div>

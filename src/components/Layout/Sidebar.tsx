@@ -34,7 +34,7 @@ export default function Sidebar({ assignmentsCount }: SidebarProps) {
       label: "Задания",
     },
     { href: "/notes", icon: FileText, label: "Конспекты" },
-    { href: "/subjects", icon: Settings, label: "Настройки" },
+    { href: "/subjects", icon: Settings, label: "Шаблоны" },
     { href: "/profile", icon: User, label: "Профиль" },
   ];
 
@@ -99,7 +99,7 @@ export default function Sidebar({ assignmentsCount }: SidebarProps) {
       </nav>
 
       {/* Mobile Bottom Navigation */}
-      <div className="sm:hidden fixed bottom-0 left-0 right-0 bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 transition-colors">
+      <div className="sm:hidden fixed bottom-0 left-0 right-0 bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 transition-colors z-10">
         <div className="flex justify-around items-center">
           {navItems.map((item) => {
             const Icon = item.icon;

@@ -63,7 +63,7 @@ const AddScheduleModal = ({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm"
+      className="m-0 fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm"
       onClick={onClose}
     >
       <div
@@ -1106,25 +1106,7 @@ export default function SchedulePage() {
           </button>
           {activeStudyPeriod && (
             <>
-              <button
-                onClick={() => {
-                  setEditingSchedule(null);
-                  setScheduleForm({
-                    date: "",
-                    subject_name: "",
-                    start_time: "09:00",
-                    end_time: "10:35",
-                    room: "",
-                    color: COLORS[0],
-                    is_important: false,
-                  });
-                  setShowAddSchedule(true);
-                }}
-                className="flex items-center justify-center gap-2 px-4 sm:px-6 py-2 sm:py-3 bg-green-600 hover:bg-green-700 text-white rounded-lg text-sm sm:text-base transition"
-              >
-                <Plus className="h-4 w-4" />
-                Добавить пару
-              </button>
+
               {presets.length > 0 && (
                 <button
                   onClick={() => setShowApplyPreset(true)}
