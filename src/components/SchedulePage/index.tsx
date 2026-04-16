@@ -14,11 +14,9 @@ import {
   AlertTriangle,
   Edit2,
   Star,
-  PlusCircle,
 } from "lucide-react";
 import { useData } from "@/src/lib/DataContext";
 import { useAuth } from "@/src/lib/AuthContext";
-import { useTheme } from "@/src/lib/ThemeContext";
 import { Schedule, Timing } from "@/src/types";
 
 const DAYS_RU = ["Пн", "Вт", "Ср", "Чт", "Пт", "Сб", "Вс"];
@@ -216,7 +214,7 @@ const AddScheduleModal = ({
 
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-              Важная пара
+              Избранная пара
             </label>
             <div className="flex items-center gap-3">
               <button
@@ -236,7 +234,7 @@ const AddScheduleModal = ({
                 <Star
                   className={`h-4 w-4 ${formData.is_important ? "fill-current" : ""}`}
                 />
-                {formData.is_important ? "Важная" : "Обычная"}
+                {formData.is_important ? "Избранная" : "Обычная"}
               </button>
             </div>
           </div>
@@ -600,7 +598,6 @@ const ErrorModal = ({
 
 export default function SchedulePage() {
   const { user, loading: authLoading } = useAuth();
-  const { isDark } = useTheme();
   const {
     schedules,
     presets,

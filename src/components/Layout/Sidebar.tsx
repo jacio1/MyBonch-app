@@ -29,12 +29,12 @@ export default function Sidebar({ assignmentsCount }: SidebarProps) {
   const navItems = [
     { href: "/schedule", icon: Calendar, label: "Расписание" },
     {
-      href: "/task",
+      href: "/tasks",
       icon: CheckSquare,
       label: "Задания",
     },
     { href: "/notes", icon: FileText, label: "Конспекты" },
-    { href: "/subjects", icon: Settings, label: "Шаблоны" },
+    { href: "/templates", icon: Settings, label: "Шаблоны" },
     { href: "/profile", icon: User, label: "Профиль" },
   ];
 

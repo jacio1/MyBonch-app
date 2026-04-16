@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect } from "react";
 import {
   User,
   Mail,
@@ -13,7 +13,6 @@ import {
   Lock,
   Bell,
   BellOff,
-  ChevronDown,
   Calendar,
   CheckSquare,
   Star,
@@ -21,7 +20,7 @@ import {
   Zap,
 } from "lucide-react";
 import { useAuth } from "@/src/lib/AuthContext";
-import { useTheme } from "@/src/lib/ThemeContext";
+import { useThemeStore } from "@/src/store/useThemeStore"; 
 import { supabase } from "@/src/lib/supabase";
 import { useRouter } from "next/navigation";
 
@@ -133,11 +132,52 @@ function SelectChips<T extends number>({
   );
 }
 
+// ── Theme Option Component ────────────────────────────────────────────────────
+
+function ThemeOption({ 
+  value, 
+  label, 
+  icon: Icon, 
+  currentTheme, 
+  onSelect 
+}: { 
+  value: 'light' | 'dark' | 'system';
+  label: string;
+  icon: any;
+  currentTheme: 'light' | 'dark' | 'system';
+  onSelect: (theme: 'light' | 'dark' | 'system') => void;
+}) {
+  const isActive = currentTheme === value;
+  
+  return (
+    <button
+      onClick={() => onSelect(value)}
+      className={`w-full flex items-center gap-3 p-3 rounded-lg border-2 transition ${
+        isActive
+          ? "border-indigo-600 bg-indigo-50 dark:bg-indigo-900/20"
+          : "border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700/50"
+      }`}
+    >
+      <Icon
+        className={`h-5 w-5 ${isActive ? "text-indigo-600" : "text-gray-500 dark:text-gray-400"}`}
+      />
+      <span
+        className={`font-medium text-sm ${isActive ? "text-indigo-600 dark:text-indigo-400" : "text-gray-900 dark:text-white"}`}
+      >
+        {label}
+      </span>
+      {isActive && (
+        <div className="ml-auto w-2 h-2 bg-indigo-600 rounded-full" />
+      )}
+    </button>
+  );
+}
+
 // ── Main Page ─────────────────────────────────────────────────────────────────
 
 export default function ProfilePage() {
   const { user, signOut, loading: authLoading } = useAuth();
-  const { theme, isDark, setTheme } = useTheme();
+  const { theme, setTheme } = useThemeStore();
   const router = useRouter();
 
   const [isEditing, setIsEditing] = useState(false);
@@ -206,34 +246,34 @@ export default function ProfilePage() {
 
   // ── Profile save ────────────────────────────────────────────────────────────
 
-const saveProfile = async () => {
-  if (!user) return;
-  setIsSaving(true);
-  try {
-    // 1. Сохраняем в таблицу profiles
-    const { error: profileError } = await supabase.from("profiles").upsert({
-      id: user.id,
-      full_name: profileData.full_name,
-      avatar_url: profileData.avatar_url,
-      updated_at: new Date().toISOString(),
-    });
-    if (profileError) throw profileError;
-    
-    // 2. Обновляем user_metadata (чтобы имя было везде одинаковым)
-    const { error: userError } = await supabase.auth.updateUser({
-      data: { full_name: profileData.full_name }
-    });
-    if (userError) throw userError;
-    
-    setIsEditing(false);
-    alert("Профиль успешно сохранён!");
-  } catch (error) {
-    console.error("Ошибка сохранения:", error);
-    alert("Ошибка при сохранении профиля");
-  } finally {
-    setIsSaving(false);
-  }
-};
+  const saveProfile = async () => {
+    if (!user) return;
+    setIsSaving(true);
+    try {
+      // 1. Сохраняем в таблицу profiles
+      const { error: profileError } = await supabase.from("profiles").upsert({
+        id: user.id,
+        full_name: profileData.full_name,
+        avatar_url: profileData.avatar_url,
+        updated_at: new Date().toISOString(),
+      });
+      if (profileError) throw profileError;
+      
+      // 2. Обновляем user_metadata (чтобы имя было везде одинаковым)
+      const { error: userError } = await supabase.auth.updateUser({
+        data: { full_name: profileData.full_name }
+      });
+      if (userError) throw userError;
+      
+      setIsEditing(false);
+      alert("Профиль успешно сохранён!");
+    } catch (error) {
+      console.error("Ошибка сохранения:", error);
+      alert("Ошибка при сохранении профиля");
+    } finally {
+      setIsSaving(false);
+    }
+  };
 
   // ── Push subscription ───────────────────────────────────────────────────────
 
@@ -256,7 +296,7 @@ const saveProfile = async () => {
 
     return reg.pushManager.subscribe({
       userVisibleOnly: true,
-      applicationServerKey: applicationServerKey as BufferSource, // 👈 добавляем приведение
+      applicationServerKey: applicationServerKey as BufferSource,
     });
   };
 
@@ -376,8 +416,9 @@ const saveProfile = async () => {
   const pushEnabled = notifSettings.push_enabled;
   const userName =
     user?.user_metadata?.full_name || user?.email || "Пользователь";
+  
   return (
-    <div className=" sm:p-8 transition-colors">
+    <div className="sm:p-8 transition-colors">
       <div className="max-w-3xl mx-auto space-y-6 p-4">
         {/* Header */}
         <div>
@@ -465,45 +506,37 @@ const saveProfile = async () => {
         {/* ── Theme ── */}
         <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6 shadow-sm">
           <h3 className="text-base font-bold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
-            {isDark ? (
+            {theme === 'dark' ? (
               <Moon className="h-5 w-5" />
-            ) : (
+            ) : theme === 'light' ? (
               <Sun className="h-5 w-5" />
+            ) : (
+              <Monitor className="h-5 w-5" />
             )}
             Внешний вид
           </h3>
           <div className="space-y-2">
-            {[
-              { value: "light" as const, label: "Светлая тема", icon: Sun },
-              { value: "dark" as const, label: "Тёмная тема", icon: Moon },
-              {
-                value: "system" as const,
-                label: "Как в системе",
-                icon: Monitor,
-              },
-            ].map(({ value, label, icon: Icon }) => (
-              <button
-                key={value}
-                onClick={() => setTheme(value)}
-                className={`w-full flex items-center gap-3 p-3 rounded-lg border-2 transition ${
-                  theme === value
-                    ? "border-indigo-600 bg-indigo-50 dark:bg-indigo-900/20"
-                    : "border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700/50"
-                }`}
-              >
-                <Icon
-                  className={`h-5 w-5 ${theme === value ? "text-indigo-600" : "text-gray-500 dark:text-gray-400"}`}
-                />
-                <span
-                  className={`font-medium text-sm ${theme === value ? "text-indigo-600 dark:text-indigo-400" : "text-gray-900 dark:text-white"}`}
-                >
-                  {label}
-                </span>
-                {theme === value && (
-                  <div className="ml-auto w-2 h-2 bg-indigo-600 rounded-full" />
-                )}
-              </button>
-            ))}
+            <ThemeOption
+              value="light"
+              label="Светлая тема"
+              icon={Sun}
+              currentTheme={theme}
+              onSelect={setTheme}
+            />
+            <ThemeOption
+              value="dark"
+              label="Тёмная тема"
+              icon={Moon}
+              currentTheme={theme}
+              onSelect={setTheme}
+            />
+            <ThemeOption
+              value="system"
+              label="Как в системе"
+              icon={Monitor}
+              currentTheme={theme}
+              onSelect={setTheme}
+            />
           </div>
         </div>
 
@@ -613,7 +646,7 @@ const saveProfile = async () => {
                         <div className="flex-1">
                           <p className="text-sm font-medium text-gray-900 dark:text-white flex items-center gap-1.5">
                             <Star className="h-3.5 w-3.5 text-yellow-500 fill-yellow-500" />
-                            Только важные пары
+                            Только избранные пары
                           </p>
                           <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
                             Уведомления придут только для пар, отмеченных как

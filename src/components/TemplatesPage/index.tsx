@@ -499,7 +499,7 @@ const ScheduleModal = ({
               <Star
                 className={`h-4 w-4 ${formData.is_important ? "fill-current" : ""}`}
               />
-              {formData.is_important ? "Важная" : "Обычная"}
+              {formData.is_important ? "Избранная" : "Обычная"}
             </button>
           </div>
 
@@ -630,7 +630,7 @@ function WeekGrid({
 
 // ─── Page ──────────────────────────────────────────────────────────────────────
 
-export default function PresetsPage() {
+export default function TemplatesPage() {
   const { user, loading: authLoading } = useAuth();
   const {
     presets,
@@ -807,7 +807,7 @@ export default function PresetsPage() {
 
   return (
     <div className="p-4 sm:p-8 transition-colors mx-auto space-y-6 max-w-6xl">
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
         <div>
           <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white">
             Настройки расписания

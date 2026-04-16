@@ -2,52 +2,32 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { BookOpen, Eye, EyeOff, Mail, Lock, User } from "lucide-react";
+import { BookOpen, Eye, EyeOff, Mail, Lock } from "lucide-react";
 import { useAuth } from "@/src/lib/AuthContext";
-import { useTheme } from "@/src/lib/ThemeContext";
 import Link from "next/link";
 
-export default function SignUpPage() {
+export default function SignInPage() {
   const router = useRouter();
-  const { signUp, error, loading } = useAuth();
-  const { isDark } = useTheme();
+  const { signIn, error, loading } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
-  const [fullName, setFullName] = useState("");
   const [showPassword, setShowPassword] = useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [localError, setLocalError] = useState("");
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLocalError("");
 
-    if (!email || !password || !confirmPassword || !fullName) {
+    if (!email || !password) {
       setLocalError("Заполните все поля");
       return;
     }
 
-    if (password !== confirmPassword) {
-      setLocalError("Пароли не совпадают");
-      return;
-    }
-
-    if (password.length < 6) {
-      setLocalError("Пароль должен быть не менее 6 символов");
-      return;
-    }
-
-    if (!email.includes("@")) {
-      setLocalError("Введите корректный email");
-      return;
-    }
-
     try {
-      await signUp(email, password, fullName);
-      router.push("/check-email");
+      await signIn(email, password);
+      router.push("/subjects");
     } catch (err) {
-      const message = err instanceof Error ? err.message : "Ошибка регистрации";
+      const message = err instanceof Error ? err.message : "Ошибка входа";
       setLocalError(message);
     }
   };
@@ -68,14 +48,14 @@ export default function SignUpPage() {
             МойБонч
           </h1>
           <p className="text-gray-600 dark:text-gray-400 text-sm sm:text-base">
-            Создайте аккаунт для управления учебой
+            Ваш персональный помощник в учебе
           </p>
         </div>
 
         {/* Form Card */}
         <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6 sm:p-8 shadow-sm">
           <h2 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white mb-6">
-            Регистрация
+            Вход в аккаунт
           </h2>
 
           {displayError && (
@@ -87,29 +67,6 @@ export default function SignUpPage() {
           )}
 
           <form onSubmit={handleSubmit} className="space-y-4">
-            {/* Full Name Input */}
-            <div>
-              <label
-                htmlFor="fullName"
-                className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
-              >
-                Имя пользователя
-              </label>
-              <div className="relative">
-                <User className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400 dark:text-gray-500" />
-                <input
-                  id="fullName"
-                  type="text"
-                  value={fullName}
-                  onChange={(e) => setFullName(e.target.value)}
-                  placeholder="Username"
-                  className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-600 disabled:opacity-50 disabled:cursor-not-allowed"
-                  disabled={loading}
-                  maxLength={15}
-                />
-              </div>
-            </div>
-
             {/* Email Input */}
             <div>
               <label
@@ -163,42 +120,6 @@ export default function SignUpPage() {
                   )}
                 </button>
               </div>
-              <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                Минимум 6 символов
-              </p>
-            </div>
-
-            {/* Confirm Password Input */}
-            <div>
-              <label
-                htmlFor="confirmPassword"
-                className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
-              >
-                Подтвердите пароль
-              </label>
-              <div className="relative">
-                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400 dark:text-gray-500" />
-                <input
-                  id="confirmPassword"
-                  type={showConfirmPassword ? "text" : "password"}
-                  value={confirmPassword}
-                  onChange={(e) => setConfirmPassword(e.target.value)}
-                  placeholder="••••••••"
-                  className="w-full pl-10 pr-10 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-600 disabled:opacity-50 disabled:cursor-not-allowed"
-                  disabled={loading}
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 transition"
-                >
-                  {showConfirmPassword ? (
-                    <EyeOff className="h-5 w-5" />
-                  ) : (
-                    <Eye className="h-5 w-5" />
-                  )}
-                </button>
-              </div>
             </div>
 
             {/* Submit Button */}
@@ -207,9 +128,19 @@ export default function SignUpPage() {
               disabled={loading}
               className="mt-4 w-full flex items-center justify-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-lg font-semibold transition text-sm sm:text-base"
             >
-              {loading ? "Регистрация..." : "Зарегистрироваться"}
+              {loading ? "Вход..." : "Войти"}
             </button>
           </form>
+
+          {/* Forgot Password */}
+          <div className="mt-6 text-center">
+            <Link
+              href="/reset-password"
+              className="text-gray-500 dark:text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-400 text-sm transition"
+            >
+              Забыли пароль?
+            </Link>
+          </div>
 
           {/* Divider */}
           <div className="relative my-6">
@@ -218,14 +149,14 @@ export default function SignUpPage() {
             </div>
           </div>
 
-          {/* Sign In Link */}
+          {/* Sign Up Link */}
           <p className="text-center text-gray-600 dark:text-gray-400 text-sm sm:text-base">
-            Уже есть аккаунт?{" "}
+            Нет аккаунта?{" "}
             <Link
-              href="/sign-in"
+              href="/sign-up"
               className="text-indigo-600 dark:text-indigo-400 font-semibold hover:underline"
             >
-              Войдите
+              Зарегистрируйтесь
             </Link>
           </p>
         </div>

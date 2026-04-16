@@ -1,11 +1,8 @@
 "use client";
 
-import { useTheme } from "@/src/lib/ThemeContext";
 import { FileText, Calendar, CreditCard, Shield, AlertCircle, RefreshCw, Gavel, Clock, Download, Trash2, Edit, Image, FileText as FileDoc, Phone, Mail as MailIcon, MapPin, User, Lock, Eye, Database, Bell } from "lucide-react";
-import Link from "next/link";
 
 export default function OfferPage() {
-  const { isDark } = useTheme();
 
   return (
     <div className="p-4 sm:p-8 transition-colors">

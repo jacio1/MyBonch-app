@@ -1,33 +1,22 @@
 "use client";
 
-import { useTheme } from "@/src/lib/ThemeContext";
 import { 
   Shield, 
   Eye, 
   Database, 
-  CreditCard, 
-  Mail, 
-  Phone, 
-  MapPin, 
   User, 
   Lock, 
   Cookie, 
   Bell, 
-  AlertTriangle,
   FileText,
   CheckCircle,
-  XCircle,
-  Server,
   Users,
   Calendar,
-  Clock,
   Globe,
   Gavel
 } from "lucide-react";
-import Link from "next/link";
 
 export default function PrivacyPolicyPage() {
-  const { isDark } = useTheme();
 
   return (
     <div className="p-4 sm:p-8 transition-colors">

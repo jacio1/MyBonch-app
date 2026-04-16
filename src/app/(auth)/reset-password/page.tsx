@@ -3,11 +3,9 @@
 import { useState } from "react";
 import { BookOpen, Mail, ArrowLeft } from "lucide-react";
 import { supabase } from "@/src/lib/supabase";
-import { useTheme } from "@/src/lib/ThemeContext";
 import Link from "next/link";
 
 export default function ResetPasswordPage() {
-  const { isDark } = useTheme();
   const [email, setEmail] = useState("");
   const [submitted, setSubmitted] = useState(false);
   const [error, setError] = useState("");
