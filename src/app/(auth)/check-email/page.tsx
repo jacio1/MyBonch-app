@@ -8,14 +8,11 @@ export default function CheckEmailPage() {
     <div className="min-h-screen  flex items-center justify-center p-4">
       <div className="w-full max-w-md">
         <div className="bg-[#131313] rounded-2xl shadow-2xl p-6 sm:p-8">
-          {/* Icon */}
           <div className="flex justify-center mb-6">
             <div className="bg-indigo-100 rounded-full p-4">
               <Mail className="h-8 w-8 text-indigo-600" />
             </div>
           </div>
-
-          {/* Content */}
           <h1 className="text-2xl sm:text-3xl font-bold text-white text-center mb-4">
             Проверьте почту
           </h1>
@@ -32,7 +29,6 @@ export default function CheckEmailPage() {
             </p>
           </div>
 
-          {/* Back to Sign In */}
           <Link
             href="/sign-in"
             className="flex items-center justify-center space-x-2 w-full bg-indigo-600 text-white font-semibold py-3 rounded-lg hover:bg-indigo-700 transition text-sm sm:text-base"
