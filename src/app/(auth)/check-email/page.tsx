@@ -13,7 +13,6 @@ export default function CheckEmailPage() {
               <Mail className="h-8 w-8 text-indigo-600" />
             </div>
           </div>
-
           <h1 className="text-2xl sm:text-3xl font-bold text-white text-center mb-4">
             Проверьте почту
           </h1>

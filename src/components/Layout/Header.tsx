@@ -2,18 +2,15 @@
 
 import {
   BookOpen,
-  Search,
   BellRing,
   User,
   Menu,
   X,
   LogOut,
-  Settings,
 } from "lucide-react";
 import { useState } from "react";
 import { useAuth } from "@/src/lib/AuthContext";
 import { useRouter } from "next/navigation";
-import Link from "next/link";
 
 export default function Header() {
   const [menuOpen, setMenuOpen] = useState(false);
@@ -53,7 +50,6 @@ export default function Header() {
 
         {/* Desktop Menu */}
         <div className="hidden sm:flex items-center space-x-4">
-          <Search className="h-5 w-5 text-gray-500 dark:text-gray-400 cursor-pointer hover:text-gray-700 dark:hover:text-gray-300 transition" />
           <BellRing className="h-5 w-5 text-gray-500 dark:text-gray-400 cursor-pointer hover:text-gray-700 dark:hover:text-gray-300 transition" />
           <div className="flex items-center space-x-3 border-l border-gray-200 dark:border-gray-700 pl-4">
             <div className="w-10 h-10 bg-indigo-100 dark:bg-indigo-900/30 rounded-full flex items-center justify-center">
@@ -78,10 +74,7 @@ export default function Header() {
       {/* Mobile Menu */}
       {menuOpen && (
         <div className="sm:hidden mt-4 pt-4 border-t border-gray-200 dark:border-gray-700 space-y-3">
-          <button className="w-full flex items-center space-x-3 p-3 hover:bg-gray-50 dark:hover:bg-gray-700 rounded-lg transition text-left">
-            <Search className="h-5 w-5 text-gray-500 dark:text-gray-400" />
-            <span className="text-gray-700 dark:text-gray-300 font-medium">Поиск</span>
-          </button>
+
           <button className="w-full flex items-center space-x-3 p-3 hover:bg-gray-50 dark:hover:bg-gray-700 rounded-lg transition text-left">
             <BellRing className="h-5 w-5 text-gray-500 dark:text-gray-400" />
             <span className="text-gray-700 dark:text-gray-300 font-medium">Уведомления</span>

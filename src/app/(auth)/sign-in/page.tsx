@@ -25,7 +25,7 @@ export default function SignInPage() {
 
     try {
       await signIn(email, password);
-      router.push("/subjects");
+      router.push("/templates");
     } catch (err) {
       const message = err instanceof Error ? err.message : "Ошибка входа";
       setLocalError(message);

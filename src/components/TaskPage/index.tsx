@@ -1,13 +1,11 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState } from "react";
 import {
   Plus,
   Clock,
   MoreVertical,
   Loader,
-  X,
-  Save,
   Trash2,
   CheckCircle2,
   Circle,
@@ -16,237 +14,19 @@ import {
 import { useAuth } from "@/src/lib/AuthContext";
 import { Assignment } from "@/src/types";
 import { useData } from "@/src/lib/DataContext";
+import { useModalStore } from "@/src/stores/useModalStore";
+import { useTaskFormStore } from "@/src/stores/taskFormStore";
+import { TaskModal } from "./TaskModal";
 
 type FilterType = "all" | "active" | "completed" | "high" | "medium" | "low";
 
-const TaskModal = ({
-  isOpen,
-  onClose,
-  onSubmit,
-  isSubmitting,
-  formData,
-  onFormChange,
-  editingId,
-  subjects,
-}: any) => {
-  if (!isOpen) return null;
-
-  const today = new Date().toISOString().split("T")[0];
-  const maxDate = new Date();
-  maxDate.setFullYear(maxDate.getFullYear() + 1);
-  const maxDateStr = maxDate.toISOString().split("T")[0];
-
-  const [isCustomSubject, setIsCustomSubject] = useState(
-    !formData.subject || !subjects.includes(formData.subject),
-  );
-
-  return (
-    <div
-      className="m-0 fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm"
-      onClick={onClose}
-    >
-      <div
-        className="bg-white dark:bg-gray-800 rounded-xl shadow-xl max-w-md w-full"
-        onClick={(e) => e.stopPropagation()}
-      >
-        <div className="border-b border-gray-200 dark:border-gray-700 p-4 flex justify-between items-center">
-          <h3 className="text-lg font-bold text-gray-900 dark:text-white">
-            {editingId ? "Редактировать задание" : "Новое задание"}
-          </h3>
-          <button
-            onClick={onClose}
-            className="p-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded text-gray-500 dark:text-gray-400 transition"
-          >
-            <X className="h-5 w-5" />
-          </button>
-        </div>
-
-        <form onSubmit={onSubmit} className="p-4 space-y-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-              Название задания <span className="text-red-500">*</span>
-            </label>
-            <input
-              type="text"
-              placeholder="Например: Подготовиться к экзамену"
-              value={formData.title}
-              onChange={(e) =>
-                onFormChange({ ...formData, title: e.target.value })
-              }
-              className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-600"
-              required
-              autoFocus
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-              Предмет
-            </label>
-
-            {/* Переключатель между выбором из списка и ручным вводом */}
-            <div className="flex gap-2 mb-3">
-              <button
-                type="button"
-                onClick={() => setIsCustomSubject(false)}
-                className={`flex-1 px-3 py-1.5 text-sm rounded-lg transition ${
-                  !isCustomSubject
-                    ? "bg-indigo-600 text-white"
-                    : "bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600"
-                }`}
-              >
-                Выбрать из списка
-              </button>
-              <button
-                type="button"
-                onClick={() => {
-                  setIsCustomSubject(true);
-                  onFormChange({ ...formData, subject: "" });
-                }}
-                className={`flex-1 px-3 py-1.5 text-sm rounded-lg transition ${
-                  isCustomSubject
-                    ? "bg-indigo-600 text-white"
-                    : "bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600"
-                }`}
-              >
-                Ввести вручную
-              </button>
-            </div>
-
-            {!isCustomSubject ? (
-              // Выбор из существующих предметов
-              <div className="relative">
-                <BookOpen className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-                <select
-                  value={formData.subject}
-                  onChange={(e) =>
-                    onFormChange({ ...formData, subject: e.target.value })
-                  }
-                  className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-600"
-                >
-                  <option value="">Выберите предмет</option>
-                  {subjects.map((subject: string, index: number) => (
-                    <option key={index} value={subject}>
-                      {subject}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            ) : (
-              // Ручной ввод
-              <input
-                type="text"
-                placeholder="Например: Вышмат"
-                value={formData.subject}
-                onChange={(e) =>
-                  onFormChange({ ...formData, subject: e.target.value })
-                }
-                className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-600"
-              />
-            )}
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-              Дедлайн <span className="text-red-500">*</span>
-            </label>
-            <input
-              type="date"
-              value={formData.deadline}
-              onChange={(e) =>
-                onFormChange({ ...formData, deadline: e.target.value })
-              }
-              min={today}
-              max={maxDateStr}
-              className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-600"
-              required
-            />
-            <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-              Можно выбрать дату от сегодня до{" "}
-              {new Date(maxDateStr).toLocaleDateString("ru-RU")}
-            </p>
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-              Приоритет
-            </label>
-            <select
-              value={formData.priority}
-              onChange={(e) =>
-                onFormChange({
-                  ...formData,
-                  priority: e.target.value as "low" | "medium" | "high",
-                })
-              }
-              className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-600"
-            >
-              <option value="low">Низкий</option>
-              <option value="medium">Средний</option>
-              <option value="high">Высокий</option>
-            </select>
-          </div>
-
-          <div className="flex gap-2 pt-2">
-            <button
-              type="submit"
-              disabled={isSubmitting}
-              className="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white py-2 rounded-lg disabled:opacity-50 transition flex items-center justify-center gap-2"
-            >
-              <Save className="h-4 w-4" />
-              {isSubmitting
-                ? "Сохраняем..."
-                : editingId
-                  ? "Обновить"
-                  : "Добавить"}
-            </button>
-            <button
-              type="button"
-              onClick={onClose}
-              className="flex-1 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-900 dark:text-white py-2 rounded-lg transition"
-            >
-              Отмена
-            </button>
-          </div>
-        </form>
-      </div>
-    </div>
-  );
-};
-
 export default function TaskPage() {
   const { user, loading: authLoading } = useAuth();
-  const {
-    assignments,
-    schedules,
-    loading,
-    error,
-    addAssignment,
-    updateAssignment,
-    deleteAssignment,
-  } = useData();
-  const [showAddForm, setShowAddForm] = useState(false);
-  const [editingId, setEditingId] = useState<number | null>(null);
+  const { assignments, loading, error, updateAssignment, deleteAssignment } =
+    useData();
+  const { openModal } = useModalStore();
+  const { setEditing, resetForm } = useTaskFormStore();
   const [filter, setFilter] = useState<FilterType>("active");
-  const [formData, setFormData] = useState<Omit<Assignment, "id">>({
-    title: "",
-    subject: "",
-    deadline: "",
-    completed: false,
-    priority: "medium",
-  });
-  const [isSubmitting, setIsSubmitting] = useState(false);
-
-  // Получаем уникальные предметы из расписания
-  const subjectsFromSchedules = useMemo(() => {
-    const subjects = new Set<string>();
-    schedules.forEach((schedule) => {
-      if (schedule.subject_name) {
-        subjects.add(schedule.subject_name);
-      }
-    });
-    return Array.from(subjects).sort();
-  }, [schedules]);
 
   const getPriorityColor = (priority: string) => {
     switch (priority) {
@@ -274,67 +54,20 @@ export default function TaskPage() {
     }
   };
 
-  const resetForm = () => {
-    setFormData({
-      title: "",
-      subject: "",
-      deadline: "",
-      completed: false,
-      priority: "medium",
-    });
-    setEditingId(null);
-    setShowAddForm(false);
+  const handleAddClick = () => {
+    resetForm();
+    openModal("task");
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsSubmitting(true);
-
-    try {
-      if (!formData.title || !formData.deadline) {
-        alert("Заполните название и дедлайн");
-        setIsSubmitting(false);
-        return;
-      }
-
-      const today = new Date();
-      today.setHours(0, 0, 0, 0);
-
-      const maxDate = new Date();
-      maxDate.setFullYear(maxDate.getFullYear() + 1);
-      maxDate.setHours(0, 0, 0, 0);
-
-      const deadlineDate = new Date(formData.deadline);
-      deadlineDate.setHours(0, 0, 0, 0);
-
-      if (deadlineDate < today) {
-        alert(
-          "Нельзя создать задание с датой дедлайна раньше сегодняшнего дня",
-        );
-        setIsSubmitting(false);
-        return;
-      }
-
-      if (deadlineDate > maxDate) {
-        alert(
-          `Дедлайн не может быть позже ${maxDate.toLocaleDateString("ru-RU")}`,
-        );
-        setIsSubmitting(false);
-        return;
-      }
-
-      if (editingId) {
-        await updateAssignment(editingId, formData);
-      } else {
-        await addAssignment(formData);
-      }
-      resetForm();
-    } catch (error) {
-      console.error("Error saving assignment:", error);
-      alert("Ошибка сохранения. Попробуйте снова.");
-    } finally {
-      setIsSubmitting(false);
-    }
+  const handleEdit = (assignment: Assignment) => {
+    setEditing(assignment.id, {
+      title: assignment.title,
+      subject: assignment.subject,
+      deadline: assignment.deadline,
+      completed: assignment.completed,
+      priority: assignment.priority,
+    });
+    openModal("task");
   };
 
   const handleToggleComplete = async (id: number, completed: boolean) => {
@@ -344,18 +77,6 @@ export default function TaskPage() {
       console.error("Error updating assignment:", error);
       alert("Ошибка обновления. Попробуйте снова.");
     }
-  };
-
-  const handleEdit = (assignment: Assignment) => {
-    setFormData({
-      title: assignment.title,
-      subject: assignment.subject,
-      deadline: assignment.deadline,
-      completed: assignment.completed,
-      priority: assignment.priority,
-    });
-    setEditingId(assignment.id);
-    setShowAddForm(true);
   };
 
   const handleDelete = async (id: number) => {
@@ -413,7 +134,7 @@ export default function TaskPage() {
   }
 
   return (
-    <div className=" sm:p-8 transition-colors mx-auto space-y-6 max-w-6xl">
+    <div className="sm:p-8 transition-colors mx-auto space-y-6 max-w-6xl">
       {/* Header */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
         <div>
@@ -426,7 +147,7 @@ export default function TaskPage() {
         </div>
         <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
           <button
-            onClick={() => setShowAddForm(true)}
+            onClick={handleAddClick}
             className="flex items-center gap-2 px-3 sm:px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 text-sm sm:text-base transition"
           >
             <Plus className="h-4 w-4" />
@@ -436,16 +157,7 @@ export default function TaskPage() {
       </div>
 
       {/* Модальное окно */}
-      <TaskModal
-        isOpen={showAddForm}
-        onClose={resetForm}
-        onSubmit={handleSubmit}
-        isSubmitting={isSubmitting}
-        formData={formData}
-        onFormChange={setFormData}
-        editingId={editingId}
-        subjects={subjectsFromSchedules}
-      />
+      <TaskModal />
 
       {/* Filters */}
       <div className="flex gap-2 mb-6 overflow-x-auto pb-2">
@@ -518,7 +230,7 @@ export default function TaskPage() {
                     onClick={() =>
                       handleToggleComplete(assignment.id, assignment.completed)
                     }
-                    className="flex-shrink-0 mt-1 text-indigo-600 hover:text-indigo-700 transition"
+                    className="shrink-0 mt-1 text-indigo-600 hover:text-indigo-700 transition"
                   >
                     {assignment.completed ? (
                       <CheckCircle2 className="h-6 w-6" />
@@ -560,8 +272,7 @@ export default function TaskPage() {
                   </div>
                 </div>
 
-                {/* Priority & Actions */}
-                <div className="flex items-center gap-2 flex-shrink-0">
+                <div className="flex items-center gap-2 shrink-0">
                   <span
                     className={`px-2 sm:px-3 py-1 rounded-full text-xs font-medium whitespace-nowrap ${getPriorityColor(
                       assignment.priority,
@@ -606,7 +317,7 @@ export default function TaskPage() {
           </p>
           {filter !== "completed" && (
             <button
-              onClick={() => setShowAddForm(true)}
+              onClick={handleAddClick}
               className="mt-4 px-4 sm:px-6 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 text-sm sm:text-base transition"
             >
               Добавить задание
