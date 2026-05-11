@@ -5,7 +5,7 @@ import Link from "next/link";
 
 export default function CheckEmailPage() {
   return (
-    <div className="flex items-center justify-center min-h-[calc(100vh-200px)] p-4 sm:p-8 transition-colors">
+    <div className="flex items-center justify-center min-h-[calc(100vh-200px)] p-4 sm:p-8 transition-colors bg-[#111827]">
       <div className="w-full max-w-md">
         {/* Header (как на странице входа) */}
         <div className="text-center mb-8">
