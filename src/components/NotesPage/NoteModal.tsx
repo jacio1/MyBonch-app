@@ -299,7 +299,7 @@ export function NoteModal() {
                   <span className="font-medium">{formData.subject}</span>
                 </p>
               )}
-              <div className="text-gray-700 dark:text-gray-300 whitespace-pre-wrap">
+              <div className="wrap-break-word text-gray-700 dark:text-gray-300 whitespace-pre-wrap">
                 {formData.content || "Содержание заметки..."}
               </div>
             </div>

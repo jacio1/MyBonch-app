@@ -57,7 +57,6 @@ export default function Header() {
             </div>
             <div className="text-sm">
               <p className="font-medium text-gray-900 dark:text-white">{userName}</p>
-              <p className="text-xs text-gray-600 dark:text-gray-400">4 курс, ИТПИ</p>
             </div>
           </div>
         </div>
@@ -86,7 +85,6 @@ export default function Header() {
               </div>
               <div className="text-sm">
                 <p className="font-medium text-gray-800 dark:text-white">{userName}</p>
-                <p className="text-xs text-gray-500 dark:text-gray-400">4 курс, ИТПИ</p>
               </div>
             </div>
             <button
