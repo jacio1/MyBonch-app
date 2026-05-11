@@ -341,7 +341,7 @@ export default function SchedulePage() {
   }
 
   return (
-    <div className="p-4 sm:p-8 transition-colors mx-auto space-y-6 max-w-6xl">
+    <div className=" sm:p-8 transition-colors mx-auto space-y-6 max-w-6xl">
       {/* Header */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
         <div>
