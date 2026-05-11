@@ -25,7 +25,7 @@ export default function SignInPage() {
 
     try {
       await signIn(email, password);
-      router.push("/subjects");
+      router.push("/templates");
     } catch (err) {
       const message = err instanceof Error ? err.message : "Ошибка входа";
       setLocalError(message);
@@ -150,7 +150,7 @@ export default function SignInPage() {
           </div>
 
           {/* Sign Up Link */}
-          <p className="text-center text-gray-600 dark:text-gray-400 text-sm sm:text-base">
+          <p className=" pt-4 text-center text-gray-600 dark:text-gray-400 text-sm sm:text-base">
             Нет аккаунта?{" "}
             <Link
               href="/sign-up"

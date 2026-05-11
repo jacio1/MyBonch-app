@@ -88,9 +88,9 @@ export type Note = {
 export type Timing = {
   id: number;
   user_id: string;
-  label: string;      // "1 пара"
-  start_time: string; // "09:00"
-  end_time: string;   // "10:35"
+  label: string;      
+  start_time: string; 
+  end_time: string;   
   sort_order: number;
   created_at?: string;
   updated_at?: string;

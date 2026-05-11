@@ -217,7 +217,7 @@ export default function SignUpPage() {
           </div>
 
           {/* Sign In Link */}
-          <p className="text-center text-gray-600 dark:text-gray-400 text-sm sm:text-base">
+          <p className="pt-4 text-center text-gray-600 dark:text-gray-400 text-sm sm:text-base">
             Уже есть аккаунт?{" "}
             <Link
               href="/sign-in"

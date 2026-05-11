@@ -20,7 +20,7 @@ import {
   Zap,
 } from "lucide-react";
 import { useAuth } from "@/src/lib/AuthContext";
-import { useThemeStore } from "@/src/store/useThemeStore"; 
+import { useThemeStore } from "@/src/stores/useThemeStore";
 import { supabase } from "@/src/lib/supabase";
 import { useRouter } from "next/navigation";
 
@@ -134,21 +134,21 @@ function SelectChips<T extends number>({
 
 // ── Theme Option Component ────────────────────────────────────────────────────
 
-function ThemeOption({ 
-  value, 
-  label, 
-  icon: Icon, 
-  currentTheme, 
-  onSelect 
-}: { 
-  value: 'light' | 'dark' | 'system';
+function ThemeOption({
+  value,
+  label,
+  icon: Icon,
+  currentTheme,
+  onSelect,
+}: {
+  value: "light" | "dark" | "system";
   label: string;
   icon: any;
-  currentTheme: 'light' | 'dark' | 'system';
-  onSelect: (theme: 'light' | 'dark' | 'system') => void;
+  currentTheme: "light" | "dark" | "system";
+  onSelect: (theme: "light" | "dark" | "system") => void;
 }) {
   const isActive = currentTheme === value;
-  
+
   return (
     <button
       onClick={() => onSelect(value)}
@@ -258,13 +258,13 @@ export default function ProfilePage() {
         updated_at: new Date().toISOString(),
       });
       if (profileError) throw profileError;
-      
+
       // 2. Обновляем user_metadata (чтобы имя было везде одинаковым)
       const { error: userError } = await supabase.auth.updateUser({
-        data: { full_name: profileData.full_name }
+        data: { full_name: profileData.full_name },
       });
       if (userError) throw userError;
-      
+
       setIsEditing(false);
       alert("Профиль успешно сохранён!");
     } catch (error) {
@@ -416,7 +416,7 @@ export default function ProfilePage() {
   const pushEnabled = notifSettings.push_enabled;
   const userName =
     user?.user_metadata?.full_name || user?.email || "Пользователь";
-  
+
   return (
     <div className="sm:p-8 transition-colors">
       <div className="max-w-3xl mx-auto space-y-6 p-4">
@@ -506,9 +506,9 @@ export default function ProfilePage() {
         {/* ── Theme ── */}
         <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6 shadow-sm">
           <h3 className="text-base font-bold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
-            {theme === 'dark' ? (
+            {theme === "dark" ? (
               <Moon className="h-5 w-5" />
-            ) : theme === 'light' ? (
+            ) : theme === "light" ? (
               <Sun className="h-5 w-5" />
             ) : (
               <Monitor className="h-5 w-5" />
