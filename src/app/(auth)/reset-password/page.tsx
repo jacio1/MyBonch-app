@@ -43,7 +43,7 @@ export default function ResetPasswordPage() {
 
   if (submitted) {
     return (
-      <div className="flex items-center justify-center min-h-[calc(100vh-200px)] p-4 sm:p-8 transition-colors bg-[#111827]">
+      <div className="flex items-center justify-center min-h-[calc(100vh-200px)] p-4 sm:p-8 transition-colors">
         <div className="w-full max-w-md">
           <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6 sm:p-8 shadow-sm">
             <div className="flex justify-center mb-6">
