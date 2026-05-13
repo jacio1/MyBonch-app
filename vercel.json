@@ -1,7 +1,8 @@
 {
   "git": {
     "deploymentEnabled": {
-      "refactor/zustand": false
+      "refactor/zustand": false,
+      "main": false
     }
   }
 }
