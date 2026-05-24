@@ -18,6 +18,9 @@ import {
   Star,
   Clock,
   Zap,
+  Trash2,
+  AlertTriangle,
+  X,
 } from "lucide-react";
 import { useAuth } from "@/src/lib/AuthContext";
 import { useThemeStore } from "@/src/stores/useThemeStore";
@@ -173,6 +176,100 @@ function ThemeOption({
   );
 }
 
+// ── Delete Account Modal Component ───────────────────────────────────────────
+
+function DeleteAccountModal({
+  isOpen,
+  onClose,
+  onConfirm,
+  isDeleting,
+}: {
+  isOpen: boolean;
+  onClose: () => void;
+  onConfirm: () => void;
+  isDeleting: boolean;
+}) {
+  const [confirmText, setConfirmText] = useState("");
+
+  if (!isOpen) return null;
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+      <div className="bg-white dark:bg-gray-800 rounded-xl max-w-md w-full shadow-xl">
+        <div className="p-6">
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-3 text-red-600 dark:text-red-400">
+              <AlertTriangle className="h-6 w-6" />
+              <h3 className="text-lg font-bold">Удаление аккаунта</h3>
+            </div>
+            <button
+              onClick={onClose}
+              className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+              disabled={isDeleting}
+            >
+              <X className="h-5 w-5" />
+            </button>
+          </div>
+
+          <div className="space-y-4">
+            <p className="text-gray-700 dark:text-gray-300">
+              Это действие <span className="font-bold text-red-600">необратимо</span>. Все ваши данные будут удалены:
+            </p>
+            <ul className="list-disc list-inside space-y-1 text-sm text-gray-600 dark:text-gray-400">
+              <li>Личная информация и настройки профиля</li>
+              <li>Расписание и пары</li>
+              <li>Домашние задания и заметки</li>
+              <li>Все уведомления и подписки</li>
+            </ul>
+            
+            <div className="bg-red-50 dark:bg-red-900/20 p-4 rounded-lg">
+              <p className="text-sm text-red-700 dark:text-red-300 font-medium mb-2">
+                Для подтверждения введите <span className="font-mono bg-red-100 dark:bg-red-800/50 px-1.5 py-0.5 rounded">УДАЛИТЬ</span>
+              </p>
+              <input
+                type="text"
+                value={confirmText}
+                onChange={(e) => setConfirmText(e.target.value)}
+                placeholder="Введите УДАЛИТЬ"
+                className="w-full px-3 py-2 border border-red-300 dark:border-red-700 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-red-500"
+                disabled={isDeleting}
+                autoComplete="off"
+              />
+            </div>
+
+            <div className="flex gap-3 pt-2">
+              <button
+                onClick={onClose}
+                disabled={isDeleting}
+                className="flex-1 px-4 py-2 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-900 dark:text-white rounded-lg font-semibold transition disabled:opacity-50"
+              >
+                Отмена
+              </button>
+              <button
+                onClick={onConfirm}
+                disabled={confirmText !== "УДАЛИТЬ" || isDeleting}
+                className="flex-1 px-4 py-2 bg-red-600 hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-lg font-semibold transition flex items-center justify-center gap-2"
+              >
+                {isDeleting ? (
+                  <>
+                    <Loader className="h-4 w-4 animate-spin" />
+                    Удаление...
+                  </>
+                ) : (
+                  <>
+                    <Trash2 className="h-4 w-4" />
+                    Удалить навсегда
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // ── Main Page ─────────────────────────────────────────────────────────────────
 
 export default function ProfilePage() {
@@ -194,6 +291,10 @@ export default function ProfilePage() {
     useState<NotifSettings>(DEFAULT_NOTIF);
   const [notifLoading, setNotifLoading] = useState(false);
   const [notifSaving, setNotifSaving] = useState(false);
+
+  // Delete account state
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   // ── Load ────────────────────────────────────────────────────────────────────
 
@@ -250,7 +351,6 @@ export default function ProfilePage() {
     if (!user) return;
     setIsSaving(true);
     try {
-      // 1. Сохраняем в таблицу profiles
       const { error: profileError } = await supabase.from("profiles").upsert({
         id: user.id,
         full_name: profileData.full_name,
@@ -259,7 +359,6 @@ export default function ProfilePage() {
       });
       if (profileError) throw profileError;
 
-      // 2. Обновляем user_metadata (чтобы имя было везде одинаковым)
       const { error: userError } = await supabase.auth.updateUser({
         data: { full_name: profileData.full_name },
       });
@@ -380,8 +479,83 @@ export default function ProfilePage() {
   const updateNotif = (patch: Partial<NotifSettings>) => {
     const next = { ...notifSettings, ...patch };
     setNotifSettings(next);
-    // debounced save
     saveNotifSettings(next);
+  };
+
+  // ── Delete Account (упрощенный рабочий вариант) ─────────────────────────────
+
+  const handleDeleteAccount = async () => {
+    if (!user) return;
+
+    try {
+      setIsDeleting(true);
+
+      // 1. Удаляем настройки уведомлений
+      const { error: notifError } = await supabase
+        .from("notification_settings")
+        .delete()
+        .eq("user_id", user.id);
+      
+      if (notifError) console.error("Error deleting notif settings:", notifError);
+
+      // 2. Удаляем расписание (если есть таблица schedules)
+      try {
+        const { error: scheduleError } = await supabase
+          .from("schedules")
+          .delete()
+          .eq("user_id", user.id);
+        if (scheduleError) console.error("Error deleting schedules:", scheduleError);
+      } catch (e) {
+        console.warn("Schedules table might not exist:", e);
+      }
+
+      // 3. Удаляем задания (если есть таблица assignments)
+      try {
+        const { error: assignmentsError } = await supabase
+          .from("assignments")
+          .delete()
+          .eq("user_id", user.id);
+        if (assignmentsError) console.error("Error deleting assignments:", assignmentsError);
+      } catch (e) {
+        console.warn("Assignments table might not exist:", e);
+      }
+
+      // 4. Удаляем профиль
+      const { error: profileError } = await supabase
+        .from("profiles")
+        .delete()
+        .eq("id", user.id);
+      
+      if (profileError) console.error("Error deleting profile:", profileError);
+
+      // 5. Пытаемся удалить пользователя через RPC (если функция существует)
+      try {
+        const { error: rpcError } = await supabase.rpc("delete_user", {
+          user_id: user.id,
+        });
+        if (rpcError) {
+          console.error("RPC delete_user failed:", rpcError);
+          // Если RPC нет, просто выходим из аккаунта (пользователь останется, но данные очищены)
+          alert("Ваши данные удалены. Сессия будет закрыта.");
+        }
+      } catch (rpcError) {
+        console.error("RPC function not available:", rpcError);
+        alert("Ваши данные удалены. Сессия будет закрыта.");
+      }
+
+      // 6. Выходим из аккаунта
+      await signOut();
+      
+      // 7. Перенаправляем на главную
+      router.push("/");
+      
+    } catch (error) {
+      console.error("Error deleting account:", error);
+      alert("Произошла ошибка при удалении аккаунта. Попробуйте позже.");
+    } finally {
+      setIsDeleting(false);
+      setIsDeleteModalOpen(false);
+    }
   };
 
   // ── Logout ──────────────────────────────────────────────────────────────────
@@ -419,7 +593,7 @@ export default function ProfilePage() {
 
   return (
     <div className="sm:p-8 transition-colors">
-      <div className="max-w-3xl mx-auto space-y-6 ">
+      <div className="max-w-3xl mx-auto space-y-6">
         {/* Header */}
         <div>
           <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
@@ -543,7 +717,6 @@ export default function ProfilePage() {
         {/* ── Notifications ── */}
         {isPushSupported && (
           <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm overflow-hidden">
-            {/* Header row */}
             <div className="p-6 flex items-center justify-between gap-4">
               <div className="flex items-center gap-3">
                 <div
@@ -582,10 +755,8 @@ export default function ProfilePage() {
               )}
             </div>
 
-            {/* Settings — only shown when push is enabled */}
             {pushEnabled && (
               <div className="border-t border-gray-200 dark:border-gray-700 divide-y divide-gray-100 dark:divide-gray-700/60">
-                {/* ── Schedule notifications ── */}
                 <div className="p-6 space-y-5">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
@@ -606,7 +777,6 @@ export default function ProfilePage() {
 
                   {notifSettings.schedule_enabled && (
                     <div className="space-y-4 pl-6 border-l-2 border-indigo-100 dark:border-indigo-900/40">
-                      {/* Offset */}
                       <div>
                         <p className="text-xs font-medium text-gray-600 dark:text-gray-400 mb-2 flex items-center gap-1">
                           <Clock className="h-3.5 w-3.5" /> Когда отправлять
@@ -620,7 +790,6 @@ export default function ProfilePage() {
                         />
                       </div>
 
-                      {/* Daily only */}
                       <div className="flex items-start gap-3">
                         <div className="flex-1">
                           <p className="text-sm font-medium text-gray-900 dark:text-white">
@@ -641,7 +810,6 @@ export default function ProfilePage() {
                         />
                       </div>
 
-                      {/* Important only */}
                       <div className="flex items-start gap-3">
                         <div className="flex-1">
                           <p className="text-sm font-medium text-gray-900 dark:text-white flex items-center gap-1.5">
@@ -667,7 +835,6 @@ export default function ProfilePage() {
                   )}
                 </div>
 
-                {/* ── Assignment notifications ── */}
                 <div className="p-6 space-y-5">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
@@ -706,7 +873,6 @@ export default function ProfilePage() {
                   )}
                 </div>
 
-                {/* Info */}
                 <div className="px-6 py-4 bg-blue-50 dark:bg-blue-950/20">
                   <p className="text-xs text-blue-700 dark:text-blue-400 flex items-start gap-2">
                     <Zap className="h-3.5 w-3.5 mt-0.5 flex-shrink-0" />
@@ -745,11 +911,40 @@ export default function ProfilePage() {
           </div>
         </div>
 
+        {/* ── Danger Zone ── */}
+        <div className="bg-red-50 dark:bg-red-950/20 rounded-xl border border-red-200 dark:border-red-800 p-6 shadow-sm">
+          <div className="flex items-center gap-2 mb-4">
+            <AlertTriangle className="h-5 w-5 text-red-600 dark:text-red-400" />
+            <h3 className="text-base font-bold text-red-900 dark:text-red-100">
+              Опасная зона
+            </h3>
+          </div>
+          <p className="text-sm text-red-700 dark:text-red-300 mb-4">
+            Удаление аккаунта приведёт к безвозвратной потере всех данных. Это
+            действие нельзя отменить.
+          </p>
+          <button
+            onClick={() => setIsDeleteModalOpen(true)}
+            className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-red-600 hover:bg-red-700 text-white rounded-lg font-semibold text-sm transition"
+          >
+            <Trash2 className="h-4 w-4" />
+            Удалить аккаунт
+          </button>
+        </div>
+
         {/* Footer */}
         <div className="text-center text-xs text-gray-400 dark:text-gray-500 pb-4">
           <p>Version 0.91 · Developed by jacio</p>
         </div>
       </div>
+
+      {/* Delete Account Modal */}
+      <DeleteAccountModal
+        isOpen={isDeleteModalOpen}
+        onClose={() => setIsDeleteModalOpen(false)}
+        onConfirm={handleDeleteAccount}
+        isDeleting={isDeleting}
+      />
     </div>
   );
 }

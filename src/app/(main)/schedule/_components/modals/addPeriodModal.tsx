@@ -69,7 +69,7 @@ export const AddPeriodModal = ({
               onChange={(e) => onFormChange({ ...formData, start_date: e.target.value })}
               min={minDate}
               max={maxDate}
-              className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-600"
+              className="w-72 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-600"
               required
             />
           </div>

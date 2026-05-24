@@ -16,7 +16,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "МойБонч",
+  title: "Шпора",
   description: "Приложение для управления учебой",
   manifest: "/manifest.json",
   icons: {
@@ -26,7 +26,7 @@ export const metadata: Metadata = {
   appleWebApp: {
     capable: true,
     statusBarStyle: "black-translucent",
-    title: "МойБонч",
+    title: "Шпора",
   },
   formatDetection: {
     telephone: false,
@@ -55,7 +55,7 @@ export default function RootLayout({
           name="apple-mobile-web-app-status-bar-style"
           content="black-translucent"
         />
-        <meta name="apple-mobile-web-app-title" content="МойБонч" />
+        <meta name="apple-mobile-web-app-title" content="Шпора" />
       </head>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased h-screen flex flex-col overflow-hidden`}

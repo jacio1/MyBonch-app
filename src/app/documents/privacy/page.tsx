@@ -19,14 +19,14 @@ import {
 export default function PrivacyPolicyPage() {
 
   return (
-    <div className="p-4 sm:p-8 transition-colors">
+    <div className="p-4 sm:p-8 transition-colors overflow-y-auto">
       <div className="max-w-4xl mx-auto">
         <div className="mb-8 text-center">
           <h1 className="text-3xl sm:text-4xl font-bold text-gray-900 dark:text-white mb-4">
             Политика конфиденциальности
           </h1>
           <p className="text-gray-600 dark:text-gray-400">
-            для веб-приложения «МойБонч»
+            для веб-приложения «Шпора»
           </p>
           <p className="text-sm text-gray-500 dark:text-gray-500 mt-2">
             Актуально на: {new Date().toLocaleDateString('ru-RU')}
@@ -68,7 +68,7 @@ export default function PrivacyPolicyPage() {
               </h2>
             </div>
             <div className="space-y-3 text-gray-700 dark:text-gray-300 text-sm leading-relaxed">
-              <p>1.1. Настоящая Политика конфиденциальности (далее — «Политика») определяет порядок обработки и защиты персональных данных пользователей веб-приложения «МойБонч» (далее — «Сервис»).</p>
+              <p>1.1. Настоящая Политика конфиденциальности (далее — «Политика») определяет порядок обработки и защиты персональных данных пользователей веб-приложения «Шпора» (далее — «Сервис»).</p>
               <p>1.2. Политика разработана в соответствии с Федеральным законом от 27.07.2006 № 152-ФЗ «О персональных данных» (с изменениями, вступившими в силу в 2025 году) и действует в отношении всех данных, которые Оператор может получить о пользователях Сервиса.</p>
               <p>1.3. Используя Сервис и проходя регистрацию, пользователь дает согласие на обработку своих персональных данных в порядке, предусмотренном настоящей Политикой и отдельной формой согласия (Приложение № 1).</p>
             </div>

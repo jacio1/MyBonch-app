@@ -12,7 +12,7 @@ self.addEventListener('push', function(event) {
     notificationData = event.data.json();
   } catch (e) {
     notificationData = {
-      title: 'МойБонч',
+      title: 'Шпора',
       body: event.data.text(),
     };
   }
@@ -39,7 +39,7 @@ self.addEventListener('push', function(event) {
   };
 
   event.waitUntil(
-    self.registration.showNotification(title || 'МойБонч', options)
+    self.registration.showNotification(title || 'Шпора', options)
   );
 });
 

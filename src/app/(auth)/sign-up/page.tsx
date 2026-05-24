@@ -16,6 +16,7 @@ export default function SignUpPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [localError, setLocalError] = useState("");
+  const [agreedToTerms, setAgreedToTerms] = useState(false); // Новый стейт для чекбокса
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -41,6 +42,11 @@ export default function SignUpPage() {
       return;
     }
 
+    if (!agreedToTerms) {
+      setLocalError("Необходимо согласиться с условиями использования");
+      return;
+    }
+
     try {
       await signUp(email, password, fullName);
       router.push("/check-email");
@@ -63,7 +69,7 @@ export default function SignUpPage() {
             </div>
           </div>
           <h1 className="text-3xl sm:text-4xl font-bold text-gray-900 dark:text-white mb-2">
-            МойБонч
+            Шпора
           </h1>
           <p className="text-gray-600 dark:text-gray-400 text-sm sm:text-base">
             Создайте аккаунт для управления учебой
@@ -197,6 +203,39 @@ export default function SignUpPage() {
                   )}
                 </button>
               </div>
+            </div>
+
+            {/* Terms and Conditions Checkbox */}
+            <div className="flex items-start space-x-3 pt-2">
+              <input
+                type="checkbox"
+                id="terms"
+                checked={agreedToTerms}
+                onChange={(e) => setAgreedToTerms(e.target.checked)}
+                className="mt-1 h-4 w-4 rounded border-gray-300 dark:border-gray-600 text-indigo-600 focus:ring-indigo-600 focus:ring-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                disabled={loading}
+              />
+              <label
+                htmlFor="terms"
+                className="text-sm text-gray-600 dark:text-gray-400 leading-relaxed"
+              >
+                Я принимаю{" "}
+                <Link
+                  href="/documents/userAgreement"
+                  target="_blank"
+                  className="text-indigo-600 dark:text-indigo-400 hover:underline font-medium"
+                >
+                  Пользовательское соглашение
+                </Link>{" "}
+                и{" "}
+                <Link
+                  href="/documents/privacy"
+                  target="_blank"
+                  className="text-indigo-600 dark:text-indigo-400 hover:underline font-medium"
+                >
+                  Политику конфиденциальности
+                </Link>
+              </label>
             </div>
 
             {/* Submit Button */}

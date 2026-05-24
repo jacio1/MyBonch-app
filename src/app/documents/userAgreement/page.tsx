@@ -5,15 +5,15 @@ import { FileText, Calendar, CreditCard, Shield, AlertCircle, RefreshCw, Gavel, 
 export default function OfferPage() {
 
   return (
-    <div className="p-4 sm:p-8 transition-colors">
+    <div className="p-4 sm:p-8 transition-colors overflow-y-auto">
       <div className="max-w-4xl mx-auto">
         {/* Header */}
         <div className="mb-8 text-center">
           <h1 className="text-3xl sm:text-4xl font-bold text-gray-900 dark:text-white mb-4">
-            Публичная оферта
+            Пользовательское соглашение
           </h1>
           <p className="text-gray-600 dark:text-gray-400">
-            О предоставлении доступа к веб-приложению «МойБонч»
+            О предоставлении доступа к веб-приложению «Шпора»
           </p>
           <p className="text-sm text-gray-500 dark:text-gray-500 mt-2">
             Актуально на: {new Date().toLocaleDateString('ru-RU')}
@@ -54,7 +54,7 @@ export default function OfferPage() {
               </h2>
             </div>
             <div className="space-y-2 text-gray-700 dark:text-gray-300 text-sm leading-relaxed">
-              <p><strong className="text-gray-900 dark:text-white">Сервис</strong> — веб-приложение «МойБонч» (расписание, задачи, заметки, вложения).</p>
+              <p><strong className="text-gray-900 dark:text-white">Сервис</strong> — веб-приложение «Шпора» (расписание, задачи, заметки, вложения).</p>
               <p><strong className="text-gray-900 dark:text-white">Пользователь</strong> — любое дееспособное лицо, принявшее Оферту.</p>
               <p><strong className="text-gray-900 dark:text-white">Подписка</strong> — платный доступ к расширенным возможностям Сервиса на 1 месяц.</p>
               <p><strong className="text-gray-900 dark:text-white">Акцепт</strong> — полное и безоговорочное принятие Оферты.</p>
