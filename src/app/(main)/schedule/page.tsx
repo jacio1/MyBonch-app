@@ -261,13 +261,13 @@ export default function SchedulePage() {
   const handleApplyPreset = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!applyPresetForm.preset_id || !applyPresetForm.start_date) {
-      alert("Выберите пресет и дату");
+      alert("Выберите шаблон и дату");
       return;
     }
 
     const preset = presets.find((p) => p.id === Number(applyPresetForm.preset_id));
     if (!preset || !preset.schedules) {
-      alert("Пресет не найден");
+      alert("Шаблон не найден");
       return;
     }
 
@@ -298,7 +298,7 @@ export default function SchedulePage() {
 
     if (conflicts.length > 0) {
       setErrorModalData({
-        title: "Невозможно применить пресет!",
+        title: "Невозможно применить шаблон!",
         message: `Обнаружены конфликты:\n\n${conflicts.join("\n")}\n\nПожалуйста, удалите конфликтующие пары или выберите другую дату.`,
         conflictSchedule: null,
       });
@@ -311,10 +311,10 @@ export default function SchedulePage() {
       await applyPreset(Number(applyPresetForm.preset_id), applyPresetForm.start_date);
       setApplyPresetForm({ preset_id: "", start_date: "" });
       setShowApplyPreset(false);
-      alert("✅ Пресет успешно применен!");
+      alert("✅ Шаблон успешно применен!");
     } catch (err) {
       console.error("Error:", err);
-      alert("Ошибка при применении пресета");
+      alert("Ошибка при применении шаблона");
     } finally {
       setIsSubmitting(false);
     }
@@ -374,7 +374,7 @@ export default function SchedulePage() {
               className="flex items-center justify-center gap-2 px-4 sm:px-6 py-2 sm:py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm sm:text-base transition"
             >
               <Copy className="h-4 w-4" />
-              Пресет
+              Шаблон
             </button>
           )}
         </div>

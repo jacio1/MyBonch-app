@@ -287,7 +287,7 @@ const PresetModal = ({
       >
         <div className="border-b border-gray-200 dark:border-gray-700 p-4 flex justify-between items-center">
           <h3 className="text-lg font-bold text-gray-900 dark:text-white">
-            {editingId ? "Редактировать пресет" : "Новый пресет"}
+            {editingId ? "Редактировать шаблон" : "Новый шаблон"}
           </h3>
           <button
             onClick={onClose}
@@ -299,7 +299,7 @@ const PresetModal = ({
         <form onSubmit={onSubmit} className="p-4 space-y-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-              Название пресета <span className="text-red-500">*</span>
+              Название шаблона <span className="text-red-500">*</span>
             </label>
             <input
               type="text"
@@ -318,7 +318,7 @@ const PresetModal = ({
               Описание
             </label>
             <textarea
-              placeholder="Описание пресета (опционально)"
+              placeholder="Описание шаблона (опционально)"
               value={formData.description || ""}
               onChange={(e) =>
                 onFormChange({ ...formData, description: e.target.value })
@@ -719,7 +719,7 @@ export default function TemplatesPage() {
   const handleSubmitPreset = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!formData.name) {
-      alert("Введите название пресета");
+      alert("Введите название шаблона");
       return;
     }
     setIsSubmitting(true);
@@ -810,10 +810,10 @@ export default function TemplatesPage() {
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
         <div>
           <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white">
-            Настройки расписания
+            Шаблоны расписания
           </h2>
           <p className="text-gray-600 dark:text-gray-400 text-sm sm:text-base">
-            {presets.length} пресетов создано
+            {presets.length} шаблонов создано
           </p>
         </div>
         <button
@@ -821,7 +821,7 @@ export default function TemplatesPage() {
           className="flex items-center gap-2 px-4 sm:px-6 py-2 sm:py-3 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 text-sm sm:text-base transition w-full sm:w-auto justify-center"
         >
           <Plus className="h-4 w-4 sm:h-5 sm:w-5" />
-          Новый пресет
+          Новый шаблон
         </button>
       </div>
 
@@ -830,7 +830,7 @@ export default function TemplatesPage() {
       <div className="mb-6">
         <input
           type="text"
-          placeholder="Поиск пресетов..."
+          placeholder="Поиск шаблон..."
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
           className="w-full px-4 py-2 sm:py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 text-sm sm:text-base"
@@ -903,7 +903,7 @@ export default function TemplatesPage() {
                 </button>
                 <button
                   onClick={() =>
-                    confirm("Удалить этот пресет?") && deletePreset(preset.id)
+                    confirm("Удалить этот шаблон?") && deletePreset(preset.id)
                   }
                   className="p-2 text-gray-500 dark:text-gray-400 hover:text-red-600 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/50 rounded transition"
                 >
@@ -924,12 +924,12 @@ export default function TemplatesPage() {
         <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-8 sm:p-12 text-center">
           <BookOpen className="h-12 w-12 text-gray-400 dark:text-gray-500 mx-auto mb-4" />
           <h3 className="text-lg sm:text-xl font-medium text-gray-900 dark:text-white">
-            Нет пресетов
+            Нет шаблонов
           </h3>
           <p className="text-gray-600 dark:text-gray-400 mt-2 text-sm sm:text-base">
             {searchQuery
               ? "По вашему поиску ничего не найдено"
-              : "Создайте первый пресет расписания"}
+              : "Создайте первый шаблон расписания"}
           </p>
         </div>
       )}

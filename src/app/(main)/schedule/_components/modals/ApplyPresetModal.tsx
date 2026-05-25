@@ -34,7 +34,7 @@ export const ApplyPresetModal = ({
       >
         <div className="border-b border-gray-200 dark:border-gray-700 p-4 flex justify-between items-center">
           <h3 className="text-lg font-bold text-gray-900 dark:text-white">
-            Применить пресет
+            Применить шаблон
           </h3>
           <button
             onClick={onClose}
@@ -47,7 +47,7 @@ export const ApplyPresetModal = ({
         <form onSubmit={onSubmit} className="p-4 space-y-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-              Пресет
+              Шаблон
             </label>
             <select
               value={formData.preset_id}
@@ -56,7 +56,7 @@ export const ApplyPresetModal = ({
               required
               autoFocus
             >
-              <option value="">Выберите пресет</option>
+              <option value="">Выберите шаблон</option>
               {formData.presets?.map((preset) => (
                 <option key={preset.id} value={preset.id}>
                   {preset.name}
@@ -86,7 +86,7 @@ export const ApplyPresetModal = ({
               disabled={isSubmitting}
               className="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-2 rounded-lg disabled:opacity-50 transition"
             >
-              Применить пресет
+              Применить шаблон
             </button>
             <button
               type="button"
