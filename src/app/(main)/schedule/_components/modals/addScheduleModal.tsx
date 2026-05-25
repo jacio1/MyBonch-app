@@ -1,8 +1,8 @@
-import { X, Clock, Star } from 'lucide-react';
-import { Timing } from '@/src/types';
-import { ScheduleFormData } from '@/src/types/schedule';
-import { formatTime } from '@/src/utils/schedule';
-import { COLORS } from '@/src/constants/schedule';
+import { X, Clock, Star } from "lucide-react";
+import { Timing } from "@/src/types";
+import { ScheduleFormData } from "@/src/types/schedule";
+import { formatTime } from "@/src/utils/schedule";
+import { COLORS } from "@/src/constants/schedule";
 
 interface AddScheduleModalProps {
   isOpen: boolean;
@@ -55,29 +55,15 @@ export const AddScheduleModal = ({
         <form onSubmit={onSubmit} className="p-4 space-y-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-              Дата
-            </label>
-            <input
-              type="date"
-              value={formData.date}
-              onChange={(e) => onFormChange({ ...formData, date: e.target.value })}
-              min={activeStudyPeriod?.start_date}
-              max={activeStudyPeriod?.end_date}
-              className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-600"
-              required
-              disabled
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
               Предмет
             </label>
             <input
               type="text"
               placeholder="Название"
               value={formData.subject_name}
-              onChange={(e) => onFormChange({ ...formData, subject_name: e.target.value })}
+              onChange={(e) =>
+                onFormChange({ ...formData, subject_name: e.target.value })
+              }
               className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-600"
               required
               autoFocus
@@ -92,7 +78,9 @@ export const AddScheduleModal = ({
               <>
                 <div className="grid grid-cols-2 gap-2">
                   {timings.map((t) => {
-                    const isSelected = formData.start_time === t.start_time && formData.end_time === t.end_time;
+                    const isSelected =
+                      formData.start_time === t.start_time &&
+                      formData.end_time === t.end_time;
                     return (
                       <button
                         key={t.id}
@@ -122,7 +110,8 @@ export const AddScheduleModal = ({
                   <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400 bg-gray-50 dark:bg-gray-700/50 rounded-lg px-3 py-2 mt-2">
                     <Clock className="h-4 w-4" />
                     <span>
-                      Выбрано: {formatTime(formData.start_time)} — {formatTime(formData.end_time)}
+                      Выбрано: {formatTime(formData.start_time)} —{" "}
+                      {formatTime(formData.end_time)}
                     </span>
                   </div>
                 )}
@@ -136,7 +125,9 @@ export const AddScheduleModal = ({
                   <input
                     type="time"
                     value={formData.start_time}
-                    onChange={(e) => onFormChange({ ...formData, start_time: e.target.value })}
+                    onChange={(e) =>
+                      onFormChange({ ...formData, start_time: e.target.value })
+                    }
                     className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-600"
                     required
                   />
@@ -148,7 +139,9 @@ export const AddScheduleModal = ({
                   <input
                     type="time"
                     value={formData.end_time}
-                    onChange={(e) => onFormChange({ ...formData, end_time: e.target.value })}
+                    onChange={(e) =>
+                      onFormChange({ ...formData, end_time: e.target.value })
+                    }
                     className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-600"
                     required
                   />
@@ -165,7 +158,9 @@ export const AddScheduleModal = ({
               type="text"
               placeholder="Например: 101"
               value={formData.room}
-              onChange={(e) => onFormChange({ ...formData, room: e.target.value })}
+              onChange={(e) =>
+                onFormChange({ ...formData, room: e.target.value })
+              }
               className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-600"
             />
           </div>
@@ -177,14 +172,21 @@ export const AddScheduleModal = ({
             <div className="flex items-center gap-3">
               <button
                 type="button"
-                onClick={() => onFormChange({ ...formData, is_important: !formData.is_important })}
+                onClick={() =>
+                  onFormChange({
+                    ...formData,
+                    is_important: !formData.is_important,
+                  })
+                }
                 className={`flex items-center gap-2 px-4 py-2 rounded-lg transition ${
                   formData.is_important
                     ? "bg-yellow-500 text-white"
                     : "bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300"
                 }`}
               >
-                <Star className={`h-4 w-4 ${formData.is_important ? "fill-current" : ""}`} />
+                <Star
+                  className={`h-4 w-4 ${formData.is_important ? "fill-current" : ""}`}
+                />
                 {formData.is_important ? "Избранная" : "Обычная"}
               </button>
             </div>
@@ -206,7 +208,9 @@ export const AddScheduleModal = ({
                       : "border-transparent hover:scale-105"
                   }`}
                 >
-                  <div className={`w-full h-full rounded ${color.split(" ")[0]} opacity-70`} />
+                  <div
+                    className={`w-full h-full rounded ${color.split(" ")[0]} opacity-70`}
+                  />
                 </button>
               ))}
             </div>
