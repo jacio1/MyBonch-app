@@ -77,17 +77,7 @@ export default function Sidebar({ assignmentsCount }: SidebarProps) {
         </div>
 
         <div className=" pt-6 border-t border-gray-200 dark:border-gray-700">
-          <div className="bg-linear-to-r from-indigo-50 to-purple-50 dark:from-indigo-950/30 dark:to-purple-950/30 rounded-xl p-4 mb-4">
-            <p className="text-sm font-medium text-gray-800 dark:text-gray-200">
-              До экзаменов
-            </p>
-            <p className="text-2xl font-bold text-indigo-700 dark:text-indigo-400 mt-1">
-              24 дня
-            </p>
-            <p className="text-xs text-gray-600 dark:text-gray-400 mt-2">
-              У вас {assignmentsCount} незавершенных заданий
-            </p>
-          </div>
+
           <button
             onClick={handleSignOut}
             className="w-full flex items-center space-x-3 p-3 rounded-lg hover:bg-red-50 dark:hover:bg-red-950/30 transition text-red-600 dark:text-red-400 font-medium"
