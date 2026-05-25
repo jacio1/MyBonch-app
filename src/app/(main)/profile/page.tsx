@@ -213,7 +213,9 @@ function DeleteAccountModal({
 
           <div className="space-y-4">
             <p className="text-gray-700 dark:text-gray-300">
-              Это действие <span className="font-bold text-red-600">необратимо</span>. Все ваши данные будут удалены:
+              Это действие{" "}
+              <span className="font-bold text-red-600">необратимо</span>. Все
+              ваши данные будут удалены:
             </p>
             <ul className="list-disc list-inside space-y-1 text-sm text-gray-600 dark:text-gray-400">
               <li>Личная информация и настройки профиля</li>
@@ -221,10 +223,13 @@ function DeleteAccountModal({
               <li>Домашние задания и заметки</li>
               <li>Все уведомления и подписки</li>
             </ul>
-            
+
             <div className="bg-red-50 dark:bg-red-900/20 p-4 rounded-lg">
               <p className="text-sm text-red-700 dark:text-red-300 font-medium mb-2">
-                Для подтверждения введите <span className="font-mono bg-red-100 dark:bg-red-800/50 px-1.5 py-0.5 rounded">УДАЛИТЬ</span>
+                Для подтверждения введите{" "}
+                <span className="font-mono bg-red-100 dark:bg-red-800/50 px-1.5 py-0.5 rounded">
+                  УДАЛИТЬ
+                </span>
               </p>
               <input
                 type="text"
@@ -495,8 +500,9 @@ export default function ProfilePage() {
         .from("notification_settings")
         .delete()
         .eq("user_id", user.id);
-      
-      if (notifError) console.error("Error deleting notif settings:", notifError);
+
+      if (notifError)
+        console.error("Error deleting notif settings:", notifError);
 
       // 2. Удаляем расписание (если есть таблица schedules)
       try {
@@ -504,7 +510,8 @@ export default function ProfilePage() {
           .from("schedules")
           .delete()
           .eq("user_id", user.id);
-        if (scheduleError) console.error("Error deleting schedules:", scheduleError);
+        if (scheduleError)
+          console.error("Error deleting schedules:", scheduleError);
       } catch (e) {
         console.warn("Schedules table might not exist:", e);
       }
@@ -515,7 +522,8 @@ export default function ProfilePage() {
           .from("assignments")
           .delete()
           .eq("user_id", user.id);
-        if (assignmentsError) console.error("Error deleting assignments:", assignmentsError);
+        if (assignmentsError)
+          console.error("Error deleting assignments:", assignmentsError);
       } catch (e) {
         console.warn("Assignments table might not exist:", e);
       }
@@ -525,7 +533,7 @@ export default function ProfilePage() {
         .from("profiles")
         .delete()
         .eq("id", user.id);
-      
+
       if (profileError) console.error("Error deleting profile:", profileError);
 
       // 5. Пытаемся удалить пользователя через RPC (если функция существует)
@@ -545,10 +553,9 @@ export default function ProfilePage() {
 
       // 6. Выходим из аккаунта
       await signOut();
-      
+
       // 7. Перенаправляем на главную
       router.push("/");
-      
     } catch (error) {
       console.error("Error deleting account:", error);
       alert("Произошла ошибка при удалении аккаунта. Попробуйте позже.");
