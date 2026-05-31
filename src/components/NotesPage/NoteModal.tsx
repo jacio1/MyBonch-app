@@ -6,6 +6,7 @@ import { useData } from "@/src/lib/DataContext";
 import { FileUploader } from "@/src/components/FileUploader";
 import { useNoteFormStore } from "@/src/stores/noteFormStore";
 import { useModalStore } from "@/src/stores/useModalStore";
+import { Attachment } from "@/src/types";
 
 export function NoteModal() {
   const { activeModal, closeModal } = useModalStore();
@@ -32,6 +33,7 @@ export function NoteModal() {
   } = useData();
 
   const isOpen = activeModal === "note";
+  const [pendingFiles, setPendingFiles] = useState<File[]>([]);
 
   const subjectsFromSchedules = (() => {
     const subjects = new Set<string>();
@@ -52,8 +54,10 @@ export function NoteModal() {
     if (editingId) {
       const noteAttachments = getNoteAttachments(editingId);
       setAttachments(noteAttachments);
+      setPendingFiles([]);
     } else {
       setAttachments([]);
+      setPendingFiles([]);
     }
   }, [editingId, getNoteAttachments, setAttachments]);
 
@@ -75,15 +79,30 @@ export function NoteModal() {
       if (editingId) {
         await updateNote(editingId, dataToSave);
         resetForm();
+        setPendingFiles([]);
         closeModal();
       } else {
         const newNote = await addNote(dataToSave);
-        if (newNote) {
-          if (attachments.length > 0) {
+        if (newNote && pendingFiles.length > 0) {
+          // Загружаем все файлы после создания заметки
+          for (const file of pendingFiles) {
+            try {
+              await addNoteAttachment(newNote.id, file);
+            } catch (error) {
+              console.error("Error uploading file:", error);
+            }
           }
-          resetForm();
-          closeModal();
+          // Очищаем временные URL
+          attachments.forEach(attachment => {
+            if (attachment.file_url && attachment.id.toString().startsWith("temp_")) {
+              URL.revokeObjectURL(attachment.file_url);
+            }
+          });
         }
+        resetForm();
+        setAttachments([]);
+        setPendingFiles([]);
+        closeModal();
       }
     } catch (error) {
       console.error("Error saving note:", error);
@@ -94,37 +113,74 @@ export function NoteModal() {
   };
 
   const handleClose = () => {
+    // Очищаем временные URL
+    attachments.forEach(attachment => {
+      if (attachment.file_url && attachment.id.toString().startsWith("temp_")) {
+        URL.revokeObjectURL(attachment.file_url);
+      }
+    });
     resetForm();
+    setAttachments([]);
+    setPendingFiles([]);
     closeModal();
   };
 
   const handleFileUpload = async (file: File) => {
-    if (!editingId) {
-      alert("Сначала сохраните заметку, затем добавляйте файлы");
-      return;
-    }
-
-    try {
-      await addNoteAttachment(editingId, file);
-      const updatedAttachments = getNoteAttachments(editingId);
-      setAttachments(updatedAttachments);
-    } catch (error) {
-      console.error("Upload error:", error);
-      alert(error instanceof Error ? error.message : "Ошибка загрузки файла");
+    // Для редактирования - сразу загружаем
+    if (editingId) {
+      try {
+        await addNoteAttachment(editingId, file);
+        const updatedAttachments = getNoteAttachments(editingId);
+        setAttachments(updatedAttachments);
+      } catch (error) {
+        console.error("Upload error:", error);
+        alert(error instanceof Error ? error.message : "Ошибка загрузки файла");
+      }
+    } else {
+      // Для новой заметки - создаем временное вложение
+      const tempId = `temp_${Date.now()}_${file.name}`;
+      const tempAttachment: Attachment = {
+        id: tempId,
+        note_id: 0,
+        file_name: file.name,
+        file_url: URL.createObjectURL(file),
+        file_type: file.type.startsWith("image/") ? "image" : "document",
+        file_size: file.size,
+        mime_type: file.type,
+        created_at: new Date().toISOString(),
+      };
+      setAttachments([...attachments, tempAttachment]);
+      setPendingFiles(prev => [...prev, file]);
     }
   };
 
   const handleDeleteAttachment = async (attachmentId: string) => {
     if (confirm("Удалить этот файл?")) {
-      try {
-        await deleteAttachment(attachmentId);
-        const updatedAttachments = editingId
-          ? getNoteAttachments(editingId)
-          : [];
-        setAttachments(updatedAttachments);
-      } catch (error) {
-        console.error("Delete error:", error);
-        alert("Ошибка удаления файла");
+      // Для временных файлов (новая заметка)
+      if (attachmentId.startsWith("temp_")) {
+        const attachmentToDelete = attachments.find(a => a.id === attachmentId);
+        if (attachmentToDelete && attachmentToDelete.file_url) {
+          URL.revokeObjectURL(attachmentToDelete.file_url);
+        }
+        const newAttachments = attachments.filter(a => a.id !== attachmentId);
+        setAttachments(newAttachments);
+        
+        // Также удаляем из pendingFiles
+        const indexToRemove = attachments.findIndex(a => a.id === attachmentId);
+        if (indexToRemove !== -1) {
+          setPendingFiles(prev => prev.filter((_, i) => i !== indexToRemove));
+        }
+      } 
+      // Для существующих файлов (редактирование)
+      else if (editingId) {
+        try {
+          await deleteAttachment(attachmentId);
+          const updatedAttachments = getNoteAttachments(editingId);
+          setAttachments(updatedAttachments);
+        } catch (error) {
+          console.error("Delete error:", error);
+          alert("Ошибка удаления файла");
+        }
       }
     }
   };
@@ -243,21 +299,25 @@ export function NoteModal() {
             />
           </div>
 
-          {/* Вложения */}
-          {editingId && (
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                Вложения (фотографии и документы)
-              </label>
-              <FileUploader
-                noteId={editingId}
-                onUpload={handleFileUpload}
-                onDelete={handleDeleteAttachment}
-                attachments={attachments}
-                isUploading={uploadingFiles}
-              />
-            </div>
-          )}
+          {/* Вложения - теперь доступны и при создании, и при редактировании */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              Вложения (фотографии и документы)
+              {!editingId && pendingFiles.length > 0 && (
+                <span className="text-xs text-gray-500 ml-2">
+                  (будут загружены после создания заметки)
+                </span>
+              )}
+            </label>
+            <FileUploader
+              noteId={editingId || 0}
+              onUpload={handleFileUpload}
+              onDelete={handleDeleteAttachment}
+              attachments={attachments}
+              isUploading={uploadingFiles}
+              isNewNote={!editingId}
+            />
+          </div>
 
           <div className="flex gap-2 pt-2">
             <button
@@ -302,6 +362,13 @@ export function NoteModal() {
               <div className="wrap-break-word text-gray-700 dark:text-gray-300 whitespace-pre-wrap">
                 {formData.content || "Содержание заметки..."}
               </div>
+              {attachments.length > 0 && (
+                <div className="mt-4">
+                  <p className="text-sm text-gray-500 dark:text-gray-400">
+                    Вложений: {attachments.length}
+                  </p>
+                </div>
+              )}
             </div>
           )}
         </form>

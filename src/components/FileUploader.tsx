@@ -10,6 +10,7 @@ interface FileUploaderProps {
   onDelete: (attachmentId: string) => Promise<void>;
   attachments: Attachment[];
   isUploading?: boolean;
+  isNewNote?: boolean;
 }
 
 export const FileUploader = ({
@@ -18,8 +19,10 @@ export const FileUploader = ({
   onDelete,
   attachments,
   isUploading = false,
+  isNewNote = false,
 }: FileUploaderProps) => {
   const [dragActive, setDragActive] = useState(false);
+  const [uploadingFiles, setUploadingFiles] = useState<Set<string>>(new Set());
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleDrag = (e: React.DragEvent) => {
@@ -39,17 +42,31 @@ export const FileUploader = ({
 
     const files = Array.from(e.dataTransfer.files);
     if (files.length > 0) {
-      await onUpload(files[0]);
+      await handleFileUpload(files[0]);
     }
   };
 
   const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
     if (files.length > 0) {
-      await onUpload(files[0]);
+      await handleFileUpload(files[0]);
     }
     if (fileInputRef.current) {
       fileInputRef.current.value = "";
+    }
+  };
+
+  const handleFileUpload = async (file: File) => {
+    const fileId = `uploading_${Date.now()}_${file.name}`;
+    setUploadingFiles(prev => new Set(prev).add(fileId));
+    try {
+      await onUpload(file);
+    } finally {
+      setUploadingFiles(prev => {
+        const newSet = new Set(prev);
+        newSet.delete(fileId);
+        return newSet;
+      });
     }
   };
 
@@ -68,44 +85,55 @@ export const FileUploader = ({
     return <FileText className="h-5 w-5 text-gray-500" />;
   };
 
+  const isUploadingFile = (attachment: Attachment) => {
+    return attachment.id.toString().startsWith("temp_") && uploadingFiles.has(attachment.id.toString());
+  };
+
   return (
     <div className="space-y-3">
-      {/* Область загрузки */}
-      <div
-        className={`relative border-2 border-dashed rounded-lg p-4 text-center transition-colors
-          ${
-            dragActive
-              ? "border-indigo-500 bg-indigo-50 dark:bg-indigo-950/20"
-              : "border-gray-300 dark:border-gray-600 hover:border-indigo-400 dark:hover:border-indigo-500"
-          }`}
-        onDragEnter={handleDrag}
-        onDragLeave={handleDrag}
-        onDragOver={handleDrag}
-        onDrop={handleDrop}
-      >
-        <input
-          ref={fileInputRef}
-          type="file"
-          accept="image/*,.pdf,.doc,.docx,.txt,.xls,.xlsx"
-          onChange={handleFileSelect}
-          className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-          disabled={isUploading}
-        />
+      {/* Область загрузки - показываем только если есть noteId (для редактирования) или isNewNote true */}
+      {(noteId !== 0 || isNewNote) && (
+        <div
+          className={`relative border-2 border-dashed rounded-lg p-4 text-center transition-colors
+            ${
+              dragActive
+                ? "border-indigo-500 bg-indigo-50 dark:bg-indigo-950/20"
+                : "border-gray-300 dark:border-gray-600 hover:border-indigo-400 dark:hover:border-indigo-500"
+            }`}
+          onDragEnter={handleDrag}
+          onDragLeave={handleDrag}
+          onDragOver={handleDrag}
+          onDrop={handleDrop}
+        >
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/*,.pdf,.doc,.docx,.txt,.xls,.xlsx"
+            onChange={handleFileSelect}
+            className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+            disabled={isUploading || uploadingFiles.size > 0}
+          />
 
-        <div className="flex flex-col items-center gap-2">
-          {isUploading ? (
-            <Loader2 className="h-8 w-8 text-indigo-600 animate-spin" />
-          ) : (
-            <Upload className="h-8 w-8 text-gray-400" />
-          )}
-          <p className="text-sm text-gray-600 dark:text-gray-400">
-            Перетащите файл сюда или кликните для выбора
-          </p>
-          <p className="text-xs text-gray-500 dark:text-gray-500">
-            Поддерживаются: изображения, PDF, DOC, TXT (макс. 10MB)
-          </p>
+          <div className="flex flex-col items-center gap-2">
+            {isUploading || uploadingFiles.size > 0 ? (
+              <Loader2 className="h-8 w-8 text-indigo-600 animate-spin" />
+            ) : (
+              <Upload className="h-8 w-8 text-gray-400" />
+            )}
+            <p className="text-sm text-gray-600 dark:text-gray-400">
+              Перетащите файл сюда или кликните для выбора
+            </p>
+            <p className="text-xs text-gray-500 dark:text-gray-500">
+              Поддерживаются: изображения, PDF, DOC, TXT (макс. 10MB)
+            </p>
+            {isNewNote && (
+              <p className="text-xs text-amber-600 dark:text-amber-400 mt-1">
+                💡 Файлы будут загружены после сохранения заметки
+              </p>
+            )}
+          </div>
         </div>
-      </div>
+      )}
 
       {/* Список вложений */}
       {attachments.length > 0 && (
@@ -121,17 +149,36 @@ export const FileUploader = ({
               >
                 <div className="flex items-center gap-3 flex-1 min-w-0">
                   {attachment.file_type === "image" ? (
-                    <img
-                      src={attachment.file_url}
-                      alt={attachment.file_name}
-                      className="w-10 h-10 object-cover rounded"
-                    />
+                    <div className="relative">
+                      <img
+                        src={attachment.file_url}
+                        alt={attachment.file_name}
+                        className="w-10 h-10 object-cover rounded"
+                      />
+                      {isUploadingFile(attachment) && (
+                        <div className="absolute inset-0 bg-black/50 rounded flex items-center justify-center">
+                          <Loader2 className="h-4 w-4 text-white animate-spin" />
+                        </div>
+                      )}
+                    </div>
                   ) : (
-                    getFileIcon(attachment.file_type)
+                    <div className="relative">
+                      {getFileIcon(attachment.file_type)}
+                      {isUploadingFile(attachment) && (
+                        <div className="absolute inset-0 bg-black/50 rounded flex items-center justify-center">
+                          <Loader2 className="h-4 w-4 text-white animate-spin" />
+                        </div>
+                      )}
+                    </div>
                   )}
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-medium text-gray-900 dark:text-white truncate">
                       {attachment.file_name}
+                      {attachment.id.toString().startsWith("temp_") && (
+                        <span className="ml-2 text-xs text-amber-600 dark:text-amber-400">
+                          (будет загружен)
+                        </span>
+                      )}
                     </p>
                     <p className="text-xs text-gray-500 dark:text-gray-400">
                       {formatFileSize(attachment.file_size)}
@@ -139,9 +186,9 @@ export const FileUploader = ({
                   </div>
                 </div>
                 <button
-                  onClick={() => onDelete(attachment.id)}
+                  onClick={() => onDelete(attachment.id.toString())}
                   className="p-1 hover:bg-gray-200 dark:hover:bg-gray-600 rounded transition ml-2"
-                  disabled={isUploading}
+                  disabled={isUploading || isUploadingFile(attachment)}
                 >
                   <X className="h-4 w-4 text-gray-500 dark:text-gray-400" />
                 </button>

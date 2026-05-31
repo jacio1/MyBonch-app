@@ -18,7 +18,8 @@ import { useModalStore } from "@/src/stores/useModalStore";
 import { useTaskFormStore } from "@/src/stores/taskFormStore";
 import { TaskModal } from "./TaskModal";
 
-type FilterType = "all" | "active" | "completed" | "high" | "medium" | "low";
+type StatusFilter = "all" | "active" | "completed";
+type PriorityFilter = "high" | "medium" | "low" | null;
 
 export default function TaskPage() {
   const { user, loading: authLoading } = useAuth();
@@ -26,7 +27,9 @@ export default function TaskPage() {
     useData();
   const { openModal } = useModalStore();
   const { setEditing, resetForm } = useTaskFormStore();
-  const [filter, setFilter] = useState<FilterType>("active");
+  
+  const [statusFilter, setStatusFilter] = useState<StatusFilter>("active");
+  const [priorityFilter, setPriorityFilter] = useState<PriorityFilter>(null);
 
   const getPriorityColor = (priority: string) => {
     switch (priority) {
@@ -90,17 +93,32 @@ export default function TaskPage() {
     }
   };
 
+  const handlePriorityClick = (priority: PriorityFilter) => {
+    // Если нажали на тот же приоритет - отключаем фильтр
+    if (priorityFilter === priority) {
+      setPriorityFilter(null);
+    } else {
+      setPriorityFilter(priority);
+    }
+  };
+
   const getFilteredAssignments = () => {
     let filtered = assignments;
 
-    if (filter === "active") {
+    // Применяем фильтр статуса
+    if (statusFilter === "active") {
       filtered = filtered.filter((a) => !a.completed);
-    } else if (filter === "completed") {
+    } else if (statusFilter === "completed") {
       filtered = filtered.filter((a) => a.completed);
-    } else if (["high", "medium", "low"].includes(filter)) {
-      filtered = filtered.filter((a) => a.priority === filter);
+    }
+    // "all" - не фильтруем по статусу
+
+    // Применяем фильтр приоритета
+    if (priorityFilter !== null) {
+      filtered = filtered.filter((a) => a.priority === priorityFilter);
     }
 
+    // Сортируем по дедлайну
     return filtered.sort(
       (a, b) => new Date(a.deadline).getTime() - new Date(b.deadline).getTime(),
     );
@@ -159,7 +177,7 @@ export default function TaskPage() {
       {/* Модальное окно */}
       <TaskModal />
 
-      {/* Filters */}
+      {/* Status Filters */}
       <div className="flex gap-2 mb-6 overflow-x-auto pb-2">
         {(["all", "active", "completed"] as const).map((f) => {
           const labels = {
@@ -170,9 +188,9 @@ export default function TaskPage() {
           return (
             <button
               key={f}
-              onClick={() => setFilter(f)}
+              onClick={() => setStatusFilter(f)}
               className={`px-4 py-2 rounded-lg font-medium whitespace-nowrap text-sm transition ${
-                filter === f
+                statusFilter === f
                   ? "bg-indigo-600 text-white"
                   : "bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border border-gray-300 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700"
               }`}
@@ -183,34 +201,39 @@ export default function TaskPage() {
         })}
       </div>
 
-      {/* Priority Filters */}
+      {/* Priority Filters - Toggle buttons */}
       <div className="flex gap-2 mb-6 overflow-x-auto pb-2">
         {(["high", "medium", "low"] as const).map((p) => {
           const labels = { high: "Высокий", medium: "Средний", low: "Низкий" };
           const priorityColors = {
             high:
-              filter === p
+              priorityFilter === p
                 ? "bg-red-600 text-white"
                 : "bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-400 hover:bg-red-200 dark:hover:bg-red-900/50",
             medium:
-              filter === p
+              priorityFilter === p
                 ? "bg-yellow-600 text-white"
                 : "bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-400 hover:bg-yellow-200 dark:hover:bg-yellow-900/50",
             low:
-              filter === p
+              priorityFilter === p
                 ? "bg-green-600 text-white"
                 : "bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-400 hover:bg-green-200 dark:hover:bg-green-900/50",
           };
           return (
             <button
               key={p}
-              onClick={() => setFilter(filter === p ? "all" : p)}
+              onClick={() => handlePriorityClick(p)}
               className={`px-3 py-1 rounded-lg text-sm font-medium whitespace-nowrap transition ${priorityColors[p]}`}
             >
               {labels[p]}
             </button>
           );
         })}
+      </div>
+
+      {/* Results Count */}
+      <div className="text-sm text-gray-500 dark:text-gray-400 mb-2">
+        Найдено: {filteredAssignments.length} заданий
       </div>
 
       {/* Assignments List */}
@@ -306,16 +329,16 @@ export default function TaskPage() {
         <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-8 sm:p-12 text-center shadow-sm">
           <CheckCircle2 className="h-12 w-12 text-gray-400 dark:text-gray-500 mx-auto mb-4" />
           <h3 className="text-lg sm:text-xl font-medium text-gray-900 dark:text-white">
-            {filter === "completed"
+            {statusFilter === "completed"
               ? "Нет выполненных заданий"
               : "Нет активных заданий"}
           </h3>
           <p className="text-gray-600 dark:text-gray-400 mt-2 text-sm sm:text-base">
-            {filter === "completed"
+            {statusFilter === "completed"
               ? "Вы еще не выполнили задания"
               : "Все задания выполнены, отличная работа!"}
           </p>
-          {filter !== "completed" && (
+          {statusFilter !== "completed" && (
             <button
               onClick={handleAddClick}
               className="mt-4 px-4 sm:px-6 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 text-sm sm:text-base transition"

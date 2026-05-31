@@ -75,6 +75,18 @@ export type Attachment = {
   created_at: string;
 };
 
+export type TempAttachment = {
+  id: string;
+  note_id: number;
+  file_name: string;
+  file_url: string;
+  file_type: string;
+  file_size: number;
+  mime_type: string;
+  created_at: string;
+  isTemp?: boolean;
+};
+
 export type Note = {
   id: number;
   title: string;
@@ -94,4 +106,4 @@ export type Timing = {
   sort_order: number;
   created_at?: string;
   updated_at?: string;
-};
+  }
