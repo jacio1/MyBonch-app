@@ -900,14 +900,7 @@ export default function ProfilePage() {
             Безопасность
           </h3>
           <div className="space-y-3">
-            <div className="flex justify-between items-center p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
-              <span className="text-sm text-gray-700 dark:text-gray-300">
-                Статус
-              </span>
-              <span className="text-sm text-green-600 dark:text-green-400 font-medium">
-                Активен
-              </span>
-            </div>
+
             <button
               onClick={handleLogout}
               className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 hover:bg-red-100 dark:hover:bg-red-900/40 rounded-lg font-semibold text-sm transition"
