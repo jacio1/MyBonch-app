@@ -1,4 +1,3 @@
-import {  } from '@/src/types/schedule';
 import { ScheduleCard } from './ScheduleCard';
 import { Plus } from 'lucide-react';
 import { Schedule } from '@/src/types';
@@ -32,8 +31,8 @@ export const WeekSchedule = ({
               {dayName}, {day.toLocaleDateString("ru-RU")}
             </h3>
 
-            {daySchedules.length > 0 ? (
-              <div className="space-y-3">
+            {daySchedules.length > 0 && (
+              <div className="space-y-3 mb-3">
                 {daySchedules.map((schedule) => (
                   <ScheduleCard
                     key={schedule.id}
@@ -43,15 +42,15 @@ export const WeekSchedule = ({
                   />
                 ))}
               </div>
-            ) : (
-              <div
-                onClick={() => onAddSchedule(dateStr)}
-                className="bg-gray-50 dark:bg-gray-800/50 rounded-lg p-4 text-center text-gray-500 dark:text-gray-400 text-sm border border-gray-200 dark:border-gray-700 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-800 transition flex justify-center items-center gap-2"
-              >
-                <Plus className="h-4 w-4" />
-                <span>Добавить пару</span>
-              </div>
             )}
+
+            <button
+              onClick={() => onAddSchedule(dateStr)}
+              className="w-full bg-gray-50 dark:bg-gray-800/50 rounded-lg p-4 text-center text-gray-500 dark:text-gray-400 text-sm border border-gray-200 dark:border-gray-700 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-800 transition flex justify-center items-center gap-2"
+            >
+              <Plus className="h-4 w-4" />
+              <span>Добавить пару</span>
+            </button>
           </div>
         );
       })}

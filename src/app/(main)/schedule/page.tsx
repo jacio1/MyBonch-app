@@ -259,68 +259,135 @@ export default function SchedulePage() {
   };
 
   const handleApplyPreset = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!applyPresetForm.preset_id || !applyPresetForm.start_date) {
-      alert("Выберите шаблон и дату");
-      return;
+  e.preventDefault();
+  if (!applyPresetForm.preset_id) {
+    alert("Выберите шаблон");
+    return;
+  }
+
+  if (!activeStudyPeriod) {
+    alert("Нет активного периода обучения");
+    return;
+  }
+
+  const preset = presets.find((p) => p.id === Number(applyPresetForm.preset_id));
+  if (!preset || !preset.schedules) {
+    alert("Шаблон не найден");
+    return;
+  }
+
+  const startDate = new Date(activeStudyPeriod.start_date);
+  const endDate = new Date(activeStudyPeriod.end_date);
+  const allDatesInPeriod: string[] = [];
+  
+  const currentDate = new Date(startDate);
+  while (currentDate <= endDate) {
+    allDatesInPeriod.push(currentDate.toISOString().split("T")[0]);
+    currentDate.setDate(currentDate.getDate() + 1);
+  }
+
+  // Группируем расписание шаблона по дням недели
+  const scheduleByDayOfWeek: { [key: number]: typeof preset.schedules } = {};
+  preset.schedules.forEach(schedule => {
+    if (!scheduleByDayOfWeek[schedule.day_of_week]) {
+      scheduleByDayOfWeek[schedule.day_of_week] = [];
     }
+    scheduleByDayOfWeek[schedule.day_of_week].push(schedule);
+  });
 
-    const preset = presets.find((p) => p.id === Number(applyPresetForm.preset_id));
-    if (!preset || !preset.schedules) {
-      alert("Шаблон не найден");
-      return;
-    }
+  // Находим все пары, которые нужно удалить (конфликтующие)
+  const schedulesToDelete: Schedule[] = [];
+  const schedulesToAdd: Array<{
+    date: string;
+    subject_name: string;
+    start_time: string;
+    end_time: string;
+    room: string;
+    color: string;
+    is_important: boolean;
+  }> = [];
 
-    const startDateObj = new Date(applyPresetForm.start_date);
-    const dayOfWeekStart = startDateObj.getDay() === 0 ? 6 : startDateObj.getDay() - 1;
+  // Проверяем все даты в периоде на конфликты и собираем их
+  for (const dateStr of allDatesInPeriod) {
+    const date = new Date(dateStr);
+    const dayOfWeek = date.getDay() === 0 ? 6 : date.getDay() - 1;
+    
+    const schedulesForDay = scheduleByDayOfWeek[dayOfWeek];
+    if (!schedulesForDay) continue;
 
-    const conflicts: string[] = [];
-
-    for (const presetSchedule of preset.schedules) {
-      const dayDiff = (presetSchedule.day_of_week - dayOfWeekStart + 7) % 7;
-      const scheduleDate = new Date(applyPresetForm.start_date);
-      scheduleDate.setDate(scheduleDate.getDate() + dayDiff);
-      const dateStr = scheduleDate.toISOString().split("T")[0];
-
-      const { overlaps, overlappingSchedule } = checkTimeOverlap(
-        schedules,
-        dateStr,
-        presetSchedule.start_time,
-        presetSchedule.end_time,
+    for (const presetSchedule of schedulesForDay) {
+      // Находим все существующие пары, которые пересекаются с новой
+      const overlappingSchedules = schedules.filter(schedule => 
+        schedule.date === dateStr &&
+        schedule.id !== editingSchedule?.id && // Исключаем редактируемую пару если есть
+        (
+          (presetSchedule.start_time >= schedule.start_time && presetSchedule.start_time < schedule.end_time) ||
+          (presetSchedule.end_time > schedule.start_time && presetSchedule.end_time <= schedule.end_time) ||
+          (presetSchedule.start_time <= schedule.start_time && presetSchedule.end_time >= schedule.end_time)
+        )
       );
 
-      if (overlaps && overlappingSchedule) {
-        conflicts.push(
-          `${dateStr}: ${presetSchedule.subject_name} (${formatTime(presetSchedule.start_time)}-${formatTime(presetSchedule.end_time)}) конфликтует с ${overlappingSchedule.subject_name}`,
-        );
-      }
-    }
+      // Добавляем конфликтующие пары в список на удаление
+      schedulesToDelete.push(...overlappingSchedules);
 
-    if (conflicts.length > 0) {
-      setErrorModalData({
-        title: "Невозможно применить шаблон!",
-        message: `Обнаружены конфликты:\n\n${conflicts.join("\n")}\n\nПожалуйста, удалите конфликтующие пары или выберите другую дату.`,
-        conflictSchedule: null,
+      // Добавляем новую пару из шаблона
+      schedulesToAdd.push({
+        date: dateStr,
+        subject_name: presetSchedule.subject_name,
+        start_time: presetSchedule.start_time,
+        end_time: presetSchedule.end_time,
+        room: presetSchedule.room || "",
+        color: presetSchedule.color || COLORS[0],
+        is_important: presetSchedule.is_important || false,
       });
-      setShowErrorModal(true);
+    }
+  }
+
+  // Подтверждение от пользователя перед перезаписью
+  const deleteCount = schedulesToDelete.length;
+  const addCount = schedulesToAdd.length;
+
+  if (deleteCount > 0) {
+    const confirmed = confirm(
+      `⚠️ Внимание!\n\n` +
+      `Применение шаблона "${preset.name}" перезапишет конфликтующие пары.\n\n` +
+      `Будет удалено: ${deleteCount} существующих пар(ы)\n` +
+      `Будет добавлено: ${addCount} новых пар(ы)\n\n` +
+      `Вы уверены, что хотите продолжить?`
+    );
+    
+    if (!confirmed) {
       return;
     }
+  }
 
-    try {
-      setIsSubmitting(true);
-      await applyPreset(Number(applyPresetForm.preset_id), applyPresetForm.start_date);
-      setApplyPresetForm({ preset_id: "", start_date: "" });
-      setShowApplyPreset(false);
-      alert("✅ Шаблон успешно применен!");
-    } catch (err) {
-      console.error("Error:", err);
-      alert("Ошибка при применении шаблона");
-    } finally {
-      setIsSubmitting(false);
+  try {
+    setIsSubmitting(true);
+    
+    for (const scheduleToDelete of schedulesToDelete) {
+      await deleteSchedule(scheduleToDelete.id);
     }
-  };
+    
+    for (const scheduleToAdd of schedulesToAdd) {
+      await addSchedule({
+        user_id: user!.id,
+        ...scheduleToAdd,
+        study_period_id: activeStudyPeriod.id,
+      });
+    }
+    
+    setApplyPresetForm({ preset_id: "", start_date: "" });
+    setShowApplyPreset(false);
+    
 
-  // Loading states
+  } catch (err) {
+    console.error("Error:", err);
+    alert("Ошибка при применении шаблона");
+  } finally {
+    setIsSubmitting(false);
+  }
+};
+
   if (authLoading || loading) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
@@ -374,7 +441,7 @@ export default function SchedulePage() {
               className="flex items-center justify-center gap-2 px-4 sm:px-6 py-2 sm:py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm sm:text-base transition"
             >
               <Copy className="h-4 w-4" />
-              Шаблон
+              Применить шаблон
             </button>
           )}
         </div>

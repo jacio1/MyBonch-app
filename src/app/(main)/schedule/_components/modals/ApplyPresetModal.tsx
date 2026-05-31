@@ -47,7 +47,7 @@ export const ApplyPresetModal = ({
         <form onSubmit={onSubmit} className="p-4 space-y-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-              Шаблон
+              Выберите шаблон
             </label>
             <select
               value={formData.preset_id}
@@ -59,26 +59,23 @@ export const ApplyPresetModal = ({
               <option value="">Выберите шаблон</option>
               {formData.presets?.map((preset) => (
                 <option key={preset.id} value={preset.id}>
-                  {preset.name}
+                  {preset.name} ({preset.schedules?.length || 0} пар)
                 </option>
               ))}
             </select>
           </div>
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-              Начиная с
-            </label>
-            <input
-              type="date"
-              value={formData.start_date}
-              onChange={(e) => onFormChange({ ...formData, start_date: e.target.value })}
-              min={activeStudyPeriod?.start_date}
-              max={activeStudyPeriod?.end_date}
-              className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-600"
-              required
-            />
-          </div>
+          {activeStudyPeriod && (
+            <div className="bg-blue-50 dark:bg-blue-900/20 p-3 rounded-lg">
+              <p className="text-sm text-blue-800 dark:text-blue-200">
+                 Шаблон будет применен на весь период обучения:
+              </p>
+              <p className="text-xs text-blue-600 dark:text-blue-300 mt-1">
+                {new Date(activeStudyPeriod.start_date).toLocaleDateString("ru-RU")} -{" "}
+                {new Date(activeStudyPeriod.end_date).toLocaleDateString("ru-RU")}
+              </p>
+            </div>
+          )}
 
           <div className="flex gap-2 pt-2">
             <button
@@ -86,7 +83,7 @@ export const ApplyPresetModal = ({
               disabled={isSubmitting}
               className="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-2 rounded-lg disabled:opacity-50 transition"
             >
-              Применить шаблон
+              {isSubmitting ? "Применение..." : "Применить"}
             </button>
             <button
               type="button"
