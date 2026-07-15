@@ -1,36 +1,105 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Study Organizer - Информационная система для организации учебного процесса
 
-## Getting Started
+## О проекте
 
-First, run the development server:
+**Study Organizer** — это современное веб-приложение, разработанное для централизованного управления учебным процессом студентов. Система объединяет в едином интерфейсе интеллектуальное расписание, шаблоны занятий, список задач, конспекты с фотографиями и автоматические push-уведомления.
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+### Проблема
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Студенты вынуждены использовать множество разрозненных инструментов: Google Календарь для расписания, Todoist для задач, Notion для конспектов — что снижает эффективность планирования и увеличивает когнитивную нагрузку.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+### Решение
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+Study Organizer предлагает единую экосистему, адаптированную под логику учебного процесса с:
 
-## Learn More
+- Делением на учебные периоды (семестры)
+- Шаблонами расписания для быстрого заполнения
+- Встроенным хранением конспектов с изображениями
+- Автоматическими push-уведомлениями без ручной настройки
 
-To learn more about Next.js, take a look at the following resources:
+## 🎯 Цель проекта
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+Разработка информационной системы для организации учебного процесса, обеспечивающей управление расписанием в рамках учебных периодов, ведение задач и конспектов, а также автоматическую отправку push-уведомлений.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## 📸 Скриншоты
 
-## Deploy on Vercel
+### Расписание
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+![Расписание](/public/readme/schedule-page.png)
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+### Шаблоны расписания и времени
+
+![Шаблоны расписания и времени](/public/readme/templates-page.png)
+
+### Список задач (To-Do)
+
+![Список задач](/public/readme/tasks.png)
+
+### Конспекты и заметки
+
+![Конспекты](/public/readme/notes.png)
+
+### Профиль пользователя
+
+![Профиль](/public/readme/profile.png)
+
+## ✨ Функциональные возможности
+
+### 1. Управление учебными периодами
+
+- Создание семестров с указанием дат начала и окончания
+- Автоматическая навигация по расписанию в пределах учебного периода
+- Поддержка логики учебного года
+
+### 2. Интеллектуальное расписание
+
+- Просмотр расписания по неделям с навигацией
+- Добавление пар с указанием предмета, преподавателя, аудитории
+- Шаблоны временных слотов для занятий
+- Шаблоны расписания на неделю ("Числитель"/"Знаменатель")
+- Быстрое применение шаблонов к любой неделе
+
+### 3. Список задач (To-Do)
+
+- Создание и управление учебными задачами
+- Отметка о выполнении
+- Удаление завершенных задач
+
+### 4. Конспекты и заметки
+
+- Создание текстовых заметок
+- Прикрепление фотографий (снимки доски, документы)
+- Хранение и удобный доступ к материалам
+
+### 5. Push-уведомления
+
+- Автоматические напоминания о начале занятий
+- Настройка времени оповещения (15, 30, 60 минут)
+- Одно уведомление в день перед первой парой
+- Настройка уведомлений по задачам
+
+### 6. Профиль пользователя
+
+- Регистрация и аутентификация
+- Редактирование личных данных
+- Настройка аватара
+- Управление параметрами уведомлений
+
+## 🛠 Технологический стек
+
+### Frontend
+
+- **[Next.js](https://nextjs.org/)**
+- **[TypeScript](https://www.typescriptlang.org/)**
+- **[Tailwind CSS](https://tailwindcss.com/)**
+- **[Zustand](https://zustand-demo.pmnd.rs/)**
+
+### Backend & Database
+
+- **[Supabase](https://supabase.com/)**
+- **PostgreSQL**
+
+### Push-уведомления
+
+- **Service Worker**
+- **[cron-job.org](https://cron-job.org/)**
