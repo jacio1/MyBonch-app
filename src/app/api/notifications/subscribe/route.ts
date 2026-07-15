@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 
-// Используйте admin клиент с сервисной ролью для обхода RLS
 const supabaseAdmin = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.SUPABASE_SERVICE_ROLE_KEY!,
@@ -13,8 +12,7 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const { subscription, userId } = body;
     
-    console.log('📝 Received subscription request:', { userId, hasSubscription: !!subscription });
-    console.log('Subscription endpoint:', subscription?.endpoint);
+
 
     if (!subscription || !userId) {
       console.log('❌ Missing data:', { subscription: !!subscription, userId });
@@ -24,10 +22,9 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Проверяем структуру подписки
     const subscriptionData = {
       user_id: userId,
-      subscription: subscription, // Не нужно JSON.stringify, Supabase сам обработает
+      subscription: subscription, 
       endpoint: subscription.endpoint,
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
@@ -38,20 +35,18 @@ export async function POST(request: NextRequest) {
       endpoint: subscription.endpoint.substring(0, 50) + '...' 
     });
 
-    // Сначала проверяем, существует ли уже запись
     const { data: existing, error: selectError } = await supabaseAdmin
       .from('push_subscriptions')
       .select('id')
       .eq('endpoint', subscription.endpoint)
       .single();
 
-    if (selectError && selectError.code !== 'PGRST116') { // PGRST116 = not found
+    if (selectError && selectError.code !== 'PGRST116') { 
       console.error('⚠️ Error checking existing:', selectError);
     }
 
     let result;
     if (existing) {
-      // Обновляем существующую
       result = await supabaseAdmin
         .from('push_subscriptions')
         .update({
@@ -60,7 +55,6 @@ export async function POST(request: NextRequest) {
         })
         .eq('id', existing.id);
     } else {
-      // Создаём новую
       result = await supabaseAdmin
         .from('push_subscriptions')
         .insert(subscriptionData);

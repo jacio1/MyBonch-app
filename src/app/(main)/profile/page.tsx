@@ -27,7 +27,6 @@ import { useThemeStore } from "@/src/stores/useThemeStore";
 import { supabase } from "@/src/lib/supabase";
 import { useRouter } from "next/navigation";
 
-// ── helpers ──────────────────────────────────────────────────────────────────
 
 function urlBase64ToUint8Array(base64String: string): Uint8Array {
   const padding = "=".repeat((4 - (base64String.length % 4)) % 4);
@@ -72,7 +71,6 @@ const ASSIGNMENT_OFFSETS = [
   { value: 7, label: "За неделю" },
 ];
 
-// ── Toggle component ─────────────────────────────────────────────────────────
 
 function Toggle({
   checked,
@@ -101,7 +99,6 @@ function Toggle({
   );
 }
 
-// ── SelectChips component ────────────────────────────────────────────────────
 
 function SelectChips<T extends number>({
   options,
@@ -135,7 +132,6 @@ function SelectChips<T extends number>({
   );
 }
 
-// ── Theme Option Component ────────────────────────────────────────────────────
 
 function ThemeOption({
   value,
@@ -176,7 +172,6 @@ function ThemeOption({
   );
 }
 
-// ── Delete Account Modal Component ───────────────────────────────────────────
 
 function DeleteAccountModal({
   isOpen,
@@ -275,7 +270,6 @@ function DeleteAccountModal({
   );
 }
 
-// ── Main Page ─────────────────────────────────────────────────────────────────
 
 export default function ProfilePage() {
   const { user, signOut, loading: authLoading } = useAuth();
@@ -297,11 +291,9 @@ export default function ProfilePage() {
   const [notifLoading, setNotifLoading] = useState(false);
   const [notifSaving, setNotifSaving] = useState(false);
 
-  // Delete account state
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
 
-  // ── Load ────────────────────────────────────────────────────────────────────
 
   useEffect(() => {
     if (!user) return;
@@ -344,13 +336,11 @@ export default function ProfilePage() {
         .maybeSingle();
       if (data) setNotifSettings(data);
     } catch {
-      // no settings yet — use defaults
     } finally {
       setNotifLoading(false);
     }
   };
 
-  // ── Profile save ────────────────────────────────────────────────────────────
 
   const saveProfile = async () => {
     if (!user) return;
@@ -379,7 +369,6 @@ export default function ProfilePage() {
     }
   };
 
-  // ── Push subscription ───────────────────────────────────────────────────────
 
   const subscribeToPush = async (): Promise<PushSubscription | null> => {
     const vapidKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY;
@@ -466,7 +455,6 @@ export default function ProfilePage() {
     }
   };
 
-  // ── Notif settings save ─────────────────────────────────────────────────────
 
   const saveNotifSettings = async (settings: NotifSettings) => {
     if (!user) return;
@@ -487,7 +475,6 @@ export default function ProfilePage() {
     saveNotifSettings(next);
   };
 
-  // ── Delete Account (упрощенный рабочий вариант) ─────────────────────────────
 
   const handleDeleteAccount = async () => {
     if (!user) return;
@@ -495,7 +482,6 @@ export default function ProfilePage() {
     try {
       setIsDeleting(true);
 
-      // 1. Удаляем настройки уведомлений
       const { error: notifError } = await supabase
         .from("notification_settings")
         .delete()
@@ -504,7 +490,6 @@ export default function ProfilePage() {
       if (notifError)
         console.error("Error deleting notif settings:", notifError);
 
-      // 2. Удаляем расписание (если есть таблица schedules)
       try {
         const { error: scheduleError } = await supabase
           .from("schedules")
@@ -516,7 +501,6 @@ export default function ProfilePage() {
         console.warn("Schedules table might not exist:", e);
       }
 
-      // 3. Удаляем задания (если есть таблица assignments)
       try {
         const { error: assignmentsError } = await supabase
           .from("assignments")
@@ -528,7 +512,6 @@ export default function ProfilePage() {
         console.warn("Assignments table might not exist:", e);
       }
 
-      // 4. Удаляем профиль
       const { error: profileError } = await supabase
         .from("profiles")
         .delete()
@@ -536,14 +519,12 @@ export default function ProfilePage() {
 
       if (profileError) console.error("Error deleting profile:", profileError);
 
-      // 5. Пытаемся удалить пользователя через RPC (если функция существует)
       try {
         const { error: rpcError } = await supabase.rpc("delete_user", {
           user_id: user.id,
         });
         if (rpcError) {
           console.error("RPC delete_user failed:", rpcError);
-          // Если RPC нет, просто выходим из аккаунта (пользователь останется, но данные очищены)
           alert("Ваши данные удалены. Сессия будет закрыта.");
         }
       } catch (rpcError) {
@@ -551,10 +532,8 @@ export default function ProfilePage() {
         alert("Ваши данные удалены. Сессия будет закрыта.");
       }
 
-      // 6. Выходим из аккаунта
       await signOut();
 
-      // 7. Перенаправляем на главную
       router.push("/");
     } catch (error) {
       console.error("Error deleting account:", error);
@@ -565,7 +544,6 @@ export default function ProfilePage() {
     }
   };
 
-  // ── Logout ──────────────────────────────────────────────────────────────────
 
   const handleLogout = async () => {
     if (!confirm("Выйти из аккаунта?")) return;
@@ -575,7 +553,6 @@ export default function ProfilePage() {
     } catch {}
   };
 
-  // ── Render ──────────────────────────────────────────────────────────────────
 
   if (authLoading) {
     return (
@@ -601,7 +578,6 @@ export default function ProfilePage() {
   return (
     <div className="sm:p-8 transition-colors">
       <div className="max-w-3xl mx-auto space-y-6">
-        {/* Header */}
         <div>
           <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
             Профиль
@@ -611,7 +587,6 @@ export default function ProfilePage() {
           </p>
         </div>
 
-        {/* ── Profile ── */}
         <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6 shadow-sm">
           <div className="flex flex-col sm:flex-row items-start sm:items-center gap-6 mb-4">
             <div className="w-20 h-20 bg-indigo-100 dark:bg-indigo-900/50 rounded-full flex items-center justify-center shrink-0">
@@ -684,7 +659,6 @@ export default function ProfilePage() {
           )}
         </div>
 
-        {/* ── Theme ── */}
         <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6 shadow-sm">
           <h3 className="text-base font-bold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
             {theme === "dark" ? (
@@ -721,7 +695,6 @@ export default function ProfilePage() {
           </div>
         </div>
 
-        {/* ── Notifications ── */}
         {isPushSupported && (
           <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm overflow-hidden">
             <div className="p-6 flex items-center justify-between gap-4">
@@ -749,9 +722,9 @@ export default function ProfilePage() {
                 </div>
               </div>
               {notifSaving ? (
-                <Loader className="h-5 w-5 text-indigo-600 animate-spin flex-shrink-0" />
+                <Loader className="h-5 w-5 text-indigo-600 animate-spin shrink-0" />
               ) : permissionState === "denied" ? (
-                <span className="text-xs text-red-500 font-medium flex-shrink-0">
+                <span className="text-xs text-red-500 font-medium shrink-0">
                   Заблокированы
                 </span>
               ) : (
@@ -882,7 +855,7 @@ export default function ProfilePage() {
 
                 <div className="px-6 py-4 bg-blue-50 dark:bg-blue-950/20">
                   <p className="text-xs text-blue-700 dark:text-blue-400 flex items-start gap-2">
-                    <Zap className="h-3.5 w-3.5 mt-0.5 flex-shrink-0" />
+                    <Zap className="h-3.5 w-3.5 mt-0.5 shrink-0" />
                     Уведомления отправляются сервером автоматически. Приложение
                     может быть закрыто — уведомления всё равно придут, если
                     устройство онлайн.
@@ -893,7 +866,6 @@ export default function ProfilePage() {
           </div>
         )}
 
-        {/* ── Security ── */}
         <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6 shadow-sm">
           <h3 className="text-base font-bold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
             <Lock className="h-5 w-5" />
@@ -911,7 +883,6 @@ export default function ProfilePage() {
           </div>
         </div>
 
-        {/* ── Danger Zone ── */}
         <div className="bg-red-50 dark:bg-red-950/20 rounded-xl border border-red-200 dark:border-red-800 p-6 shadow-sm">
           <div className="flex items-center gap-2 mb-4">
             <AlertTriangle className="h-5 w-5 text-red-600 dark:text-red-400" />
@@ -932,13 +903,11 @@ export default function ProfilePage() {
           </button>
         </div>
 
-        {/* Footer */}
         <div className="text-center text-xs text-gray-400 dark:text-gray-500 pb-4">
           <p>Version 0.91 · Developed by jacio</p>
         </div>
       </div>
 
-      {/* Delete Account Modal */}
       <DeleteAccountModal
         isOpen={isDeleteModalOpen}
         onClose={() => setIsDeleteModalOpen(false)}

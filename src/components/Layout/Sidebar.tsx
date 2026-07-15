@@ -16,11 +16,8 @@ import { useState } from "react";
 import { useAuth } from "@/src/lib/AuthContext";
 import { useRouter } from "next/navigation";
 
-interface SidebarProps {
-  assignmentsCount: number;
-}
 
-export default function Sidebar({ assignmentsCount }: SidebarProps) {
+export default function Sidebar() {
   const pathname = usePathname();
   const [mobileOpen, setMobileOpen] = useState(false);
   const { signOut } = useAuth();
@@ -49,7 +46,6 @@ export default function Sidebar({ assignmentsCount }: SidebarProps) {
 
   return (
     <>
-      {/* Desktop Sidebar */}
       <nav className="hidden sm:flex w-64 bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 flex-col p-6 space-y-8 transition-colors">
         <div className="space-y-2">
           <h2 className="text-xs uppercase text-gray-500 dark:text-gray-400 font-semibold tracking-wider">
@@ -88,7 +84,6 @@ export default function Sidebar({ assignmentsCount }: SidebarProps) {
         </div>
       </nav>
 
-      {/* Mobile Bottom Navigation */}
       <div className="px-2 sm:hidden fixed bottom-0 left-0 right-0 bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 transition-colors z-10 pb-[env(safe-area-inset-bottom)]">
         <div className="flex justify-around items-center">
           {navItems.map((item) => {
@@ -113,7 +108,6 @@ export default function Sidebar({ assignmentsCount }: SidebarProps) {
         </div>
       </div>
 
-      {/* Mobile Menu Overlay */}
       {mobileOpen && (
         <div
           className="sm:hidden fixed inset-0 z-50 bg-black/50"

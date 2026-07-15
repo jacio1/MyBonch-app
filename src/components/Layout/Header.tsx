@@ -1,24 +1,12 @@
 "use client";
 
-import { BookOpen, BellRing, User, Menu, X, LogOut } from "lucide-react";
-import { useState } from "react";
+import { BookOpen, BellRing, User } from "lucide-react";
 import { useAuth } from "@/src/lib/AuthContext";
-import { useRouter } from "next/navigation";
 import Link from "next/link";
 
 export default function Header() {
-  const [menuOpen, setMenuOpen] = useState(false);
-  const { user, signOut } = useAuth();
-  const router = useRouter();
+  const { user } = useAuth();
 
-  const handleSignOut = async () => {
-    try {
-      await signOut();
-      router.push("/sign-in");
-    } catch (error) {
-      console.error("Sign out error:", error);
-    }
-  };
 
   const userName =
     user?.user_metadata?.full_name || user?.email || "Пользователь";
@@ -26,7 +14,6 @@ export default function Header() {
   return (
     <header className="bg-white dark:bg-gray-800 shadow-sm border-b border-gray-200 dark:border-gray-700 px-4 sm:px-6 py-4 transition-colors hidden sm:block">
       <div className="flex justify-between items-center">
-        {/* Logo */}
         <div className="flex items-center space-x-2 sm:space-x-3">
           <BookOpen className="h-6 w-6 sm:h-8 sm:w-8 text-indigo-600" />
           <div className="hidden sm:block">
@@ -42,7 +29,6 @@ export default function Header() {
           </h1>
         </div>
 
-        {/* Desktop Menu */}
         <div className="hidden sm:flex items-center space-x-4">
           <BellRing className="h-5 w-5 text-gray-500 dark:text-gray-400 cursor-pointer hover:text-gray-700 dark:hover:text-gray-300 transition" />
           <Link href={"/profile"}>

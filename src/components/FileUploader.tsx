@@ -1,8 +1,9 @@
 "use client";
 
 import { useState, useRef } from "react";
-import { Upload, X, FileText, Image, Loader2 } from "lucide-react";
+import { Upload, X, FileText, Loader2, ImageIcon } from "lucide-react";
 import { Attachment } from "@/src/types";
+import Image from "next/image";
 
 interface FileUploaderProps {
   noteId: number;
@@ -80,7 +81,7 @@ export const FileUploader = ({
 
   const getFileIcon = (fileType: string) => {
     if (fileType === "image") {
-      return <Image className="h-5 w-5 text-blue-500" />;
+      return <ImageIcon className="h-5 w-5 text-blue-500" />;
     }
     return <FileText className="h-5 w-5 text-gray-500" />;
   };
@@ -91,7 +92,6 @@ export const FileUploader = ({
 
   return (
     <div className="space-y-3">
-      {/* Область загрузки - показываем только если есть noteId (для редактирования) или isNewNote true */}
       {(noteId !== 0 || isNewNote) && (
         <div
           className={`relative border-2 border-dashed rounded-lg p-4 text-center transition-colors
@@ -135,7 +135,6 @@ export const FileUploader = ({
         </div>
       )}
 
-      {/* Список вложений */}
       {attachments.length > 0 && (
         <div className="space-y-2">
           <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300">
@@ -150,7 +149,7 @@ export const FileUploader = ({
                 <div className="flex items-center gap-3 flex-1 min-w-0">
                   {attachment.file_type === "image" ? (
                     <div className="relative">
-                      <img
+                      <Image
                         src={attachment.file_url}
                         alt={attachment.file_name}
                         className="w-10 h-10 object-cover rounded"

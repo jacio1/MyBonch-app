@@ -84,7 +84,7 @@ interface DataContextType {
   getNoteAttachments: (noteId: number) => Attachment[];
   uploadingFiles: boolean;
 
-  // Timings
+  
   timings: Timing[];
   addTiming: (timing: Omit<Timing, "id" | "user_id">) => Promise<Timing>;
   updateTiming: (id: number, timing: Partial<Timing>) => Promise<Timing>;
@@ -94,7 +94,6 @@ interface DataContextType {
   loading: boolean;
   error: string | null;
 
-  // Новая функция для принудительного обновления данных
   refreshData: () => Promise<void>;
 }
 
@@ -128,7 +127,6 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Функция загрузки данных
   const loadData = useCallback(
     async (skipCache: boolean = false) => {
       if (!user) return;
@@ -169,7 +167,6 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
         const notesData = notesRes.data || [];
         let timingsData: Timing[] = timingsRes.data || [];
 
-        // Seed default timings if user has none
         if (timingsData.length === 0) {
           const toInsert = DEFAULT_TIMINGS.map((t) => ({
             ...t,
@@ -210,7 +207,6 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
           attachmentsData = attachmentsRes || [];
         }
 
-        // Обновляем кеш только если не принудительная перезагрузка
         if (!skipCache) {
           cachedData.studyPeriods = studyPeriodsData;
           cachedData.schedules = schedulesData;
@@ -245,11 +241,9 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
     [user],
   );
 
-  // Функция для принудительного обновления данных (очищает кеш)
   const refreshData = useCallback(async () => {
     if (!user) return;
 
-    // Очищаем кеш
     cachedData = {
       userId: null,
       studyPeriods: null,
@@ -263,7 +257,6 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
       loadPromise: null,
     };
 
-    // Загружаем данные заново
     await loadData(true);
   }, [user, loadData]);
 
@@ -333,7 +326,6 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
     cachedData.loadPromise = promise;
   }, [user, loadData]);
 
-  // ─── Study Periods ──────────────────────────────────────────────────────────
 
   const createStudyPeriod = useCallback(
     async (period: Omit<StudyPeriod, "id">) => {
@@ -383,7 +375,6 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
     async (id: number) => {
       if (!user) throw new Error("User not authenticated");
 
-      // Сначала удаляем все расписания, связанные с этим периодом
       const { error: schedulesError } = await supabase
         .from("schedules")
         .delete()
@@ -392,7 +383,6 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
 
       if (schedulesError) throw schedulesError;
 
-      // Затем удаляем сам период
       const { error: err } = await supabase
         .from("study_periods")
         .delete()
@@ -406,7 +396,6 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
           (p) => p.id !== id,
         );
 
-      // Очищаем расписание из состояния
       setSchedules((prev) => prev.filter((s) => s.study_period_id !== id));
       if (cachedData.schedules)
         cachedData.schedules = cachedData.schedules.filter(
@@ -437,7 +426,6 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
     [user, studyPeriods],
   );
 
-  // ─── Schedules ──────────────────────────────────────────────────────────────
 
   const addSchedule = useCallback(
     async (schedule: Omit<Schedule, "id">) => {
@@ -503,7 +491,6 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
     [schedules],
   );
 
-  // ─── Presets ────────────────────────────────────────────────────────────────
 
   const addPreset = useCallback(
     async (preset: Omit<Preset, "id">) => {
@@ -634,7 +621,6 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
     [user, presets, addSchedule, studyPeriods],
   );
 
-  // ─── Assignments ────────────────────────────────────────────────────────────
 
   const addAssignment = useCallback(
     async (assignment: Omit<Assignment, "id">) => {
@@ -696,7 +682,6 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
     [user],
   );
 
-  // ─── Notes ──────────────────────────────────────────────────────────────────
 
   const addNote = useCallback(
     async (note: Omit<Note, "id">) => {
@@ -755,7 +740,6 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
     [user],
   );
 
-  // ─── Attachments ────────────────────────────────────────────────────────────
 
   const addAttachment = useCallback(
     async (noteId: number, file: File): Promise<Attachment> => {
@@ -826,7 +810,6 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
     [attachments],
   );
 
-  // ─── Timings ────────────────────────────────────────────────────────────────
 
   const addTiming = useCallback(
     async (timing: Omit<Timing, "id" | "user_id">) => {
@@ -893,9 +876,7 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
 
   const resetTimingsToDefault = useCallback(async () => {
     if (!user) throw new Error("User not authenticated");
-    // Delete all existing timings
     await supabase.from("timings").delete().eq("user_id", user.id);
-    // Insert defaults
     const toInsert = DEFAULT_TIMINGS.map((t) => ({ ...t, user_id: user.id }));
     const { data, error: err } = await supabase
       .from("timings")
@@ -907,7 +888,6 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
     if (cachedData.timings) cachedData.timings = sorted;
   }, [user]);
 
-  // ─── Context value ──────────────────────────────────────────────────────────
 
   const value: DataContextType = {
     studyPeriods,

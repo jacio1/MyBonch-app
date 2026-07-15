@@ -16,7 +16,7 @@ export default function SignUpPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [localError, setLocalError] = useState("");
-  const [agreedToTerms, setAgreedToTerms] = useState(false); // Новый стейт для чекбокса
+  const [agreedToTerms, setAgreedToTerms] = useState(false); 
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -61,7 +61,6 @@ export default function SignUpPage() {
   return (
     <div className="overflow-y-auto flex items-center justify-center min-h-[calc(100vh-200px)] p-4 sm:p-8 transition-colors">
       <div className="w-full max-w-md">
-        {/* Header */}
         <div className="text-center mb-8">
           <div className="flex justify-center mb-4">
             <div className="bg-white dark:bg-indigo-900/50 rounded-full p-3 sm:p-4">
@@ -76,7 +75,6 @@ export default function SignUpPage() {
           </p>
         </div>
 
-        {/* Form Card */}
         <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6 sm:p-8 shadow-sm">
           <h2 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white mb-6">
             Регистрация
@@ -91,7 +89,6 @@ export default function SignUpPage() {
           )}
 
           <form onSubmit={handleSubmit} className="space-y-4">
-            {/* Full Name Input */}
             <div>
               <label
                 htmlFor="fullName"
@@ -114,7 +111,6 @@ export default function SignUpPage() {
               </div>
             </div>
 
-            {/* Email Input */}
             <div>
               <label
                 htmlFor="email"
@@ -136,7 +132,6 @@ export default function SignUpPage() {
               </div>
             </div>
 
-            {/* Password Input */}
             <div>
               <label
                 htmlFor="password"
@@ -172,7 +167,6 @@ export default function SignUpPage() {
               </p>
             </div>
 
-            {/* Confirm Password Input */}
             <div>
               <label
                 htmlFor="confirmPassword"
@@ -205,7 +199,6 @@ export default function SignUpPage() {
               </div>
             </div>
 
-            {/* Terms and Conditions Checkbox */}
             <div className="flex items-start space-x-3 pt-2">
               <input
                 type="checkbox"
@@ -238,7 +231,6 @@ export default function SignUpPage() {
               </label>
             </div>
 
-            {/* Submit Button */}
             <button
               type="submit"
               disabled={loading}
@@ -248,14 +240,12 @@ export default function SignUpPage() {
             </button>
           </form>
 
-          {/* Divider */}
           <div className="relative my-6">
             <div className="absolute inset-0 flex items-center">
               <div className="w-full border-t border-gray-200 dark:border-gray-700"></div>
             </div>
           </div>
 
-          {/* Sign In Link */}
           <p className="pt-4 text-center text-gray-600 dark:text-gray-400 text-sm sm:text-base">
             Уже есть аккаунт?{" "}
             <Link

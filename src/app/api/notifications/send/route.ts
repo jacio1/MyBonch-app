@@ -1,4 +1,3 @@
-// app/api/notifications/send/route.ts
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import webpush from "web-push";
@@ -17,7 +16,6 @@ webpush.setVapidDetails(
   process.env.VAPID_PRIVATE_KEY!,
 );
 
-// Вспомогательная функция для форматирования времени в московском часовом поясе
 function formatMoscowTime(
   date: Date,
   options: Intl.DateTimeFormatOptions = {},
@@ -46,15 +44,12 @@ function notifyTime(
 ): Date {
   const [h, m] = timeStr.substring(0, 5).split(":").map(Number);
 
-  // Формируем строку с московским временем
   const hour = String(h).padStart(2, "0");
   const minute = String(m).padStart(2, "0");
   const moscowDateTimeStr = `${date}T${hour}:${minute}:00`;
 
-  // Конвертируем из МСК в UTC (fromZonedTime = из часового пояса в UTC)
   const utcDate = fromZonedTime(moscowDateTimeStr, TIMEZONE);
 
-  // Вычитаем оффсет
   utcDate.setMinutes(utcDate.getMinutes() - offsetMinutes);
 
   return utcDate;
@@ -121,7 +116,6 @@ async function handler(request: NextRequest) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  // ========== ТЕСТОВЫЙ РЕЖИМ ==========
   const isTestMode = request.headers.get("X-Test-Mode") === "true";
 
   if (isTestMode) {
@@ -172,7 +166,6 @@ async function handler(request: NextRequest) {
       error: "Нет активных подписок",
     });
   }
-  // ========== КОНЕЦ ТЕСТОВОГО РЕЖИМА ==========
 
   const now = new Date();
   const todayStr = now.toISOString().split("T")[0];
@@ -200,8 +193,6 @@ async function handler(request: NextRequest) {
           : row.subscription,
       );
 
-      // Schedule notifications
-      // Schedule notifications - с подробными логами
       if (s.schedule_enabled) {
         console.log(`\n🔔 === ПРОВЕРКА РАСПИСАНИЯ для user ${userId} ===`);
         console.log(`📅 Сегодня: ${todayStr}`);
@@ -266,7 +257,6 @@ async function handler(request: NextRequest) {
                 url: "/schedule",
               };
 
-              // Получаем подписки пользователя
               const { data: userSubs } = await supabaseAdmin
                 .from("push_subscriptions")
                 .select("subscription")
@@ -292,7 +282,6 @@ async function handler(request: NextRequest) {
           }
         }
       }
-      // Assignment notifications
       if (s.assignments_enabled) {
         const offsetDays: number = s.assignment_offset_days ?? 1;
         const targetDate = new Date(now);
@@ -323,7 +312,6 @@ async function handler(request: NextRequest) {
                 ? "🟡 "
                 : "🟢 ";
 
-          // Исправляем дату дедлайна с московским часовым поясом
           const deadlineDate = new Date(task.deadline);
           const formattedDeadline = formatMoscowDate(deadlineDate);
 

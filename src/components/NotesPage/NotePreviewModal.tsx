@@ -5,6 +5,7 @@ import { useData } from "@/src/lib/DataContext";
 import { Attachment } from "@/src/types";
 import { useModalStore } from "@/src/stores/useModalStore";
 import { useNoteFormStore } from "@/src/stores/noteFormStore";
+import Image from "next/image";
 
 export function NotePreviewModal() {
   const { activeModal, modalProps, closeModal } = useModalStore();
@@ -81,7 +82,6 @@ export function NotePreviewModal() {
             </p>
           </div>
 
-          {/* Отображение вложений */}
           {note.attachments && note.attachments.length > 0 && (
             <div className="mt-6">
               <h3 className="font-semibold text-gray-900 dark:text-white mb-3">
@@ -98,7 +98,7 @@ export function NotePreviewModal() {
                   >
                     {attachment.file_type === "image" ? (
                       <div className="relative">
-                        <img
+                        <Image
                           src={attachment.file_url}
                           alt={attachment.file_name}
                           className="w-full h-24 object-cover rounded mb-2"

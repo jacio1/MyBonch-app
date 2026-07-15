@@ -60,7 +60,6 @@ export default function NotesPage() {
 
   return (
     <div className="sm:p-8 transition-colors mx-auto space-y-6 max-w-6xl">
-      {/* Header */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
         <div>
           <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white">
@@ -79,7 +78,6 @@ export default function NotesPage() {
         </button>
       </div>
 
-      {/* Search */}
       <div className="mb-6">
         <div className="relative">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400 dark:text-gray-500" />
@@ -93,11 +91,9 @@ export default function NotesPage() {
         </div>
       </div>
 
-      {/* Модальные окна */}
       <NoteModal />
       <NotePreviewModal />
 
-      {/* Notes Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
         {filteredNotes.map((note) => (
           <div
@@ -139,7 +135,6 @@ export default function NotesPage() {
 
       </div>
 
-      {/* Empty State */}
       {filteredNotes.length === 0 && searchQuery && (
         <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-8 sm:p-12 text-center">
           <p className="text-gray-600 dark:text-gray-400">

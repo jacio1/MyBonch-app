@@ -1,13 +1,12 @@
 "use client";
 
-import { FileText, Calendar, CreditCard, Shield, AlertCircle, RefreshCw, Gavel, Clock, Download, Trash2, Edit, Image, FileText as FileDoc, Phone, Mail as MailIcon, MapPin, User, Lock, Eye, Database, Bell } from "lucide-react";
+import { FileText, Calendar, CreditCard, Shield, AlertCircle, RefreshCw, Gavel,  Trash2, Edit,  User, Lock,  Database, } from "lucide-react";
 
 export default function OfferPage() {
 
   return (
     <div className="p-4 sm:p-8 transition-colors overflow-y-auto">
       <div className="max-w-4xl mx-auto">
-        {/* Header */}
         <div className="mb-8 text-center">
           <h1 className="text-3xl sm:text-4xl font-bold text-gray-900 dark:text-white mb-4">
             Пользовательское соглашение
@@ -20,7 +19,6 @@ export default function OfferPage() {
           </p>
         </div>
 
-        {/* Executor Info Card */}
         <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6 sm:p-8 mb-6 shadow-sm">
           <div className="flex items-start gap-4 flex-wrap sm:flex-nowrap">
             <div className="bg-indigo-100 dark:bg-indigo-900/50 rounded-full p-3 shrink-0">
@@ -40,10 +38,8 @@ export default function OfferPage() {
           </div>
         </div>
 
-        {/* Content */}
         <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6 sm:p-8 shadow-sm space-y-8">
           
-          {/* Section 1 - Terms */}
           <section>
             <div className="flex items-center gap-3 mb-4">
               <div className="bg-indigo-100 dark:bg-indigo-900/50 rounded-lg p-2">
@@ -61,7 +57,6 @@ export default function OfferPage() {
             </div>
           </section>
 
-          {/* Section 2 - Subject */}
           <section>
             <div className="flex items-center gap-3 mb-4">
               <div className="bg-indigo-100 dark:bg-indigo-900/50 rounded-lg p-2">
@@ -81,7 +76,6 @@ export default function OfferPage() {
             </div>
           </section>
 
-          {/* Section 3 - Acceptance */}
           <section>
             <div className="flex items-center gap-3 mb-4">
               <div className="bg-indigo-100 dark:bg-indigo-900/50 rounded-lg p-2">
@@ -106,7 +100,6 @@ export default function OfferPage() {
             </div>
           </section>
 
-          {/* Section 4 - Features */}
           <section>
             <div className="flex items-center gap-3 mb-4">
               <div className="bg-indigo-100 dark:bg-indigo-900/50 rounded-lg p-2">
@@ -168,7 +161,6 @@ export default function OfferPage() {
             </div>
           </section>
 
-          {/* Section 5 - Payment */}
           <section>
             <div className="flex items-center gap-3 mb-4">
               <div className="bg-indigo-100 dark:bg-indigo-900/50 rounded-lg p-2">
@@ -187,7 +179,6 @@ export default function OfferPage() {
             </ul>
           </section>
 
-          {/* Section 6 - Cancellation */}
           <section>
             <div className="flex items-center gap-3 mb-4">
               <div className="bg-indigo-100 dark:bg-indigo-900/50 rounded-lg p-2">
@@ -214,7 +205,6 @@ export default function OfferPage() {
             </div>
           </section>
 
-          {/* Section 7 - Liability */}
           <section>
             <div className="flex items-center gap-3 mb-4">
               <div className="bg-indigo-100 dark:bg-indigo-900/50 rounded-lg p-2">
@@ -237,7 +227,6 @@ export default function OfferPage() {
             </div>
           </section>
 
-          {/* Section 8 - Privacy */}
           <section>
             <div className="flex items-center gap-3 mb-4">
               <div className="bg-indigo-100 dark:bg-indigo-900/50 rounded-lg p-2">
@@ -255,7 +244,6 @@ export default function OfferPage() {
             </div>
           </section>
 
-          {/* Section 9 - Blocking */}
           <section>
             <div className="flex items-center gap-3 mb-4">
               <div className="bg-indigo-100 dark:bg-indigo-900/50 rounded-lg p-2">

@@ -35,7 +35,6 @@ const formatTime = (time: string) => time.substring(0, 5);
 const isTimeOverlap = (s1: string, e1: string, s2: string, e2: string) =>
   (s1 >= s2 && s1 < e2) || (e1 > s2 && e1 <= e2) || (s1 <= s2 && e1 >= e2);
 
-// ─── TimingSettings ────────────────────────────────────────────────────────────
 
 function TimingSettings() {
   const {
@@ -205,7 +204,6 @@ function TimingSettings() {
   );
 }
 
-// ─── ErrorModal ────────────────────────────────────────────────────────────────
 
 const ErrorModal = ({
   isOpen,
@@ -264,7 +262,6 @@ const ErrorModal = ({
   );
 };
 
-// ─── PresetModal ───────────────────────────────────────────────────────────────
 
 const PresetModal = ({
   isOpen,
@@ -353,7 +350,6 @@ const PresetModal = ({
   );
 };
 
-// ─── ScheduleModal ─────────────────────────────────────────────────────────────
 
 const ScheduleModal = ({
   isOpen,
@@ -551,7 +547,6 @@ const ScheduleModal = ({
   );
 };
 
-// ─── WeekGrid ──────────────────────────────────────────────────────────────────
 
 function WeekGrid({
   preset,
@@ -587,9 +582,9 @@ function WeekGrid({
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-1 flex-wrap">
                           {s.is_important && (
-                            <Star className="h-3 w-3 text-yellow-500 fill-current flex-shrink-0" />
+                            <Star className="h-3 w-3 text-yellow-500 fill-current shrink-0" />
                           )}
-                          <p className="font-semibold text-xs sm:text-sm text-gray-900 dark:text-gray-100 break-words">
+                          <p className="font-semibold text-xs sm:text-sm text-gray-900 dark:text-gray-100 wrap-break-word">
                             {s.subject_name}
                           </p>
                         </div>
@@ -598,14 +593,14 @@ function WeekGrid({
                         </p>
                         {s.room && (
                           <p className="text-xs text-gray-500 dark:text-gray-500 flex items-center gap-0.5 mt-0.5">
-                            <MapPin className="h-2.5 w-2.5 flex-shrink-0" />
-                            <span className="break-words">{s.room}</span>
+                            <MapPin className="h-2.5 w-2.5 shrink-0" />
+                            <span className="wrap-break-word">{s.room}</span>
                           </p>
                         )}
                       </div>
                       <button
                         onClick={() => onDeleteSchedule(s.id)}
-                        className="opacity-0 group-hover:opacity-100 p-1 text-gray-500 hover:text-red-600 rounded transition flex-shrink-0"
+                        className="opacity-0 group-hover:opacity-100 p-1 text-gray-500 hover:text-red-600 rounded transition shrink-0"
                       >
                         <X className="h-3.5 w-3.5" />
                       </button>
@@ -628,7 +623,6 @@ function WeekGrid({
   );
 }
 
-// ─── Page ──────────────────────────────────────────────────────────────────────
 
 export default function TemplatesPage() {
   const { user, loading: authLoading } = useAuth();

@@ -60,12 +60,10 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased h-screen flex flex-col overflow-hidden`}
       >
-        <ThemeInitializer/>
-          <AuthProvider>
-            <DataProvider>
-                  {children}
-            </DataProvider>
-          </AuthProvider>
+        <ThemeInitializer />
+        <AuthProvider>
+          <DataProvider>{children}</DataProvider>
+        </AuthProvider>
       </body>
     </html>
   );

@@ -49,7 +49,6 @@ export function NoteModal() {
     !formData.subject || !subjectsFromSchedules.includes(formData.subject),
   );
 
-  // Загружаем вложения при редактировании
   useEffect(() => {
     if (editingId) {
       const noteAttachments = getNoteAttachments(editingId);
@@ -84,7 +83,6 @@ export function NoteModal() {
       } else {
         const newNote = await addNote(dataToSave);
         if (newNote && pendingFiles.length > 0) {
-          // Загружаем все файлы после создания заметки
           for (const file of pendingFiles) {
             try {
               await addNoteAttachment(newNote.id, file);
@@ -92,7 +90,6 @@ export function NoteModal() {
               console.error("Error uploading file:", error);
             }
           }
-          // Очищаем временные URL
           attachments.forEach(attachment => {
             if (attachment.file_url && attachment.id.toString().startsWith("temp_")) {
               URL.revokeObjectURL(attachment.file_url);
@@ -113,7 +110,6 @@ export function NoteModal() {
   };
 
   const handleClose = () => {
-    // Очищаем временные URL
     attachments.forEach(attachment => {
       if (attachment.file_url && attachment.id.toString().startsWith("temp_")) {
         URL.revokeObjectURL(attachment.file_url);
@@ -126,7 +122,6 @@ export function NoteModal() {
   };
 
   const handleFileUpload = async (file: File) => {
-    // Для редактирования - сразу загружаем
     if (editingId) {
       try {
         await addNoteAttachment(editingId, file);
@@ -137,7 +132,6 @@ export function NoteModal() {
         alert(error instanceof Error ? error.message : "Ошибка загрузки файла");
       }
     } else {
-      // Для новой заметки - создаем временное вложение
       const tempId = `temp_${Date.now()}_${file.name}`;
       const tempAttachment: Attachment = {
         id: tempId,
@@ -156,7 +150,6 @@ export function NoteModal() {
 
   const handleDeleteAttachment = async (attachmentId: string) => {
     if (confirm("Удалить этот файл?")) {
-      // Для временных файлов (новая заметка)
       if (attachmentId.startsWith("temp_")) {
         const attachmentToDelete = attachments.find(a => a.id === attachmentId);
         if (attachmentToDelete && attachmentToDelete.file_url) {
@@ -165,13 +158,11 @@ export function NoteModal() {
         const newAttachments = attachments.filter(a => a.id !== attachmentId);
         setAttachments(newAttachments);
         
-        // Также удаляем из pendingFiles
         const indexToRemove = attachments.findIndex(a => a.id === attachmentId);
         if (indexToRemove !== -1) {
           setPendingFiles(prev => prev.filter((_, i) => i !== indexToRemove));
         }
       } 
-      // Для существующих файлов (редактирование)
       else if (editingId) {
         try {
           await deleteAttachment(attachmentId);
@@ -299,7 +290,6 @@ export function NoteModal() {
             />
           </div>
 
-          {/* Вложения - теперь доступны и при создании, и при редактировании */}
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
               Вложения (фотографии и документы)
@@ -348,7 +338,6 @@ export function NoteModal() {
             </button>
           </div>
 
-          {/* Preview */}
           {showPreview && (
             <div className="mt-4 p-4 bg-gray-50 dark:bg-gray-900/50 rounded-lg border border-gray-200 dark:border-gray-700">
               <h4 className="font-bold text-lg mb-2 text-gray-900 dark:text-white">

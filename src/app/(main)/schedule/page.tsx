@@ -31,7 +31,6 @@ export default function SchedulePage() {
     updateSchedule,
     deleteSchedule,
     createStudyPeriod,
-    applyPreset,
     deleteStudyPeriod,
   } = useData();
 
@@ -44,7 +43,6 @@ export default function SchedulePage() {
     goToPrevWeek,
   } = useWeekNavigation(activeStudyPeriod);
 
-  // State
   const [showAddPeriod, setShowAddPeriod] = useState(false);
   const [showAddSchedule, setShowAddSchedule] = useState(false);
   const [showApplyPreset, setShowApplyPreset] = useState(false);
@@ -80,7 +78,6 @@ export default function SchedulePage() {
     start_date: "",
   });
 
-  // Memoized values
   const weekDays = useMemo(() => getWeekDays(currentWeekStart), [currentWeekStart]);
 
   const weekSchedules = useMemo(() => {
@@ -106,7 +103,6 @@ export default function SchedulePage() {
     return grouped;
   }, [weekSchedules]);
 
-  // Handlers
   const handleCreatePeriodSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!periodForm.name || !periodForm.start_date || !periodForm.end_date) {
@@ -286,7 +282,6 @@ export default function SchedulePage() {
     currentDate.setDate(currentDate.getDate() + 1);
   }
 
-  // Группируем расписание шаблона по дням недели
   const scheduleByDayOfWeek: { [key: number]: typeof preset.schedules } = {};
   preset.schedules.forEach(schedule => {
     if (!scheduleByDayOfWeek[schedule.day_of_week]) {
@@ -295,7 +290,6 @@ export default function SchedulePage() {
     scheduleByDayOfWeek[schedule.day_of_week].push(schedule);
   });
 
-  // Находим все пары, которые нужно удалить (конфликтующие)
   const schedulesToDelete: Schedule[] = [];
   const schedulesToAdd: Array<{
     date: string;
@@ -307,7 +301,6 @@ export default function SchedulePage() {
     is_important: boolean;
   }> = [];
 
-  // Проверяем все даты в периоде на конфликты и собираем их
   for (const dateStr of allDatesInPeriod) {
     const date = new Date(dateStr);
     const dayOfWeek = date.getDay() === 0 ? 6 : date.getDay() - 1;
@@ -316,10 +309,9 @@ export default function SchedulePage() {
     if (!schedulesForDay) continue;
 
     for (const presetSchedule of schedulesForDay) {
-      // Находим все существующие пары, которые пересекаются с новой
       const overlappingSchedules = schedules.filter(schedule => 
         schedule.date === dateStr &&
-        schedule.id !== editingSchedule?.id && // Исключаем редактируемую пару если есть
+        schedule.id !== editingSchedule?.id && 
         (
           (presetSchedule.start_time >= schedule.start_time && presetSchedule.start_time < schedule.end_time) ||
           (presetSchedule.end_time > schedule.start_time && presetSchedule.end_time <= schedule.end_time) ||
@@ -327,10 +319,8 @@ export default function SchedulePage() {
         )
       );
 
-      // Добавляем конфликтующие пары в список на удаление
       schedulesToDelete.push(...overlappingSchedules);
 
-      // Добавляем новую пару из шаблона
       schedulesToAdd.push({
         date: dateStr,
         subject_name: presetSchedule.subject_name,
@@ -343,7 +333,6 @@ export default function SchedulePage() {
     }
   }
 
-  // Подтверждение от пользователя перед перезаписью
   const deleteCount = schedulesToDelete.length;
   const addCount = schedulesToAdd.length;
 
@@ -409,7 +398,6 @@ export default function SchedulePage() {
 
   return (
     <div className=" sm:p-8 transition-colors mx-auto space-y-6 max-w-6xl">
-      {/* Header */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
         <div>
           <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white">
@@ -447,7 +435,6 @@ export default function SchedulePage() {
         </div>
       </div>
 
-      {/* Modals */}
       <AddPeriodModal
         isOpen={showAddPeriod}
         onClose={() => setShowAddPeriod(false)}
@@ -502,7 +489,6 @@ export default function SchedulePage() {
         conflictSchedule={errorModalData.conflictSchedule}
       />
 
-      {/* No Period Warning */}
       {!activeStudyPeriod && (
         <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-700 rounded-lg p-4 mb-6 text-center">
           <p className="text-amber-800 dark:text-amber-200 font-medium">
@@ -511,7 +497,6 @@ export default function SchedulePage() {
         </div>
       )}
 
-      {/* Week Schedule */}
       {activeStudyPeriod && (
         <>
           <WeekNavigation

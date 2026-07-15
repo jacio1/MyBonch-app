@@ -1,9 +1,7 @@
 @import "tailwindcss";
 
-/* Настройка dark mode через класс - правильный синтаксис для Tailwind v4 */
 @variant dark (&:where(.dark, .dark *));
 
-/* Базовые стили для body */
 body {
   background-color: #f9fafb;
   color: #111827;
@@ -13,7 +11,6 @@ html.dark body {
   background-color: #111827;
   color: #f9fafb;
 }
-/* Основной контент */
 main {
   background-color: #f9fafb;
 }
@@ -22,7 +19,6 @@ html.dark main {
   background-color: #111827;
 }
 
-/* Header */
 header {
   background-color: #ffffff;
   border-bottom: 1px solid #e5e7eb;
@@ -33,7 +29,6 @@ html.dark header {
   border-bottom-color: #374151;
 }
 
-/* Sidebar/Nav */
 nav {
   background-color: #ffffff;
   border-right: 1px solid #e5e7eb;
@@ -44,7 +39,6 @@ html.dark nav {
   border-right-color: #374151;
 }
 
-/* Плавный переход между темами */
 * {
   transition-property: color, background-color, border-color, fill, stroke;
   transition-duration: 200ms;
@@ -55,7 +49,6 @@ button{
   cursor: pointer;
 }
 
-/* Стили для скроллбара (опционально) */
 ::-webkit-scrollbar {
   width: 8px;
   height: 8px;

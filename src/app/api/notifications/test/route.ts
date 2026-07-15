@@ -15,7 +15,6 @@ webpush.setVapidDetails(
 );
 
 export async function POST(request: NextRequest) {
-  // Проверка авторизации (как у вас)
   const auth = request.headers.get('authorization');
   if (process.env.CRON_SECRET && auth !== `Bearer ${process.env.CRON_SECRET}`) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
@@ -23,7 +22,6 @@ export async function POST(request: NextRequest) {
 
   const { userId, customTitle, customBody } = await request.json();
   
-  // Получаем подписку пользователя
   const { data: subs } = await supabaseAdmin
     .from('push_subscriptions')
     .select('subscription')

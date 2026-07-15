@@ -94,7 +94,6 @@ export default function TaskPage() {
   };
 
   const handlePriorityClick = (priority: PriorityFilter) => {
-    // Если нажали на тот же приоритет - отключаем фильтр
     if (priorityFilter === priority) {
       setPriorityFilter(null);
     } else {
@@ -105,20 +104,16 @@ export default function TaskPage() {
   const getFilteredAssignments = () => {
     let filtered = assignments;
 
-    // Применяем фильтр статуса
     if (statusFilter === "active") {
       filtered = filtered.filter((a) => !a.completed);
     } else if (statusFilter === "completed") {
       filtered = filtered.filter((a) => a.completed);
     }
-    // "all" - не фильтруем по статусу
 
-    // Применяем фильтр приоритета
     if (priorityFilter !== null) {
       filtered = filtered.filter((a) => a.priority === priorityFilter);
     }
 
-    // Сортируем по дедлайну
     return filtered.sort(
       (a, b) => new Date(a.deadline).getTime() - new Date(b.deadline).getTime(),
     );
@@ -153,7 +148,6 @@ export default function TaskPage() {
 
   return (
     <div className="sm:p-8 transition-colors mx-auto space-y-6 max-w-6xl">
-      {/* Header */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
         <div>
           <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white">
@@ -174,10 +168,8 @@ export default function TaskPage() {
         </div>
       </div>
 
-      {/* Модальное окно */}
       <TaskModal />
 
-      {/* Status Filters */}
       <div className="flex gap-2 mb-6 overflow-x-auto pb-2">
         {(["all", "active", "completed"] as const).map((f) => {
           const labels = {
@@ -201,7 +193,6 @@ export default function TaskPage() {
         })}
       </div>
 
-      {/* Priority Filters - Toggle buttons */}
       <div className="flex gap-2 mb-6 overflow-x-auto pb-2">
         {(["high", "medium", "low"] as const).map((p) => {
           const labels = { high: "Высокий", medium: "Средний", low: "Низкий" };
@@ -231,12 +222,10 @@ export default function TaskPage() {
         })}
       </div>
 
-      {/* Results Count */}
       <div className="text-sm text-gray-500 dark:text-gray-400 mb-2">
         Найдено: {filteredAssignments.length} заданий
       </div>
 
-      {/* Assignments List */}
       {filteredAssignments.length > 0 ? (
         <div className="space-y-3">
           {filteredAssignments.map((assignment) => (
@@ -248,7 +237,6 @@ export default function TaskPage() {
             >
               <div className="flex items-start justify-between gap-4">
                 <div className="flex items-start gap-4 flex-1 min-w-0">
-                  {/* Checkbox */}
                   <button
                     onClick={() =>
                       handleToggleComplete(assignment.id, assignment.completed)
@@ -262,7 +250,6 @@ export default function TaskPage() {
                     )}
                   </button>
 
-                  {/* Content */}
                   <div className="flex-1 min-w-0">
                     <h4
                       className={`font-bold text-base sm:text-lg transition ${

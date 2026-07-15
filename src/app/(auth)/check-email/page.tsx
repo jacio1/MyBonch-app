@@ -7,7 +7,6 @@ export default function CheckEmailPage() {
   return (
     <div className="flex items-center justify-center min-h-[calc(100vh-200px)] p-4 sm:p-8 transition-colors">
       <div className="w-full max-w-md">
-        {/* Header (как на странице входа) */}
         <div className="text-center mb-8">
           <div className="flex justify-center mb-4">
             <div className="bg-white dark:bg-indigo-900/50 rounded-full p-3 sm:p-4">
@@ -22,7 +21,6 @@ export default function CheckEmailPage() {
           </p>
         </div>
 
-        {/* Карточка с сообщением (как карточка входа) */}
         <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6 sm:p-8 shadow-sm">
           <div className="flex justify-center mb-6">
             <div className="bg-indigo-50 dark:bg-indigo-900/30 rounded-full p-4">
@@ -40,7 +38,6 @@ export default function CheckEmailPage() {
             регистрации.
           </p>
 
-          {/* Информационный блок (заменён на стилизованный под тёмную тему) */}
           <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4 mb-6">
             <p className="text-blue-800 dark:text-blue-300 text-sm font-medium">
               💡 Не получили письмо? Проверьте папку `Спам` или попробуйте
@@ -48,7 +45,6 @@ export default function CheckEmailPage() {
             </p>
           </div>
 
-          {/* Кнопка возврата (как кнопка "Войти" на странице входа) */}
           <Link
             href="/sign-in"
             className="flex items-center justify-center gap-2 w-full bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-3 rounded-lg transition text-sm sm:text-base"
@@ -57,7 +53,6 @@ export default function CheckEmailPage() {
             <ArrowRight className="h-4 w-4" />
           </Link>
 
-          {/* Дополнительная информация (как текст внизу) */}
           <p className="text-center text-gray-500 dark:text-gray-500 text-xs sm:text-sm mt-6">
             Это займет всего несколько секунд
           </p>
